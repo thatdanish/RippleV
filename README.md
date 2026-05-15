@@ -34,10 +34,10 @@ RippleV is a RISC-V core, supporting 32 bits *I* & *M* extensions.
 
 ![image](img/Overview.svg ) 
         
-        Fig 1 : RippleV overview.
+        Fig 1 : RippleV core diagram.
 </center>
 
-**Note**: Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementaion to the diagram as closely as possible. Hence, both the diagram and implementation might change from time to time. 
+**Note**: Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagram as closely as possible. Hence, both the diagram and implementation might be updated from time to time. 
 
 ## Source
 

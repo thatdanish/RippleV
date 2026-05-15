@@ -1,0 +1,106 @@
+package Opcodes;
+
+// Opcode & funct-codes
+
+localparam LUI = 7'b0110111;
+localparam AUIPC = 7'b0010111;
+localparam JAL = 7'b1101111;
+localparam JALR = 7'b1100111;
+localparam CJ = 7'b1100011;
+    localparam BEQ = 3'b000;
+    localparam BNE = 3'b001;
+    localparam BGE = 3'b101;
+    localparam BLTU = 3'b110;
+    localparam BGEU = 3'b111;
+localparam LOAD = 7'b0000011;
+    localparam LB = 3'b000;
+    localparam LH = 3'b001;
+    localparam LW = 3'b010;
+    localparam LBU = 3'b100;
+    localparam LHU = 3'b101;
+localparam STORE = 7'b0100011;
+    localparam SB = 3'b000;
+    localparam SH = 3'b001;
+    localparam SW = 3'b010;
+localparam IMM_T = 7'b0010011;
+    localparam ADDI = 3'b000;
+    localparam SLTI = 3'b010;
+    localparam SLTU = 3'b011;
+    localparam XORI = 3'b100;
+    localparam ORI = 3'b110;
+    localparam ANDI = 3'b111;
+    localparam SLLI = 3'b001;
+        localparam SLLI_F7 = 7'b0000000;
+    localparam SRLI_SRAI = 3'b101;
+        localparam SRLI_F7 = 7'b0000000;
+        localparam SRAI_F7 = 7'b0100000;
+localparam REG_T = 7'b0110011;
+    localparam ADD_SUB = 3'b000;
+        localparam ADD_F7 = 7'b0000000;
+        localparam SUB_F7 = 7'b0100000;
+    localparam SLL = 3'b001;
+        localparam SLL_F7 = 7'b0000000;
+    localparam SLT = 3'b010;
+        localparam SLT_F7 = 7'b0000000;
+    localparam SLTU = 3'b011;
+        localparam SLTU_F7 = 7'b0000000;
+    localparam XOR = 3'b100;
+        localparam XOR_F7 = 7'b0000000;
+    localparam SRL_SRA = 3'b101;
+        localparam SRL_F7 = 7'b0000000;
+        localparam SRA_F7 = 7'b0100000;
+    localparam OR = 3'b110;
+        localparam OR_F7 = 7'b0000000;
+    localparam AND = 3'b111;
+        localparam AND_F7 = 7'b0000000;
+
+// Instructions to CTRL-Unit
+
+localparam CTRL_ADDI = 6'd0;
+localparam CTRL_SLTI = 6'd1;
+localparam CTRL_SLTIU = 6'd2;
+localparam CTRL_ANDI = 6'd3;
+localparam CTRL_ORI = 6'd4;
+localparam CTRL_XORI = 6'd5;
+localparam CTRL_SLLI = 6'd6;
+localparam CTRL_SRLI = 6'd7;
+localparam CTRL_SRAI = 6'd8;
+localparam CTRL_LUI = 6'd9;
+localparam CTRL_AUIPC = 6'd10;
+localparam CTRL_ADD = 6'd11;
+localparam CTRL_SUB = 6'd12;
+localparam CTRL_SLTU = 6'd13;
+localparam CTRL_SLT = 6'd14;
+localparam CTRL_AND = 6'd15;
+localparam CTRL_OR = 6'd16;
+localparam CTRL_XOR = 6'd17;
+localparam CTRL_SLL = 6'd18;
+localparam CTRL_SRL = 6'd19;
+localparam CTRL_JAL = 6'd20;
+localparam CTRL_JALR = 6'd21;
+localparam CTRL_BEQ = 6'd22;
+localparam CTRL_BNE = 6'd23;
+localparam CTRL_BLT = 6'd24;
+localparam CTRL_BLTU = 6'd25;
+localparam CTRL_LW = 6'd26;
+localparam CTRL_LH = 6'd27;
+localparam CTRL_LHU = 6'd28;
+localparam CTRL_LB = 6'd29;
+localparam CTRL_LBU = 6'd30;
+localparam CTRL_SW = 6'd31;
+localparam CTRL_SH = 6'd32;
+localparam CTRL_SB = 6'd33;
+localparam CTRL_MUL = 6'd34;
+localparam CTRL_MULH = 6'd35;
+localparam CTRL_MULHU = 6'd36;
+localparam CTRL_MULHSU = 6'd37;
+localparam CTRL_DIV = 6'd38;
+localparam CTRL_DIVU = 6'd39;
+localparam CTRL_REM = 6'd40;
+localparam CTRL_REMU = 6'd41;
+localparam CTRL_MRET = 6'd42;
+localparam CTRL_WFI = 6'd43;
+
+// Instructions to ALU
+
+endpackage
