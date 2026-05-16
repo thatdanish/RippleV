@@ -1,5 +1,4 @@
-# .github/workflows/cocotb.yml
-name: CI-Tests
+name: Block-Level-Tests
 
 on:
   push:
@@ -7,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test_decoder:
+  Block-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,22 +15,22 @@ jobs:
         uses: actions/cache@v4
         with: 
           path: /var/cache/apt/archives
-          key: ${{runner.os}}-opt-iverilog-icarus
+          key: ${{runner.os}}-opt-iverilog-gtkwave
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y iverilog icarus
+          sudo apt-get install -y iverilog gtkwave
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.13"
 
       - name: Install Python dependencies
         run: |
           pip install cocotb cocotb-test pytest
 
-      - name: Run decoder tests
+      - name: Run Decoder tests
         run: |
           cd test/decoder && WAVES=0 pytest test_runner_decoder.py -s
