@@ -1,0 +1,10 @@
+# Artifacts
+
+__pycache__
+.pytest_cache
+.vscode
+
+# Sim files
+
+sim_build
+results.xml

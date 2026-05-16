@@ -1,4 +1,4 @@
-package Opcodes;
+package Opcodes_pkg;
 
 // Opcode & funct-codes
 
@@ -25,7 +25,7 @@ localparam STORE = 7'b0100011;
 localparam IMM_T = 7'b0010011;
     localparam ADDI = 3'b000;
     localparam SLTI = 3'b010;
-    localparam SLTU = 3'b011;
+    localparam SLTIU = 3'b011;
     localparam XORI = 3'b100;
     localparam ORI = 3'b110;
     localparam ANDI = 3'b111;
@@ -76,12 +76,15 @@ localparam CTRL_OR = 6'd16;
 localparam CTRL_XOR = 6'd17;
 localparam CTRL_SLL = 6'd18;
 localparam CTRL_SRL = 6'd19;
+localparam CTRL_SRA = 6'd46;
 localparam CTRL_JAL = 6'd20;
 localparam CTRL_JALR = 6'd21;
 localparam CTRL_BEQ = 6'd22;
 localparam CTRL_BNE = 6'd23;
+localparam CTRL_BGE = 6'd44;
 localparam CTRL_BLT = 6'd24;
 localparam CTRL_BLTU = 6'd25;
+localparam CTRL_BGEU = 6'd45;
 localparam CTRL_LW = 6'd26;
 localparam CTRL_LH = 6'd27;
 localparam CTRL_LHU = 6'd28;
