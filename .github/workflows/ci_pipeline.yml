@@ -1,0 +1,37 @@
+# .github/workflows/cocotb.yml
+name: CI-Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  test_decoder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with: 
+          path: /var/cache/apt/archives
+          key: ${{runner.os}}-opt-iverilog-icarus
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog icarus
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install Python dependencies
+        run: |
+          pip install cocotb cocotb-test pytest
+
+      - name: Run decoder tests
+        run: |
+          cd test/decoder && WAVES=0 pytest test_runner_decoder.py -s
