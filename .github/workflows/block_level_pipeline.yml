@@ -10,26 +10,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Cache apt packages
-        uses: actions/cache@v4
-        with: 
-          path: /var/cache/apt/archives
-          key: ${{runner.os}}-opt-iverilog-gtkwave python3-numpy
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog gtkwave python3-numpy
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
+      
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with: 
+          path: ~/.cache/pip
+          key: pip-${{runner.os}}cocotb-cocotb-test-pytest-numpy
 
       - name: Install Python dependencies
         run: |
-          pip install cocotb cocotb-test pytest
+          pip install cocotb cocotb-test pytest numpy
+      
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with: 
+          path: /var/cache/apt/archives
+          key: ${{runner.os}}-opt-iverilog-gtkwave
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog gtkwave
 
       - name: Run Decoder tests
         run: |
