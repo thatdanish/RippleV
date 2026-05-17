@@ -14,3 +14,11 @@ reg_file:
 
 wave_reg_file:
 	cd test/reg_file/sim_build && gtkwave reg_file.fst
+
+# Program-counter
+
+program_counter:
+	cd test/program_counter && pytest tests_program_counter.py -s
+
+wave_program_counter:
+	cd test/program_counter/sim_build && gtkwave program_counter.fst

@@ -33,3 +33,7 @@ jobs:
       - name: Run Reg-file tests
         run: |
           cd test/reg_file && WAVES=0 pytest tests_reg_file.py
+
+      - name: Run Program-counter tests
+        run: |
+          cd test/program_counter && WAVES=0 pytest tests_program_counter.py
