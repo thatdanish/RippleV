@@ -28,7 +28,7 @@ async def smoketest(dut):
     # Setup
     clk = cocotb.start_soon(clk_(dut, CLOCKPERIOD, MAX_CLOCKS/2))
     await init_inputs(dut)
-    await ResetTrigger(dut, 5)
+    await ResetTrigger(dut)
     await ClockCycles(dut.clk_i, 3)
 
     # Probe

@@ -15,12 +15,12 @@ jobs:
         uses: actions/cache@v4
         with: 
           path: /var/cache/apt/archives
-          key: ${{runner.os}}-opt-iverilog-gtkwave
+          key: ${{runner.os}}-opt-iverilog-gtkwave python3-numpy
 
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y iverilog gtkwave
+          sudo apt-get install -y iverilog gtkwave python3-numpy
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,3 +34,7 @@ jobs:
       - name: Run Decoder tests
         run: |
           cd test/decoder && WAVES=0 pytest test_runner_decoder.py -s
+
+      - name: Run Reg-file tests
+        run: |
+          cd test/reg_file && WAVES=0 pytest tests_reg_file.py -s
