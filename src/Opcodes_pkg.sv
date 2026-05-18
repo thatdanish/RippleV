@@ -106,4 +106,16 @@ localparam CTRL_WFI = 6'd43;
 
 // Instructions to ALU
 
+// Address to CSR
+
+localparam CSR_mstatus = 3'd0;
+localparam CSR_mepc = 3'd1;
+localparam CSR_mcause = 3'd2;
+localparam CSR_misa = 3'd3;
+localparam CSR_mtvec = 3'd4;
+
+// Read & write
+
+localparam read = 1'b1;
+localparam write = 1'b0;
 endpackage

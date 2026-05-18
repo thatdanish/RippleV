@@ -11,6 +11,9 @@ module reg_file(
     output logic [31:0] data_o
 );
 
+import Opcodes_pkg::read;
+import Opcodes_pkg::write;
+
 logic [31:0] [31:0] int_regs;
 
 always_ff @( posedge clk_i ) begin 
@@ -19,7 +22,7 @@ always_ff @( posedge clk_i ) begin
         int_regs <= 'd0;
     end else begin
         if (en_i == 1'b1) begin
-            if (rw_i == 1'b0) begin // write
+            if (rw_i == write) begin // write
                 if (addr_i != 'd0) int_regs[addr_i] <= data_i;
                 else int_regs <= int_regs;
             end else begin // read

@@ -37,3 +37,7 @@ jobs:
       - name: Run Program-counter tests
         run: |
           cd test/program_counter && WAVES=0 pytest tests_program_counter.py
+
+      - name: Run CSR tests
+        run: |
+          cd test/csr && WAVES=0 pytest tests_csr.py

@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent)+"/sim/")
 from simulation import NextClockCycle, clk_, ResetTrigger
 
 # Parameters
+
 MAX_CLOCK = 200
 N_TESTS = 50
 

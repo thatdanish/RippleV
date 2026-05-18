@@ -22,3 +22,11 @@ program_counter:
 
 wave_program_counter:
 	cd test/program_counter/sim_build && gtkwave program_counter.fst
+
+# CSR
+
+csr:
+	cd test/csr && pytest tests_csr.py -s
+
+wave_csr:
+	cd test/csr/sim_build && gtkwave csr.fst
