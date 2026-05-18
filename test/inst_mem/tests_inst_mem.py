@@ -56,7 +56,7 @@ async def smoke_test(dut):
     await ClockCycles(dut.clk_i, 10)
 
 
-def test_inst_memory():
+def test_inst_mem():
     sim = os.getenv("SIM", "icarus")
     waves = os.getenv("WAVES", 1)
     sources = ["../../src/inst_mem.sv"]
@@ -76,4 +76,4 @@ def test_inst_memory():
     )
 
 if __name__ == "__main__":
-    test_inst_memory()
+    test_inst_mem()

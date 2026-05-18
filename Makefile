@@ -38,3 +38,11 @@ inst_mem:
 
 wave_inst_mem:
 	cd test/inst_mem/sim_build && gtkwave inst_mem.fst
+
+# Data-memory
+
+data_mem:
+	cd test/data_mem && pytest tests_data_mem.py -s
+
+wave_data_mem:
+	cd test/data_mem/sim_build && gtkwave data_mem.fst
