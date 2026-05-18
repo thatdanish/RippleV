@@ -43,6 +43,14 @@ RippleV is a RISC-V core, supporting 32 bits *I* & *M* extensions.
 #### Note: 
 Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagram as closely as possible. Hence, both the diagram and implementation might be updated from time to time. 
 
+## Supported/Recommended Tools
+- CocoTB (for verification)
+- Icarus (for simulation/compilation)
+- GTKwave (for waveforms)
+
+VERILATOR & SURFER support is planned [see issue](https://github.com/thatdanish/RippleV/issues/1#issue-4471244125).
+
+
 ## Source
 
 - [Unpriviledged Instructructions](https://docs.riscv.org/reference/isa/_attachments/riscv-unprivileged.pdf)

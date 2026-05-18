@@ -30,3 +30,11 @@ csr:
 
 wave_csr:
 	cd test/csr/sim_build && gtkwave csr.fst
+
+# Instruction-memory
+
+inst_mem:
+	cd test/inst_mem && pytest tests_inst_mem.py -s
+
+wave_inst_mem:
+	cd test/inst_mem/sim_build && gtkwave inst_mem.fst

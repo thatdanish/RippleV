@@ -41,3 +41,7 @@ jobs:
       - name: Run CSR tests
         run: |
           cd test/csr && WAVES=0 pytest tests_csr.py
+
+      - name: Run INST MEM tests
+        run: |
+          cd test/inst_mem && WAVES=0 pytest tests_inst_mem.py
