@@ -1,5 +1,5 @@
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer, ClockCycles
+from cocotb.triggers import RisingEdge, Timer, ClockCycles, ReadOnly
 
 # Parameters
 

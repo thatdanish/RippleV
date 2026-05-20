@@ -46,3 +46,11 @@ data_mem:
 
 wave_data_mem:
 	cd test/data_mem/sim_build && gtkwave data_mem.fst
+
+# ALU
+
+alu:
+	cd test/ALU && pytest tests_alu.py 
+
+wave_alu:
+	cd test/ALU/sim_build && gtkwave temp_alu.fst
