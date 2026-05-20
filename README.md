@@ -39,6 +39,7 @@ RippleV is a RISC-V core, supporting 32 bits *I* & *M* extensions.
 **Legend**:
 - Blue = Designed & Verified   
 - White = Incomplete design and/or verification
+- Yellow = Temporary design and/or verification
 
 #### Note: 
 Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagram as closely as possible. Hence, both the diagram and implementation might be updated from time to time. 

@@ -49,3 +49,7 @@ jobs:
       - name: Run Data MEM tests
         run: |
           cd test/data_mem && WAVES=0 pytest tests_data_mem.py
+
+      - name: Run ALU tests
+        run: |
+          cd test/ALU && WAVES=0 pytest tests_alu.py

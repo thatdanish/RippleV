@@ -50,7 +50,7 @@ wave_data_mem:
 # ALU
 
 alu:
-	cd test/ALU && pytest tests_alu.py 
+	cd test/ALU && pytest tests_alu.py -s
 
 wave_alu:
 	cd test/ALU/sim_build && gtkwave temp_alu.fst

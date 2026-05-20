@@ -2,6 +2,7 @@ import os
 import sys 
 import random
 from pathlib import Path
+import math
 sys.path.insert(0, str(Path(__file__).parent.parent)+"/sim/")
 
 import numpy as np
@@ -14,8 +15,8 @@ from simulation import clk_, NextClockCycle, ResetTrigger
 
 # Parameters
 
-MAX_CLKS = 3000
-N_TESTS = 1000
+MAX_CLKS = 10000
+N_TESTS = 5000
 
 # Init-inputs
 
@@ -50,7 +51,7 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
         # MULH
         a = a.to_signed()
         b = b.to_signed()
-        z = LogicArray(a*b, 64)
+        z = LogicArray.from_signed(a*b, 64)
         return z[63:32]
     elif opr == 4:
         # MULHU
@@ -68,7 +69,12 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
         # DIV
         a = a.to_signed()
         b = b.to_signed()
-        return LogicArray(int(b/a), 32)
+        z = b/a
+        if z >= 0:
+            z = math.floor(z)
+        else: 
+            z = math.ceil(z)
+        return LogicArray.from_signed(z, 32)
     elif opr == 7:
         # DIVU
         a = a.to_unsigned()
@@ -86,10 +92,8 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
             b = b*-1
             z = LogicArray.from_signed(-1*(b%a), 32)
             return z
-        
         z = LogicArray.from_signed(b%a, 32)
         return z
-
     elif opr == 9:
         # REMU
         a = a.to_unsigned()
@@ -168,7 +172,6 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
     else:
         raise NotImplementedError("Invalid operation error. {opr}")
 
-
 # Computation-test
 
 @cocotb.test()
@@ -185,16 +188,9 @@ async def compute_test(dut):
 
     for _ in range(N_TESTS):
         opr = random.randint(0,25)
-        # opr = 5
-        
+             
         while opr == 24:
             opr = random.randint(0,25)
-
-        # a = LogicArray(random.randint(1,10), 32)
-        # b = LogicArray(random.randint(1,10), 32)
-
-        # a = LogicArray.from_signed(5, 32)
-        # b = LogicArray.from_signed(-10, 32)
 
         a = LogicArray(random.getrandbits(32), 32)
         b = LogicArray(random.getrandbits(32), 32)
@@ -224,7 +220,6 @@ async def compute_test(dut):
                                          f"Opr: {opr}, a : {a} ({a.to_unsigned()}), b : {b} ({b.to_unsigned()})\n"
                                          f"Expected : {res} (), got : {dut.out_o.value}")
         
-
 def test_alu():
     sim = os.getenv("SIM", "icarus")
     waves = os.getenv("WAVES", 1)
