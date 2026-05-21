@@ -47,8 +47,8 @@ always_comb begin
         ALU_DIVU : int_out = unsigned'(b_i)/unsigned'(a_i);
         ALU_REM : int_out = func_rem(a_i, b_i);
         ALU_REMU : int_out = unsigned'(b_i)%unsigned'(a_i);
-        ALU_SLT : int_out = (signed'(b_i)<signed'(a_i));
-        ALU_SLTU : int_out = (unsigned'(b_i)<unsigned'(a_i));
+        ALU_SLT : int_out = 32'(signed'(b_i)<signed'(a_i));
+        ALU_SLTU : int_out = 32'(unsigned'(b_i)<unsigned'(a_i));
         ALU_AND : int_out = b_i & a_i;
         ALU_OR :  int_out = b_i | a_i;
         ALU_XOR : int_out = b_i ^ a_i;

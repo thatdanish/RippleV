@@ -69,9 +69,9 @@ async def smoke_test(dut):
         except:
             raise AssertionError(f"Invalid read --> ADDR {addr} expected : {data_mem_model[addr]}, got : {dut.data_o.value}")
 
-def test_data_mem():
+def test_ruuner_data_mem():
     
-    sim = os.getenv("SIM", "icarus")
+    sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
     sources = ["../../src/Opcodes_pkg.sv", "../../src/data_mem.sv"]
 
@@ -80,7 +80,9 @@ def test_data_mem():
     runner.build(
         sources=sources,
         hdl_toplevel="data_mem",
-        waves=waves
+        waves=waves,
+        clean=True,
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
@@ -90,4 +92,4 @@ def test_data_mem():
     )
 
 if __name__ == "__main__":
-    test_data_mem()
+    test_ruuner_data_mem()

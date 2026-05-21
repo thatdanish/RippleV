@@ -86,7 +86,7 @@ async def read_write_test(dut):
 
 
 def test_runner_reg_file():
-    sim = os.getenv("SIM", "icarus")
+    sim = os.getenv("SIM", "verilator")    
     waves = os.getenv("WAVES", 1)
 
     sources = ["../../src/Opcodes_pkg.sv", "../../src/reg_file.sv"]
@@ -96,7 +96,9 @@ def test_runner_reg_file():
     runner.build(
         sources=sources,
         hdl_toplevel="reg_file",
-        waves=waves
+        waves=waves,
+        clean=True,
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(

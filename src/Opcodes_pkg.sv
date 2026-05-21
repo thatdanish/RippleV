@@ -1,3 +1,5 @@
+`timescale 1ns/1ns  // for making verilator happy
+
 package Opcodes_pkg;
 
 // Opcode & funct-codes
@@ -54,7 +56,7 @@ localparam REG_T = 7'b0110011;
     localparam SRL_SRA_DIVU = 3'b101;
         localparam SRL_F7 = 7'b0000000;
         localparam SRA_F7 = 7'b0100000;
-        localparam DIVU_F7 = 7'b0100000;
+        localparam DIVU_F7 = 7'b0000001;
     localparam OR_REM = 3'b110;
         localparam OR_F7 = 7'b0000000;
         localparam REM_F7 = 7'b0000001;

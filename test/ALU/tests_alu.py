@@ -220,8 +220,8 @@ async def compute_test(dut):
                                          f"Opr: {opr}, a : {a} ({a.to_unsigned()}), b : {b} ({b.to_unsigned()})\n"
                                          f"Expected : {res} (), got : {dut.out_o.value}")
         
-def test_alu():
-    sim = os.getenv("SIM", "icarus")
+def test_runner_alu():
+    sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
     sources = ["../../src/Opcodes_pkg.sv", "../../src/temp_alu.sv"]
 
@@ -230,7 +230,9 @@ def test_alu():
     runner.build(
         sources=sources,
         hdl_toplevel="temp_alu",
-        waves=waves
+        waves=waves,
+        clean=True,
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
@@ -240,4 +242,4 @@ def test_alu():
     )
 
 if __name__ == "__main__":
-    test_alu()
+    test_runner_alu()

@@ -56,8 +56,8 @@ async def smoke_test(dut):
     await ClockCycles(dut.clk_i, 10)
 
 
-def test_inst_mem():
-    sim = os.getenv("SIM", "icarus")
+def test_runner_inst_mem():
+    sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
     sources = ["../../src/inst_mem.sv"]
 
@@ -66,7 +66,9 @@ def test_inst_mem():
     runner.build(
         sources=sources,
         hdl_toplevel="inst_mem",
-        waves=waves
+        waves=waves,
+        clean=True,
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
@@ -76,4 +78,4 @@ def test_inst_mem():
     )
 
 if __name__ == "__main__":
-    test_inst_mem()
+    test_runner_inst_mem()
