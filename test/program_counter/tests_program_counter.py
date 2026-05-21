@@ -53,8 +53,8 @@ async def smoke_test(dut):
 
     cocotb.pass_test()
 
-def test_program_counter():
-    sim = os.getenv("SIM", "icarus")
+def test_runner_program_counter():
+    sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
 
     sources = ["../../src/program_counter.sv"]
@@ -64,7 +64,9 @@ def test_program_counter():
     runner.build(
         sources=sources,
         hdl_toplevel="program_counter",
-        waves=waves
+        waves=waves,
+        clean=True,
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
@@ -74,4 +76,4 @@ def test_program_counter():
     )
 
 if __name__ == "__main__":
-    test_program_counter()
+    test_runner_program_counter()

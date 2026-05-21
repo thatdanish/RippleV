@@ -25,8 +25,8 @@ assign imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, i
 assign lui_o = {inst_i[31:12], 12'd0};
 
 assign op_code = inst_i[6:0];
-assign funct_7 = inst_i[14:12];
-assign funct_3 = inst_i[31:25];
+assign funct_3 = inst_i[14:12];
+assign funct_7 = inst_i[31:25];
 
 always_ff @( posedge clk_i ) begin 
     if(!rst_i) begin

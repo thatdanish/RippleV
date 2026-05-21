@@ -94,9 +94,9 @@ async def smoke_test(dut):
     cocotb.pass_test()
 
 
-def test_csr():
-    sim = os.getenv("SIM", "icarus")            
-    waves = os.getenv("WAVES", 1)            
+def test_runner_csr():
+    sim = os.getenv("SIM", "verilator")            
+    waves = os.getenv("WAVES", True)            
 
     sources = ["../../src/Opcodes_pkg.sv", "../../src/csr.sv"]
 
@@ -105,7 +105,9 @@ def test_csr():
     runner.build(
         sources=sources,
         hdl_toplevel="csr",
-        waves=waves
+        waves=waves, 
+        clean=True,
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
@@ -115,4 +117,4 @@ def test_csr():
     )
 
 if __name__ == "__main__":
-    test_csr()
+    test_runner_csr()

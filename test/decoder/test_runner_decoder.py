@@ -7,7 +7,7 @@ from tests_decoder import *
 from cocotb_tools.runner import get_runner
 
 def test_runner_decoder():
-    sim = os.getenv("SIM", "icarus")
+    sim = os.getenv("SIM", "verilator")    
     waves = os.getenv("WAVES", 1)
 
     sources = ["../../src/Opcodes_pkg.sv","../../src/decoder.sv"]
@@ -17,7 +17,10 @@ def test_runner_decoder():
     runner.build(
         sources=sources,
         hdl_toplevel="decoder",
-        waves=waves
+        waves=waves, 
+        clean=True,
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
+
     )
 
     runner.test(

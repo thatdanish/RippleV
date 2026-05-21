@@ -9,14 +9,15 @@ module csr #(
     input rw_i,
     input en_i,
     input intrpt_i,
-    input logic[3:0] csr_addr_i,
+    input logic[2:0] csr_addr_i,
     input logic[ADD_WIDTH-1:0] new_data_i,
     output interrupt_status_o,
     output logic [31:0] csr_data_o    
 );
 
 import Opcodes_pkg::*;
-localparam zero_bits = 31-2-ADD_WIDTH;
+localparam zero_bits_one = 32-2-ADD_WIDTH;
+localparam zero_bits_two = 32-ADD_WIDTH;
 
 logic [31:0] mstatus, mepc, misa, mtvec, mcause;
 
@@ -38,7 +39,9 @@ always_ff @( posedge clk_i ) begin
         
         if (en_i == 1'b1) begin
             if (rw_i == read) begin // read
-                case (csr_addr_i)
+
+            /* verilator lint_off CASEINCOMPLETE */
+                unique case (csr_addr_i)
                     CSR_misa : csr_data_o <= misa;
                     CSR_mstatus : csr_data_o <= mstatus;
                     CSR_mepc : csr_data_o <= mepc;
@@ -46,10 +49,11 @@ always_ff @( posedge clk_i ) begin
                     CSR_mcause : csr_data_o <= mcause;
                     default: csr_data_o <= 'd0; 
                 endcase
+            /* verilator lint_off CASEINCOMPLETE*/
             end else begin //write
                 case (csr_addr_i)
-                    CSR_mepc : mepc <= {new_data_i, 2'b00};
-                    CSR_mcause : mcause <= new_data_i;
+                    CSR_mepc : mepc <= {zero_bits_one'(1'b0), new_data_i, 2'b00};
+                    CSR_mcause : mcause <= {zero_bits_two'(1'b0), new_data_i};
                 endcase
             end 
         end
