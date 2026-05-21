@@ -44,6 +44,10 @@ RippleV is a RISC-V core, supporting 32 bits *I* & *M* extensions.
 #### Note: 
 Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagram as closely as possible. Hence, both the diagram and implementation might be updated from time to time. 
 
+### Verification Coverage
+
+see [here](test/README.md)
+
 ## Supported/Recommended Tools
 - CocoTB (for verification)
 - Verilator v5.048 (simulation/compilation) -- *Recommended*

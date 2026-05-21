@@ -57,6 +57,15 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
+| Line        |   1/1       |     100 %     |
+| Toggle      |   144/146   |     91.2 %    |
+| Branch      |   6/6       |     100 %     |
+| Expression  |   2/2       |     100 %     |
+
+## ALU
+
+| Type        | Coverage    | Percentage    |
+|  :----:     |  :----:     |    :----:     |
 | Line        |   33/34     |     97.1 %    |
 | Toggle      |   274/276   |     99.3 %    |
 | Branch      |   7/10      |     70 %      |
