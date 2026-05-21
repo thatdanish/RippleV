@@ -35,24 +35,32 @@ localparam IMM_T = 7'b0010011;
         localparam SRLI_F7 = 7'b0000000;
         localparam SRAI_F7 = 7'b0100000;
 localparam REG_T = 7'b0110011;
-    localparam ADD_SUB = 3'b000;
+    localparam ADD_SUB_MUL = 3'b000;
         localparam ADD_F7 = 7'b0000000;
         localparam SUB_F7 = 7'b0100000;
-    localparam SLL = 3'b001;
+        localparam MUL_F7 = 7'b0000001;
+    localparam SLL_MULH = 3'b001;
         localparam SLL_F7 = 7'b0000000;
-    localparam SLT = 3'b010;
+        localparam MULH_F7 = 7'b0000001;
+    localparam SLT_MULHSU = 3'b010;
         localparam SLT_F7 = 7'b0000000;
-    localparam SLTU = 3'b011;
+        localparam MULHSU_F7 = 7'b0000001;
+    localparam SLTU_MULHU = 3'b011;
         localparam SLTU_F7 = 7'b0000000;
-    localparam XOR = 3'b100;
+        localparam MULHU_F7 = 7'b0000001;
+    localparam XOR_DIV = 3'b100;
         localparam XOR_F7 = 7'b0000000;
-    localparam SRL_SRA = 3'b101;
+        localparam DIV_F7 = 7'b0000001;
+    localparam SRL_SRA_DIVU = 3'b101;
         localparam SRL_F7 = 7'b0000000;
         localparam SRA_F7 = 7'b0100000;
-    localparam OR = 3'b110;
+        localparam DIVU_F7 = 7'b0100000;
+    localparam OR_REM = 3'b110;
         localparam OR_F7 = 7'b0000000;
-    localparam AND = 3'b111;
+        localparam REM_F7 = 7'b0000001;
+    localparam AND_REMU = 3'b111;
         localparam AND_F7 = 7'b0000000;
+        localparam REMU_F7 = 7'b0000001;
 
 // Instructions to CTRL-Unit
 
@@ -106,4 +114,43 @@ localparam CTRL_WFI = 6'd43;
 
 // Instructions to ALU
 
+localparam ALU_ADD = 5'd0;
+localparam ALU_SUB = 5'd1;
+localparam ALU_MUL = 5'd2;
+localparam ALU_MULH = 5'd3;
+localparam ALU_MULHU = 5'd4;
+localparam ALU_MULHSU = 5'd5;
+localparam ALU_DIV = 5'd6;
+localparam ALU_DIVU = 5'd7;
+localparam ALU_REM = 5'd8;
+localparam ALU_REMU = 5'd9;
+localparam ALU_SLT = 5'd10;
+localparam ALU_SLTU = 5'd11;
+localparam ALU_AND = 5'd13;
+localparam ALU_OR = 5'd14;
+localparam ALU_XOR = 5'd15;
+localparam ALU_SLL = 5'd16;
+localparam ALU_SRL = 5'd17;
+localparam ALU_SRA = 5'd18;
+localparam ALU_BEQ = 5'd19;
+localparam ALU_BNE = 5'd20;
+localparam ALU_BLT = 5'd21;
+localparam ALU_BLTU = 5'd22;
+localparam ALU_BGE = 5'd23;
+localparam ALU_BGEU = 5'd12;
+localparam ALU_JAL = 5'd24;
+localparam ALU_JALR = 5'd25;
+
+// Address to CSR
+
+localparam CSR_mstatus = 3'd0;
+localparam CSR_mepc = 3'd1;
+localparam CSR_mcause = 3'd2;
+localparam CSR_misa = 3'd3;
+localparam CSR_mtvec = 3'd4;
+
+// Read & write
+
+localparam read = 1'b1;
+localparam write = 1'b0;
 endpackage

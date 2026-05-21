@@ -11,7 +11,6 @@ from simulation import clk_, ResetTrigger, NextClockCycle
 
 # Parameters
 
-CLOCKPERIOD = 10
 MAX_CLOCKS = 140
 N_TESTS = 50
 
@@ -26,9 +25,9 @@ async def init_inputs(dut):
 async def smoketest(dut):
     
     # Setup
-    clk = cocotb.start_soon(clk_(dut, CLOCKPERIOD, MAX_CLOCKS/2))
+    clk = cocotb.start_soon(clk_(dut, MAX_CLOCKS/2))
     await init_inputs(dut)
-    await ResetTrigger(dut, 5)
+    await ResetTrigger(dut)
     await ClockCycles(dut.clk_i, 3)
 
     # Probe

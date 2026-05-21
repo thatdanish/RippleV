@@ -10,27 +10,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Cache apt packages
-        uses: actions/cache@v4
-        with: 
-          path: /var/cache/apt/archives
-          key: ${{runner.os}}-opt-iverilog-gtkwave
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog gtkwave
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-
+          cache: 'pip'
+      
       - name: Install Python dependencies
         run: |
-          pip install cocotb cocotb-test pytest
+          pip install -r requirements.txt
+    
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog gtkwave
 
       - name: Run Decoder tests
         run: |
-          cd test/decoder && WAVES=0 pytest test_runner_decoder.py -s
+          cd test/decoder && WAVES=0 pytest test_runner_decoder.py
+
+      - name: Run Reg-file tests
+        run: |
+          cd test/reg_file && WAVES=0 pytest tests_reg_file.py
+
+      - name: Run Program-counter tests
+        run: |
+          cd test/program_counter && WAVES=0 pytest tests_program_counter.py
+
+      - name: Run CSR tests
+        run: |
+          cd test/csr && WAVES=0 pytest tests_csr.py
+
+      - name: Run INST MEM tests
+        run: |
+          cd test/inst_mem && WAVES=0 pytest tests_inst_mem.py
+
+      - name: Run Data MEM tests
+        run: |
+          cd test/data_mem && WAVES=0 pytest tests_data_mem.py
+
+      - name: Run ALU tests
+        run: |
+          cd test/ALU && WAVES=0 pytest tests_alu.py

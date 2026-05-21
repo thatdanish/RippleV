@@ -26,5 +26,5 @@ def test_runner_decoder():
         waves=waves
     )
 
-    if __name__=="__main__":
-        test_runner_decoder()
+if __name__=="__main__":
+    test_runner_decoder()

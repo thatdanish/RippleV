@@ -83,20 +83,46 @@ always_ff @( posedge clk_i ) begin
             end
             REG_T :  begin
                 case (funct_3)
-                    ADD_SUB : begin
-                        if (funct_7 == ADD_F7) inst_to_ctrl_o <= CTRL_ADD;
-                        else inst_to_ctrl_o <= CTRL_SUB;
+                    ADD_SUB_MUL : begin
+                        case (funct_7)
+                            ADD_F7 : inst_to_ctrl_o <= CTRL_ADD;
+                            SUB_F7 : inst_to_ctrl_o <= CTRL_SUB;
+                            MUL_F7 : inst_to_ctrl_o <= CTRL_MUL;
+                            default: inst_to_ctrl_o <= 'd0;
+                        endcase
                     end 
-                    SLL : inst_to_ctrl_o <= CTRL_SLL;
-                    SLT : inst_to_ctrl_o <= CTRL_SLT;
-                    SLTU : inst_to_ctrl_o <= CTRL_SLTU;
-                    XOR : inst_to_ctrl_o <= CTRL_XOR;
-                    SRL_SRA : begin
-                        if (funct_7 == SRL_F7) inst_to_ctrl_o <= CTRL_SRL;
-                        else inst_to_ctrl_o <= CTRL_SRA;
+                    SLL_MULH : begin
+                       if (funct_7 == SLL_F7) inst_to_ctrl_o <= CTRL_SLL;
+                       else inst_to_ctrl_o <= CTRL_MULH;
                     end
-                    OR : inst_to_ctrl_o <= CTRL_OR;
-                    AND : inst_to_ctrl_o <= CTRL_AND;
+                    SLT_MULHSU : begin
+                        if (funct_7 == SLT_F7) inst_to_ctrl_o <= CTRL_SLT;
+                        else inst_to_ctrl_o <= CTRL_MULHSU;
+                    end
+                    SLTU_MULHU : begin
+                       if (funct_7 == SLTU_F7) inst_to_ctrl_o <= CTRL_SLTU;
+                       else inst_to_ctrl_o <= CTRL_MULHU;
+                    end
+                    XOR_DIV : begin
+                       if (funct_7 == XOR_F7) inst_to_ctrl_o <= CTRL_XOR;
+                       else inst_to_ctrl_o <= CTRL_DIV;
+                    end
+                    SRL_SRA_DIVU : begin
+                        case (funct_7)
+                            SRL_F7 : inst_to_ctrl_o <= CTRL_SRL;
+                            SRA_F7 : inst_to_ctrl_o <= CTRL_SRA;
+                            DIVU_F7 : inst_to_ctrl_o <= CTRL_DIVU;
+                            default: inst_to_ctrl_o <= 'd0;
+                        endcase
+                    end
+                    OR_REM : begin
+                       if (funct_7 == OR_F7) inst_to_ctrl_o <= CTRL_OR;
+                       else inst_to_ctrl_o <= CTRL_REM;
+                    end
+                    AND_REMU : begin
+                       if (funct_7 == AND_F7) inst_to_ctrl_o <= CTRL_AND;
+                       else inst_to_ctrl_o <= CTRL_REMU;
+                    end
                     default: inst_to_ctrl_o <= 'd0;
                 endcase
             end
