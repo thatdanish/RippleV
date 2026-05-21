@@ -46,11 +46,10 @@ Diagram shown above is not final, does not include control path and is only for 
 
 ## Supported/Recommended Tools
 - CocoTB (for verification)
-- Icarus (for simulation/compilation)
+- Verilator v5.048 (simulation/compilation) -- *Recommended*
+- Icarus (for simulation/compilation) -- *Support deprecated since [v0.0.1](https://github.com/thatdanish/RippleV/releases)*
+- Surfer ( for waveforms) -- *Recommended*
 - GTKwave (for waveforms)
-
-VERILATOR & SURFER support is planned [see issue](https://github.com/thatdanish/RippleV/issues/1#issue-4471244125).
-
 
 ## Source
 
