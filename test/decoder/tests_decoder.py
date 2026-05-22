@@ -11,8 +11,8 @@ from simulation import clk_, ResetTrigger, NextClockCycle
 
 # Parameters
 
-MAX_CLOCKS = 140
-N_TESTS = 50
+MAX_CLOCKS = 11000
+N_TESTS = 5000
 
 # Initialize-inputs
 

@@ -8,16 +8,18 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
     
     make cover_<block name>
 
-## Decoder
+## Block Level
+
+### Decoder
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
-| Line        |   7/53      |     13.2 %    |
-| Toggle      |   245/272   |     90.1 %    |
-| Branch      |   4/18      |     22.2 %    |
+| Line        |   44/53     |     83.0 %    |
+| Toggle      |   247/272   |     90.8 %    |
+| Branch      |   12/18     |     66.7 %    |
 | Expression  |   2/2       |     100 %     |
 
-## Reg File
+### Reg File
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
@@ -26,7 +28,7 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 | Branch      |   8/8       |     100 %     |
 | Expression  |   2/2       |     100 %     |
 
-## Program Counter
+### Program Counter
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
@@ -35,7 +37,7 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 | Branch      |   4/4       |     100 %     |
 | Expression  |   4/4       |     100 %     |
 
-## CSR
+### CSR
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
@@ -44,7 +46,7 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 | Branch      |   8/8       |     100 %     |
 | Expression  |   2/2       |     100 %     |
 
-## Instruction Memory
+### Instruction Memory
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
@@ -53,7 +55,7 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 | Branch      |   4/4       |     100 %     |
 | Expression  |   2/2       |     100 %     |
 
-## Data Memory
+### Data Memory
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
@@ -62,7 +64,7 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 | Branch      |   6/6       |     100 %     |
 | Expression  |   2/2       |     100 %     |
 
-## ALU
+### ALU
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
