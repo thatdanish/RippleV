@@ -21,7 +21,7 @@ N_TESTS = 1000
 async def init_inputs(dut):
     dut.en_i.value = 0
     dut.rw_i.value = 0
-    dut.intrpt_i.value = 0
+    dut.ext_interrupt_i.value = 0
     dut.csr_addr_i.value = 0
     dut.new_data_i.value = 0
 
@@ -82,7 +82,7 @@ async def smoke_test(dut):
     await ClockCycles(dut.clk_i, 5)
     
     # Interrupt
-    dut.intrpt_i.value = 1 
+    dut.ext_interrupt_i.value = 1 
     await NextClockCycle(dut)
     try:
         assert dut.interrupt_status_o.value == 1

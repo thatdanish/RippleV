@@ -74,3 +74,16 @@ wave_alu:
 
 coverage_alu:
 	cd test/ALU/sim_build && verilator_coverage --annotate . coverage.dat
+
+# --------------------------------------------------------------------------------------- #
+
+# RippleV_Mc
+
+rvmc:
+	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py
+
+wave_rvmc:
+	cd test/RippleV_Mc/sim_build && surfer dump.fst
+
+coverage_rvmc:
+	cd test/RippleV_Mc/sim_build && verilator_coverage --annotate . coverage.dat
