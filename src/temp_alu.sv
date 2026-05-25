@@ -55,6 +55,7 @@ always_comb begin
         ALU_SLL : int_out = (b_i == 32'b0) ? 32'b0 : b_i << a_i[4:0];
         ALU_SRL : int_out = (b_i == 32'b0) ? 32'b0 : b_i >> a_i[4:0];
         ALU_SRA : int_out = (b_i == 32'b0) ? 32'b0 : b_i >>> a_i[4:0];
+        ALU_JAL : int_out = func_jal(a_i,b_i);
         ALU_JALR : int_out = func_jalr(a_i,b_i);
         ALU_BEQ : int_take_branch = (a_i == b_i);
         ALU_BNE :  int_take_branch = (a_i != b_i);
@@ -103,10 +104,17 @@ function logic [31:0] func_rem (logic [31:0] a, b);
     return int_result;
 endfunction
 
+function logic [31:0] func_jal (logic [31:0] a, b);
+    bit [31:0] int_result;
+    int_result = a + b - 31'(4);
+    return int_result;
+endfunction
+
 function logic [31:0] func_jalr (logic [31:0] a, b);
     bit [31:0] int_result;
     int_result = a + b;
     return {int_result[31:1], 1'b0};
 endfunction
+
 
 endmodule

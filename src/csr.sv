@@ -38,8 +38,7 @@ always_ff @( posedge clk_i ) begin
         else mstatus <= {19'b0, 2'b11, 11'b0};
         
         if (en_i == 1'b1) begin
-            if (rw_i == read) begin // read
-
+            if (rw_i == read) begin 
             /* verilator lint_off CASEINCOMPLETE */
                 unique case (csr_addr_i)
                     CSR_misa : csr_data_o <= misa;
@@ -50,7 +49,7 @@ always_ff @( posedge clk_i ) begin
                     default: csr_data_o <= 'd0; 
                 endcase
             /* verilator lint_off CASEINCOMPLETE*/
-            end else begin //write
+            end else begin 
                 case (csr_addr_i)
                     CSR_mepc : mepc <= {zero_bits_one'(1'b0), new_data_i, 2'b00};
                     CSR_mcause : mcause <= {zero_bits_two'(1'b0), new_data_i};

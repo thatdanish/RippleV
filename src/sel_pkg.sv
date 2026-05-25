@@ -11,6 +11,7 @@ localparam  sel_reg_file_rd = 2'd2;
 localparam  sel_reg_file_data_mem = 2'd0;
 localparam  sel_reg_file_alu = 2'd1;
 localparam  sel_reg_file_decoder = 2'd2;
+localparam  sel_reg_file_pc = 2'd3;
 
 // mux_alu_a
 
@@ -26,11 +27,11 @@ localparam  sel_alu_rs1 = 2'd1;
 
 // mux_pc
 
-localparam  sel_pc_pc_update = 2'd0;
+localparam  sel_pc_update = 2'd0;
 localparam  sel_pc_mret = 2'd1;
 localparam  sel_pc_handler_addr = 2'd2;
 
-// housekeeper task
+// housekeeper tasks
 
 localparam  task_reset = 2'd0;
 localparam  task_exception = 2'd1;

@@ -25,7 +25,7 @@ module RippleV_Mc #(
         .clk_i,
         .rst_i,
         .interrupt_i(interrupt), 
-        .sel_pc_mux(sel_mux_pc),
+        .pc_mux_sel_o(sel_mux_pc),
         .housekeeper_en_o(housekeeper_enable),
         .housekeeper_task_o(housekeeper_task)
     );
