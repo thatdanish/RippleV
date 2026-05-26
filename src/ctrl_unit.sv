@@ -12,7 +12,7 @@ module ctrl_unit(
     input logic [5:0] instruction_i,
     // PC
     output logic [1:0] pc_mux_sel_o, 
-    output logic pc_en_o
+    output logic pc_en_o,
     // Housekeeper
     output logic housekeeper_en_o, 
     output logic [1:0] housekeeper_task_o,
@@ -31,15 +31,14 @@ module ctrl_unit(
     output logic[1:0] alu_b_mux_sel_o,
     // Data Memory
     output logic data_mem_en_o,
-    output data_mem_rw_o,
-
+    output data_mem_rw_o
 );
 
     import Opcodes_pkg::*;
     import sel_pkg::*;
 
     typedef enum bit[3:0] { RESET_TRIGGER, UPDATE_PC_AFTER_RESET, IDLE, TAKE_BRANCH, INST_START, READ_RS1, READ_RS2,
-                            WRITE_RD, LOAD_FROM_DATA_MEM, STORE_DATA_MEM} state_t;
+                            ALU_COMPUTE, WRITE_RD, LOAD_FROM_DATA_MEM, STORE_DATA_MEM} state_t;
     
     state_t current_state, next_state;
     logic take_branch_delayed;
@@ -291,68 +290,68 @@ module ctrl_unit(
                         CTRL_AUIPC: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_lui;
-                            alu_b_mux_sel_o = sel_alu_pc
+                            alu_b_mux_sel_o = sel_alu_pc;
                             alu_opr_o = ALU_JAL;
                         end
                         CTRL_ADD: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_ADD;
+                            alu_opr_o = ALU_ADD;
                         end
                         CTRL_SUB: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_SUB;
+                            alu_opr_o = ALU_SUB;
                         end
                         CTRL_SLTU: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_SLTU;
+                            alu_opr_o = ALU_SLTU;
                         end
                         CTRL_SLT: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_SLT;
+                            alu_opr_o = ALU_SLT;
                         end
                         CTRL_AND: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_AND;
+                            alu_opr_o = ALU_AND;
                         end
                         CTRL_OR: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_OR;
+                            alu_opr_o = ALU_OR;
                         end
                         CTRL_XOR: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_XOR;
+                            alu_opr_o = ALU_XOR;
                         end
                         CTRL_SLL: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_SLL;
+                            alu_opr_o = ALU_SLL;
                         end
                         CTRL_SRL: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_SRL;
+                            alu_opr_o = ALU_SRL;
                         end
                         CTRL_SRA: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_rs2;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = CTRL_SRA;
+                            alu_opr_o = ALU_SRA;
                         end
                         CTRL_JAL: begin
                             alu_en_o = 1'b1;
@@ -547,14 +546,14 @@ module ctrl_unit(
             end
             LOAD_FROM_DATA_MEM: begin
                 data_mem_en_o = 1'b1;
-                rw_data_mem_o = read;
+                data_mem_rw_o = read;
             end
             STORE_DATA_MEM: begin
                 data_mem_en_o = 1'b1;
-                rw_data_mem_o = write;
+                data_mem_rw_o = write;
             end
             TAKE_BRANCH: begin
-                pc_mux_sel_o = sel_pc_update
+                pc_mux_sel_o = sel_pc_update;
                 pc_en_o = 1'b1;
             end
             default: begin

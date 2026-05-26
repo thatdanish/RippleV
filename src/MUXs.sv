@@ -43,7 +43,7 @@ endmodule
 
 module mux_alu_a(
     input clk_i,
-    input logic [2:0] sel_i, 
+    input logic [1:0] sel_i, 
     input logic [31:0] const_4_i, 
     input logic [31:0] sign_ext_offset_i, 
     input logic [31:0] lui_i, 
@@ -70,7 +70,7 @@ module mux_alu_a(
 endmodule
 
 module mux_alu_b(
-    input logic [2:0] sel_i, 
+    input logic [1:0] sel_i, 
     input logic [31:0] pc_i, 
     input logic [31:0] rs1_i,  
     output logic [31:0] data_o

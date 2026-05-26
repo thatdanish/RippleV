@@ -80,7 +80,7 @@ coverage_alu:
 # RippleV_Mc
 
 rvmc:
-	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py
+	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -s
 
 wave_rvmc:
 	cd test/RippleV_Mc/sim_build && surfer dump.fst

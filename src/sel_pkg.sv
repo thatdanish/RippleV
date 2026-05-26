@@ -22,7 +22,7 @@ localparam  sel_alu_rs2 = 2'd3;
 
 // mux_alu_b
 
-localparam  sel_alu_pc_i = 2'd0;
+localparam  sel_alu_pc = 2'd0;
 localparam  sel_alu_rs1 = 2'd1;
 
 // mux_pc
