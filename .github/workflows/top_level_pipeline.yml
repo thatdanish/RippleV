@@ -1,4 +1,4 @@
-name: Block-Level-Tests
+name: Top-Level-Tests
 
 on:
   push:
@@ -59,30 +59,6 @@ jobs:
       - name: Add Verilator to PATH
         run: echo "$HOME/verilator/bin" >> $GITHUB_PATH
     
-      - name: Run Decoder tests
+      - name: Run Custom instructions tests
         run: |
-          cd test/decoder && WAVES=0 pytest test_runner_decoder.py
-
-      - name: Run Reg-file tests
-        run: |
-          cd test/reg_file && WAVES=0 pytest tests_reg_file.py
-
-      - name: Run Program-counter tests
-        run: |
-          cd test/program_counter && WAVES=0 pytest tests_program_counter.py
-
-      - name: Run CSR tests
-        run: |
-          cd test/csr && WAVES=0 pytest tests_csr.py
-
-      - name: Run INST MEM tests
-        run: |
-          cd test/inst_mem && WAVES=0 pytest tests_inst_mem.py
-
-      - name: Run Data MEM tests
-        run: |
-          cd test/data_mem && WAVES=0 pytest tests_data_mem.py
-
-      - name: Run ALU tests
-        run: |
-          cd test/ALU && WAVES=0 pytest tests_alu.py
+          cd test/RippleV_Mc && WAVES=0 pytest test_runner_RippleV_Mc.py
