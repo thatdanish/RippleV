@@ -12,18 +12,20 @@ module data_mem #(
     input logic [31:0] data_i,    
     output logic [31:0] data_o    
 );
+localparam DMEM_BASE = 32'h80000000;
+
 import Opcodes_pkg::read;
 import Opcodes_pkg::write;
 
-logic [31:0] int_data_mem[ADDR_WIDTH-1:0];
+logic [31:0] int_data_mem[4096];
 
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin
         data_o <= 'd0;
     end else begin
         if (en_i == 1'b1) begin
-            if (rw_i == read) data_o <= int_data_mem[addr_i];
-            else int_data_mem[addr_i] <= data_i;
+            if (rw_i == read) data_o <= int_data_mem[(addr_i - DMEM_BASE) >> 2];
+            else int_data_mem[(addr_i - DMEM_BASE) >> 2] <= data_i;
         end
     end    
 end

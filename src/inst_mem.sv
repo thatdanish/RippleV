@@ -14,7 +14,7 @@ module inst_mem #(
 
 integer file;
 
-logic [MEM_SIZE-1:0] int_inst_mem [ADDR_WIDTH-1:0];
+logic [MEM_SIZE-1:0] int_inst_mem [4096];
 
 initial begin
     $readmemb("../../../data/sample_instructions.data", int_inst_mem);

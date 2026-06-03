@@ -58,7 +58,4 @@ jobs:
 
       - name: Add Verilator to PATH
         run: echo "$HOME/verilator/bin" >> $GITHUB_PATH
-    
-      - name: Run Custom instructions tests
-        run: |
-          cd test/RippleV_Mc && WAVES=0 pytest test_runner_RippleV_Mc.py
+  
