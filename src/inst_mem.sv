@@ -2,7 +2,7 @@
 `default_nettype  none
 
 module inst_mem #( 
-    parameter ADDR_WIDTH = 5,
+    parameter ADDR_WIDTH = 32,
     parameter MEM_SIZE = 32
 ) (
     input clk_i,
@@ -14,7 +14,7 @@ module inst_mem #(
 
 integer file;
 
-logic [MEM_SIZE-1:0] int_inst_mem [0:31];
+logic [MEM_SIZE-1:0] int_inst_mem [ADDR_WIDTH-1:0];
 
 initial begin
     $readmemb("../../../data/sample_instructions.data", int_inst_mem);

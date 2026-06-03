@@ -3,7 +3,7 @@ import sys
 import random
 from pathlib import Path
 import math
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/sim/")
+sys.path.insert(0, str(Path(__file__).parent.parent)+"/utils/")
 
 import numpy as np
 import cocotb

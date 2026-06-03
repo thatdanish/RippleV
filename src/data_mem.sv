@@ -2,7 +2,7 @@
 `default_nettype none
 
 module data_mem #( 
-    parameter ADDR_WIDTH = 5
+    parameter ADDR_WIDTH = 32
 ) (
     input clk_i,
     input rst_i,
@@ -15,7 +15,7 @@ module data_mem #(
 import Opcodes_pkg::read;
 import Opcodes_pkg::write;
 
-logic [31:0] int_data_mem[31:0];
+logic [31:0] int_data_mem[ADDR_WIDTH-1:0];
 
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin

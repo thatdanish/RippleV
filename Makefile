@@ -34,7 +34,7 @@ coverage_program_counter:
 # CSR
 
 csr:
-	cd test/csr && pytest tests_csr.py -s
+	cd test/csr && pytest tests_csr.py 
 
 wave_csr:
 	cd test/csr/sim_build && surfer dump.fst
@@ -80,7 +80,7 @@ coverage_alu:
 # RippleV_Mc
 
 rvmc:
-	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -s
+	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py 
 
 wave_rvmc:
 	cd test/RippleV_Mc/sim_build && surfer dump.fst

@@ -6,7 +6,7 @@
 `default_nettype none
 
 module RippleV_Mc #( 
-    parameter ADDR_WIDTH = 5,
+    parameter ADDR_WIDTH = 32,
     parameter MEM_SIZE = 32,
     parameter RST_HND = 4,
     parameter EXP_HND = 8,
@@ -17,6 +17,8 @@ module RippleV_Mc #(
     input ext_interrupt_i,
     input main_enable_i
 );
+    import Opcodes_pkg::*;
+
     logic interrupt, housekeeper_enable, csr_rw, csr_enable, pc_enable, inst_mem_enable, reg_file_rw, reg_file_enable;
     logic take_branch, alu_enable, data_mem_enable, data_mem_rw;
     logic [1:0] housekeeper_task, sel_mux_pc, sel_mux_reg_file_addr, sel_mux_reg_file_data, sel_mux_alu_a, sel_mux_alu_b;
@@ -191,7 +193,55 @@ module RippleV_Mc #(
         .data_o(final_alu_b)
     );
 
-// Assertions
 
+// Coverage
+
+cover property (@ (posedge clk_i) ctrl_instruction == CTRL_ADDI); 
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SLTI);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SLTIU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_ANDI);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_ORI);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_XORI);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SLLI);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SRLI);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SRAI);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_LUI);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_AUIPC);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_ADD);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SUB);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SLTU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SLT);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_AND);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_OR);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_XOR);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SLL);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SRL);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SRA);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_JAL);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_JALR);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_BEQ);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_BNE);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_BGE);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_BLT);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_BLTU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_BGEU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_LW);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_LH);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_LHU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_LB);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_LBU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SW);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SH);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_SB);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_MUL);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_MULH);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_MULHU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_MULHSU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_DIV);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_DIVU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_REM);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_REMU);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_MRET);
+cover property (@(posedge clk_i) ctrl_instruction == CTRL_WFI);
 
 endmodule

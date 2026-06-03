@@ -2,7 +2,7 @@
 `default_nettype none
 
 module csr #(
-    parameter ADDR_WIDTH = 5
+    parameter ADDR_WIDTH = 32
 ) (
     input clk_i,
     input rst_i,
@@ -51,19 +51,12 @@ always_ff @( posedge clk_i ) begin
             /* verilator lint_off CASEINCOMPLETE*/
             end else begin 
                 case (csr_addr_i)
-                    CSR_mepc : mepc <= {zero_bits_one'(1'b0), new_data_i, 2'b00};
-                    CSR_mcause : mcause <= {zero_bits_two'(1'b0), new_data_i};
+                    CSR_mepc : mepc <= new_data_i;
+                    CSR_mcause : mcause <= new_data_i;
                 endcase
             end 
         end
     end
-end
-
-// Assertions
-
-initial begin
-    assert (ADDR_WIDTH < 30) 
-    else $fatal(1, "ADDR_WIDTH must be < 30");
 end
 
 endmodule

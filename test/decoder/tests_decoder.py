@@ -5,7 +5,7 @@ import random
 import cocotb
 from cocotb.triggers import ClockCycles, RisingEdge
 
-sys.path.insert(0,  str(Path(__file__).parent.parent)+"/sim/")
+sys.path.insert(0,  str(Path(__file__).parent.parent)+"/utils/")
 from simulation import clk_, ResetTrigger, NextClockCycle
 
 

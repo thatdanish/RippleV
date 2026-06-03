@@ -2,7 +2,7 @@
 `default_nettype none
 
 module program_counter #(
-    parameter ADDR_WIDTH = 5
+    parameter ADDR_WIDTH = 32
     ) (
     input clk_i,
     input rst_i,

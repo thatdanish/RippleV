@@ -2,7 +2,7 @@ import os
 import sys 
 import random
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/sim/")
+sys.path.insert(0, str(Path(__file__).parent.parent)+"/utils/")
 
 import cocotb
 from cocotb.triggers import ClockCycles, RisingEdge

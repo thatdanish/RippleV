@@ -6,7 +6,7 @@
 `default_nettype none
 
 module housekeeper #( 
-    parameter ADDR_WIDTH = 5,
+    parameter ADDR_WIDTH = 32,
     parameter RST_HND = 4, 
     parameter EXP_HND = 8, 
     parameter INT_HND = 0 

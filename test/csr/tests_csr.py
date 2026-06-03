@@ -7,7 +7,7 @@ import cocotb
 from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb_tools.runner import get_runner
 
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/sim/")
+sys.path.insert(0, str(Path(__file__).parent.parent)+"/utils/")
 
 from simulation import clk_, ResetTrigger, NextClockCycle
 
@@ -74,10 +74,7 @@ async def smoke_test(dut):
 
             await RisingEdge(dut.clk_i)
             dut.en_i.value = 0
-            if choice == "mepc":
-                data_csrs[choice] = 4*data
-            else:
-                data_csrs[choice] = data
+            data_csrs[choice] = data
 
     await ClockCycles(dut.clk_i, 5)
     

@@ -87,7 +87,7 @@ module mux_alu_b(
 endmodule
 
 module mux_pc #( 
-    parameter ADDR_WIDTH = 5
+    parameter ADDR_WIDTH = 32
 ) (
     input logic [1:0] sel_i, 
     input logic [ADDR_WIDTH-1:0] pc_update_i, 
