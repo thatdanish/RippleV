@@ -21,7 +21,7 @@ module housekeeper #(
     output logic [ADDR_WIDTH-1:0] handler_addr_o
 );
     import sel_pkg::*;
-    import Opcodes_pkg::*;
+    import CSR_pkg::*;
 
     logic [ADDR_WIDTH-1:0] reset_handler, exception_handler, interrupt_handler;
 

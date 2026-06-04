@@ -34,7 +34,7 @@ coverage_program_counter:
 # CSR
 
 csr:
-	cd test/csr && pytest tests_csr.py 
+	cd test/csr && pytest tests_csr.py -s
 
 wave_csr:
 	cd test/csr/sim_build && surfer dump.fst
@@ -45,7 +45,7 @@ coverage_csr:
 # Instruction-memory
 
 inst_mem:
-	cd test/inst_mem && pytest tests_inst_mem.py -s
+	cd test/inst_mem && WAVES=1 pytest tests_inst_mem.py -s
 
 wave_inst_mem:
 	cd test/inst_mem/sim_build && surfer dump.fst
@@ -59,7 +59,7 @@ data_mem:
 	cd test/data_mem && pytest tests_data_mem.py -s
 
 wave_data_mem:
-	cd test/data_mem/sim_build && surfer dump.fst
+	cd test/data_mem/sim_build && gtkwave dump.fst
 
 coverage_data_mem:
 	cd test/data_mem/sim_build && verilator_coverage --annotate . coverage.dat

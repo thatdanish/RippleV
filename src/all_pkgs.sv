@@ -63,7 +63,10 @@ localparam REG_T = 7'b0110011;
     localparam AND_REMU = 3'b111;
         localparam AND_F7 = 7'b0000000;
         localparam REMU_F7 = 7'b0000001;
+endpackage
 
+package CTRL_pkg;
+    
 // Instructions to CTRL-Unit
 
 localparam CTRL_ADDI = 6'd0;
@@ -114,6 +117,10 @@ localparam CTRL_REMU = 6'd41;
 localparam CTRL_MRET = 6'd42;
 localparam CTRL_WFI = 6'd43;
 
+endpackage
+
+package ALU_pkg;
+
 // Instructions to ALU
 
 localparam ALU_ADD = 5'd0;
@@ -143,6 +150,10 @@ localparam ALU_BGEU = 5'd12;
 localparam ALU_JAL = 5'd24;
 localparam ALU_JALR = 5'd25;
 
+endpackage
+
+package CSR_pkg;
+
 // Address to CSR
 
 localparam CSR_mstatus = 3'd0;
@@ -151,8 +162,58 @@ localparam CSR_mcause = 3'd2;
 localparam CSR_misa = 3'd3;
 localparam CSR_mtvec = 3'd4;
 
+endpackage
+
+package sel_pkg;
+
+// mux_reg_file_addr
+
+localparam  sel_reg_file_rs1 = 2'd0;
+localparam  sel_reg_file_rs2 = 2'd1;
+localparam  sel_reg_file_rd = 2'd2;
+
+// mux_reg_file_data
+
+localparam  sel_reg_file_data_mem = 2'd0;
+localparam  sel_reg_file_alu = 2'd1;
+localparam  sel_reg_file_decoder = 2'd2;
+localparam  sel_reg_file_pc = 2'd3;
+
+// mux_alu_a
+
+localparam  sel_alu_const_4 = 2'd0;
+localparam  sel_alu_sign_ext_offset = 2'd1;
+localparam  sel_alu_lui = 2'd2;
+localparam  sel_alu_rs2 = 2'd3;
+
+// mux_alu_b
+
+localparam  sel_alu_pc = 2'd0;
+localparam  sel_alu_rs1 = 2'd1;
+
+// mux_pc
+
+localparam  sel_pc_update = 2'd0;
+localparam  sel_pc_mret = 2'd1;
+localparam  sel_pc_handler_addr = 2'd2;
+
+// housekeeper tasks
+
+localparam  task_reset = 2'd0;
+localparam  task_exception = 2'd1;
+localparam  task_interrupt = 2'd2;
+localparam  task_mret = 2'd3;
+
+endpackage
+
+package Transfer_pkg;
 // Read & write
 
 localparam read = 1'b1;
 localparam write = 1'b0;
+
+localparam transfer_byte = 2'b00;
+localparam transfer_hex_byte = 2'b01;
+localparam transfer_word = 2'b10;
+
 endpackage

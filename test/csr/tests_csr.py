@@ -95,7 +95,7 @@ def test_runner_csr():
     sim = os.getenv("SIM", "verilator")            
     waves = os.getenv("WAVES", True)            
 
-    sources = ["../../src/Opcodes_pkg.sv", "../../src/csr.sv"]
+    sources = ["../../src/all_pkgs.sv", "../../src/csr.sv"]
 
     runner = get_runner(sim)
 

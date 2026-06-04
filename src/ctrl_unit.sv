@@ -31,10 +31,15 @@ module ctrl_unit(
     output logic[1:0] alu_b_mux_sel_o,
     // Data Memory
     output logic data_mem_en_o,
+    output logic [1:0] data_mem_transfer_type_o,
     output data_mem_rw_o
 );
 
     import Opcodes_pkg::*;
+    import ALU_pkg::*;
+    import CTRL_pkg::*;
+    import CSR_pkg::*;
+    import Transfer_pkg::*;
     import sel_pkg::*;
 
     typedef enum bit[3:0] { RESET_TRIGGER, UPDATE_PC_AFTER_RESET, IDLE, TAKE_BRANCH, INST_START, READ_RS1, READ_RS2,
@@ -189,6 +194,7 @@ module ctrl_unit(
         // Data-mem
         data_mem_en_o = 1'b0;
         data_mem_rw_o = 1'b0;
+        data_mem_transfer_type_o = 1'b0;
 
         case (current_state)
             RESET_TRIGGER: begin

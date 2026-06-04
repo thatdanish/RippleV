@@ -15,9 +15,8 @@ module csr #(
     output logic [31:0] csr_data_o    
 );
 
-import Opcodes_pkg::*;
-localparam zero_bits_one = 32-2-ADDR_WIDTH;
-localparam zero_bits_two = 32-ADDR_WIDTH;
+import CSR_pkg::*;
+import Transfer_pkg::*;
 
 logic [31:0] mstatus, mepc, misa, mtvec, mcause;
 

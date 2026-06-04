@@ -89,7 +89,7 @@ def test_runner_reg_file():
     sim = os.getenv("SIM", "verilator")    
     waves = os.getenv("WAVES", 1)
 
-    sources = ["../../src/Opcodes_pkg.sv", "../../src/reg_file.sv"]
+    sources = ["../../src/all_pkgs.sv", "../../src/reg_file.sv"]
     
     runner = get_runner(sim)
 

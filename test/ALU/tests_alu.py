@@ -223,7 +223,7 @@ async def compute_test(dut):
 def test_runner_alu():
     sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
-    sources = ["../../src/Opcodes_pkg.sv", "../../src/temp_alu.sv"]
+    sources = ["../../src/all_pkgs.sv", "../../src/temp_alu.sv"]
 
     runner = get_runner(sim)
 

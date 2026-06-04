@@ -17,11 +17,11 @@ module RippleV_Mc #(
     input ext_interrupt_i,
     input main_enable_i
 );
-    import Opcodes_pkg::*;
+    import CTRL_pkg::*;
 
     logic interrupt, housekeeper_enable, csr_rw, csr_enable, pc_enable, inst_mem_enable, reg_file_rw, reg_file_enable;
     logic take_branch, alu_enable, data_mem_enable, data_mem_rw;
-    logic [1:0] housekeeper_task, sel_mux_pc, sel_mux_reg_file_addr, sel_mux_reg_file_data, sel_mux_alu_a, sel_mux_alu_b;
+    logic [1:0] housekeeper_task, transfer_type, sel_mux_pc, sel_mux_reg_file_addr, sel_mux_reg_file_data, sel_mux_alu_a, sel_mux_alu_b;
     logic [ADDR_WIDTH-1:0] handler_address, pc_update_from_alu, pc_update, pc_final;
     logic [2:0] csr_addr;
     logic [4:0] alu_operations, register_rs1, register_rs2, register_rd, final_register_addr;
@@ -50,6 +50,7 @@ module RippleV_Mc #(
         .alu_a_mux_sel_o(sel_mux_alu_a),
         .alu_b_mux_sel_o(sel_mux_alu_b),
         .data_mem_en_o(data_mem_enable),
+        .data_mem_transfer_type_o(transfer_type)
         .data_mem_rw_o(data_mem_rw)
     );
 
@@ -71,6 +72,7 @@ module RippleV_Mc #(
         .rst_i,
         .en_i(data_mem_enable),
         .rw_i(data_mem_rw),
+        .transfer_type_i(transfer_type)
         .addr_i(alu_output[ADDR_WIDTH-1:0]),
         .data_i(reg_file_output),    
         .data_o(data_mem_output)  

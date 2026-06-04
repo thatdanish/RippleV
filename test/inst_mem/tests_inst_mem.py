@@ -12,8 +12,9 @@ from simulation import clk_, NextClockCycle, ResetTrigger
 
 # Parameters
 
-MAX_CLKS = 3000
-N_TESTS = 1000
+MAX_CLKS = 13000
+N_TESTS = 6000
+MAX_ADDR_RANGE = 16384
 
 # Initialize inputs
 
@@ -42,16 +43,16 @@ async def smoke_test(dut):
     for _ in range(N_TESTS):
         await RisingEdge(dut.clk_i)
         dut.en_i.value = 1
-        addr = random.getrandbits(5)
+        addr = random.randint(0, MAX_ADDR_RANGE)
         dut.addr_i.value = addr
 
         await NextClockCycle(dut)
         dut.en_i.value = 0
 
         try:
-            assert data[addr] == dut.data_o.value
+            assert data[addr >> 2] == dut.data_o.value
         except:
-            raise AssertionError(f"Invalid read --> expected : {data[addr]}, got {dut.data_o.value}")
+            raise AssertionError(f"Invalid read --> expected : {data[addr >> 2]}, got {dut.data_o.value}")
         
     await ClockCycles(dut.clk_i, 10)
 

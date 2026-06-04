@@ -11,8 +11,7 @@ module reg_file(
     output logic [31:0] data_o
 );
 
-import Opcodes_pkg::read;
-import Opcodes_pkg::write;
+import Transfer_pkg::*;
 
 logic [31:0] [31:0] int_regs;
 

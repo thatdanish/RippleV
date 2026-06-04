@@ -4,10 +4,10 @@ from cocotb_tools.runner import get_runner
 
 # Parameters
 
-ISA_TESTS_DIR = os.environ.get("RISCV_TESTS_DIR", "/opt/riscv-tests/isa")
-HEX_OUT_DIR = "/tmp/riscv_hex"
-
 def get_rv32ui_tests():
+    ISA_TESTS_DIR = os.environ.get("RISCV_TESTS_DIR", "/opt/riscv-tests/isa")
+    HEX_OUT_DIR = "/tmp/riscv_hex"
+
     os.makedirs(HEX_OUT_DIR, exist_ok=True)
     tests = []
     for fname in sorted(os.listdir(ISA_TESTS_DIR)):
@@ -26,8 +26,8 @@ def test_runner_RippleV_Mc(test_name, elf_path, hex_path):
     os.environ["TEST_HEX"] = hex_path
     os.environ["TEST_ELF"] = elf_path
 
-    sim = os.getenv("SIM", "verilator")
-    waves = os.getenv("WAVES", 1)
+    SIM = os.getenv("SIM", "verilator")
+    WAVES = os.getenv("WAVES", 1)
 
     SOURCES = [
     "../../src/csr.sv",
@@ -37,28 +37,27 @@ def test_runner_RippleV_Mc(test_name, elf_path, hex_path):
     "../../src/housekeeper.sv",
     "../../src/inst_mem.sv",
     "../../src/MUXs.sv",
-    "../../src/Opcodes_pkg.sv",
+    "../../src/all_pkgs.sv",
     "../../src/program_counter.sv",
     "../../src/reg_file.sv",
     "../../src/RippleV_Mc.sv",
-    "../../src/sel_pkg.sv",
     "../../src/temp_alu.sv",
     ]
 
-    runner = get_runner(sim)
+    runner = get_runner(SIM)
 
     runner.build(
         sources=SOURCES,
         hdl_toplevel="RippleV_Mc",
-        waves=waves,
-        clean=False,         
+        waves=WAVES,
+        clean=True,         
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
         hdl_toplevel="RippleV_Mc",
         test_module="tests_RippleV_Mc", 
-        waves=waves
+        waves=WAVES
     )
 
 if __name__ == "__main__":

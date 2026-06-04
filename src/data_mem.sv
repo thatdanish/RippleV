@@ -8,24 +8,63 @@ module data_mem #(
     input rst_i,
     input en_i,
     input rw_i,
+    input logic [1:0] transfer_type_i,
     input logic [ADDR_WIDTH-1:0] addr_i,
     input logic [31:0] data_i,    
     output logic [31:0] data_o    
 );
-localparam DMEM_BASE = 32'h80000000;
 
-import Opcodes_pkg::read;
-import Opcodes_pkg::write;
+import Transfer_pkg::*;
 
-logic [31:0] int_data_mem[4096];
+logic [31:0] int_data_mem[4096+1];
 
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin
         data_o <= 'd0;
     end else begin
         if (en_i == 1'b1) begin
-            if (rw_i == read) data_o <= int_data_mem[(addr_i - DMEM_BASE) >> 2];
-            else int_data_mem[(addr_i - DMEM_BASE) >> 2] <= data_i;
+            if (rw_i == read) begin
+                /* verilator lint_off CASEINCOMPLETE */
+                unique case (transfer_type_i)
+                    transfer_byte :  begin
+                        case (32'((addr_i >> 2) % 32'd4))
+                            'd0: data_o <= 32'(int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][7:0]);
+                            'd1: data_o <= 32'(int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][15:8]);
+                            'd2: data_o <= 32'(int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][23:16]);
+                            'd3: data_o <= 32'(int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][31:24]);
+                        endcase
+                    end
+                    transfer_hex_byte : begin
+                        case (32'((addr_i >> 2) % 32'd4))
+                            'd0: data_o <= 32'(int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][15:0]);
+                            'd2: data_o <= 32'(int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][31:16]);
+                        endcase
+                    end
+                    transfer_word : data_o <= int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))];
+                endcase
+               /* verilator lint_on CASEINCOMPLETE */
+            end
+            else begin                
+                /* verilator lint_off CASEINCOMPLETE */
+                unique case (transfer_type_i)
+                    transfer_byte :  begin
+                        case (32'((addr_i >> 2) % 32'd4))
+                            'd0: int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][7:0] <= data_i[7:0];
+                            'd1: int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][15:8] <= data_i[7:0];
+                            'd2: int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][23:16] <= data_i[7:0];
+                            'd3: int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][31:24] <= data_i[7:0];
+                        endcase
+                    end
+                    transfer_hex_byte : begin
+                        case (32'((addr_i >> 2) % 32'd4))
+                            'd0: int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][15:0] <= data_i[15:0];
+                            'd2: int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))][31:16] <= data_i[15:0];
+                        endcase
+                    end
+                    transfer_word : int_data_mem[32'((addr_i >> 2)-((addr_i >> 2)%4))] <= data_i;
+                endcase
+               /* verilator lint_on CASEINCOMPLETE */
+            end 
         end
     end    
 end

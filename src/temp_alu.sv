@@ -12,7 +12,7 @@ module temp_alu (
     output logic take_branch_o
 );
 
-import Opcodes_pkg::*;
+import ALU_pkg::*;
 
 logic [31:0] int_out;
 logic int_take_branch;

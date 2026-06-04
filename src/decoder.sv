@@ -14,6 +14,7 @@ module decoder(
 );
 
 import Opcodes_pkg::*;
+import CTRL_pkg::*;
 
 logic [6:0] op_code, funct_7;
 logic [2:0] funct_3;

@@ -25,7 +25,7 @@ always_ff @( posedge clk_i ) begin
         data_o <= 'd0;
     end else begin
         if (en_i) begin
-            data_o <= int_inst_mem[addr_i];
+            data_o <= int_inst_mem[addr_i >> 2];
         end else data_o <= 'd0;
     end
 end
