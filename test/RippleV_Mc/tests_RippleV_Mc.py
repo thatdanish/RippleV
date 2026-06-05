@@ -15,9 +15,6 @@ from utils.monitor import wait_for_tohost
 
 # Parameters
 
-DMEM_BASE = 0x80000000
-
-
 
 @cocotb.test()
 async def run_riscv_test(dut):

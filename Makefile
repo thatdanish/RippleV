@@ -1,3 +1,8 @@
+# Activate env
+
+env: 
+	source rippleVenv/bin/activate
+
 # Decoder
 
 decoder:
@@ -78,6 +83,13 @@ coverage_alu:
 # --------------------------------------------------------------------------------------- #
 
 # RippleV_Mc
+TC ?= undefined
+
+tc_gen:
+	cd sw && make TC=$(TC)
+
+tc_clean:
+	cd data && rm -rf $(TC)
 
 rvmc:
 	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -v -k "rv32ui-p-addi"  

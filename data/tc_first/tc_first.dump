@@ -1,0 +1,85 @@
+
+sw_tc/tc_first.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .reset:
+
+00000000 <_reset>:
+ */
+
+__attribute__((section(".reset"), naked))
+void _reset(void) {
+    /* Set up stack pointer: top of data memory */
+    __asm__ volatile (
+   0:	00004137          	lui	sp,0x4
+   4:	0440006f          	j	48 <main>
+        "li sp, 0x4000\n"   /* 16K = top of 4096-word data memory */
+        "j  main\n"
+    );
+}
+   8:	00000013          	nop
+
+Disassembly of section .trap:
+
+00000010 <_trap_handler>:
+
+__attribute__((section(".trap"), interrupt))
+void _trap_handler(void) {
+  10:	fe010113          	addi	sp,sp,-32 # 3fe0 <main+0x3f98>
+  14:	00112e23          	sw	ra,28(sp)
+  18:	00812c23          	sw	s0,24(sp)
+  1c:	00e12a23          	sw	a4,20(sp)
+  20:	00f12823          	sw	a5,16(sp)
+  24:	02010413          	addi	s0,sp,32
+    volatile uint32_t *tohost = (volatile uint32_t *)0x3FF8;
+  28:	000047b7          	lui	a5,0x4
+  2c:	ff878793          	addi	a5,a5,-8 # 3ff8 <main+0x3fb0>
+  30:	fef42623          	sw	a5,-20(s0)
+    *tohost = 0xDEADBEEF;   /* signal that a trap occurred */
+  34:	fec42783          	lw	a5,-20(s0)
+  38:	deadc737          	lui	a4,0xdeadc
+  3c:	eef70713          	addi	a4,a4,-273 # deadbeef <main+0xdeadbea7>
+  40:	00e7a023          	sw	a4,0(a5)
+    while (1);               /* halt — or use wfi */
+  44:	0000006f          	j	44 <_trap_handler+0x34>
+
+Disassembly of section .text:
+
+00000048 <main>:
+#include "handlers.c"
+#include <stdint.h>
+
+
+int main(void) {
+  48:	fe010113          	addi	sp,sp,-32
+  4c:	00112e23          	sw	ra,28(sp)
+  50:	00812c23          	sw	s0,24(sp)
+  54:	02010413          	addi	s0,sp,32
+    volatile uint32_t *result = (volatile uint32_t *)0x0100; /* DMEM address */
+  58:	10000793          	li	a5,256
+  5c:	fef42623          	sw	a5,-20(s0)
+    
+    uint32_t a = 10, b = 20;
+  60:	00a00793          	li	a5,10
+  64:	fef42423          	sw	a5,-24(s0)
+  68:	01400793          	li	a5,20
+  6c:	fef42223          	sw	a5,-28(s0)
+    *result = a + b;   /* should be 30 = 0x1E */
+  70:	fe842703          	lw	a4,-24(s0)
+  74:	fe442783          	lw	a5,-28(s0)
+  78:	00f70733          	add	a4,a4,a5
+  7c:	fec42783          	lw	a5,-20(s0)
+  80:	00e7a023          	sw	a4,0(a5)
+
+    /* Signal success by writing a known value to a sentinel address */
+    volatile uint32_t *done = (volatile uint32_t *)0x01FC;
+  84:	1fc00793          	li	a5,508
+  88:	fef42023          	sw	a5,-32(s0)
+    *done = 0xCAFECAFE;
+  8c:	fe042783          	lw	a5,-32(s0)
+  90:	cafed737          	lui	a4,0xcafed
+  94:	afe70713          	addi	a4,a4,-1282 # cafecafe <main+0xcafecab6>
+  98:	00e7a023          	sw	a4,0(a5)
+
+    while (1);  /* halt */
+  9c:	0000006f          	j	9c <main+0x54>
