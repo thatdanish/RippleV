@@ -1,7 +1,6 @@
-# Activate env
+# Vars
 
-env: 
-	source rippleVenv/bin/activate
+WAVE ?= surfer
 
 # Decoder
 
@@ -9,7 +8,7 @@ decoder:
 	cd test/decoder && pytest test_runner_decoder.py -s
 
 wave_decoder:
-	cd test/decoder/sim_build && surfer dump.fst
+	cd test/decoder/sim_build && $(WAVE) dump.fst
 
 coverage_decoder:
 	cd test/decoder/sim_build && verilator_coverage --annotate . coverage.dat
@@ -20,7 +19,7 @@ reg_file:
 	cd test/reg_file && pytest tests_reg_file.py -s
 
 wave_reg_file:
-	cd test/reg_file/sim_build && surfer dump.fst
+	cd test/reg_file/sim_build && $(WAVE) dump.fst
 
 coverage_reg_file:
 	cd test/reg_file/sim_build && verilator_coverage --annotate . coverage.dat
@@ -31,7 +30,7 @@ program_counter:
 	cd test/program_counter && pytest tests_program_counter.py -s
 
 wave_program_counter:
-	cd test/program_counter/sim_build && surfer dump.fst
+	cd test/program_counter/sim_build && $(WAVE) dump.fst
 
 coverage_program_counter:
 	cd test/program_counter/sim_build && verilator_coverage --annotate . coverage.dat
@@ -42,7 +41,7 @@ csr:
 	cd test/csr && pytest tests_csr.py -s
 
 wave_csr:
-	cd test/csr/sim_build && surfer dump.fst
+	cd test/csr/sim_build && $(WAVE) dump.fst
 
 coverage_csr:
 	cd test/csr/sim_build && verilator_coverage --annotate . coverage.dat
@@ -50,10 +49,10 @@ coverage_csr:
 # Instruction-memory
 
 inst_mem:
-	cd test/inst_mem && WAVES=1 pytest tests_inst_mem.py -s
+	cd test/inst_mem && pytest tests_inst_mem.py -s
 
 wave_inst_mem:
-	cd test/inst_mem/sim_build && surfer dump.fst
+	cd test/inst_mem/sim_build && $(WAVE) dump.fst
 
 coverage_inst_mem:
 	cd test/inst_mem/sim_build && verilator_coverage --annotate . coverage.dat
@@ -64,7 +63,7 @@ data_mem:
 	cd test/data_mem && pytest tests_data_mem.py -s
 
 wave_data_mem:
-	cd test/data_mem/sim_build && gtkwave dump.fst
+	cd test/data_mem/sim_build && $(WAVE) dump.fst
 
 coverage_data_mem:
 	cd test/data_mem/sim_build && verilator_coverage --annotate . coverage.dat
@@ -75,14 +74,14 @@ alu:
 	cd test/ALU && pytest tests_alu.py -s
 
 wave_alu:
-	cd test/ALU/sim_build && surfer dump.fst
+	cd test/ALU/sim_build && $(WAVE) dump.fst
 
 coverage_alu:
 	cd test/ALU/sim_build && verilator_coverage --annotate . coverage.dat
 
 # --------------------------------------------------------------------------------------- #
 
-# RippleV_Mc
+# RippleV
 TC ?= undefined
 
 tc_gen:
@@ -92,10 +91,10 @@ tc_clean:
 	cd data && rm -rf $(TC)
 
 rvmc:
-	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -v -k "rv32ui-p-addi"  
+	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -sk $(TC) 
 
 wave_rvmc:
-	cd test/RippleV_Mc/sim_build && surfer dump.fst
+	cd test/RippleV_Mc/sim_build && $(WAVE) dump.fst
 
 coverage_rvmc:
 	cd test/RippleV_Mc/sim_build && verilator_coverage --annotate . coverage.dat

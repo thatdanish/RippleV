@@ -69,7 +69,7 @@ module ctrl_unit(
                 next_state = IDLE; 
             end
             IDLE: begin
-                if (interrupt_i == 1'b1) next_state = (main_enable_i == 1'b1) ? INST_START : IDLE; 
+                if (interrupt_i == 1'b0) next_state = (main_enable_i == 1'b1) ? INST_START : IDLE; 
                 else next_state = IDLE;
             end
             INST_START: begin
@@ -194,7 +194,7 @@ module ctrl_unit(
         // Data-mem
         data_mem_en_o = 1'b0;
         data_mem_rw_o = 1'b0;
-        data_mem_transfer_type_o = 1'b0;
+        data_mem_transfer_type_o = 2'b0;
 
         case (current_state)
             RESET_TRIGGER: begin

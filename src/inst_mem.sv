@@ -2,8 +2,7 @@
 `default_nettype  none
 
 module inst_mem #( 
-    parameter TEST = 0,
-    parameter FILE = "../../../data/sample/sample_instructions.hex",
+    parameter string FILE = "../../../data/sample/sample_instructions.hex",
     parameter ADDR_WIDTH = 32,
     parameter MEM_SIZE = 32
 ) (
@@ -16,11 +15,10 @@ module inst_mem #(
 
 integer file;
 
-logic [MEM_SIZE-1:0] int_inst_mem [4096];
+logic [MEM_SIZE-1:0] imem [4096];
 
 initial begin
-    if (TEST == 1) $readmemh("../../../data/sample/sample_instructions.hex", int_inst_mem);
-    else $readmemh(FILE, int_inst_mem);
+    $readmemh(FILE, imem);
 end
 
 always_ff @( posedge clk_i ) begin
@@ -28,7 +26,7 @@ always_ff @( posedge clk_i ) begin
         data_o <= 'd0;
     end else begin
         if (en_i) begin
-            data_o <= int_inst_mem[addr_i >> 2];
+            data_o <= imem[addr_i >> 2];
         end else data_o <= 'd0;
     end
 end

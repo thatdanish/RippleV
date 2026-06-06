@@ -1,30 +1,21 @@
-import pytest
 import os
+import pytest
 from cocotb_tools.runner import get_runner
 
 # Parameters
 
-def get_rv32ui_tests():
-    ISA_TESTS_DIR = os.environ.get("RISCV_TESTS_DIR", "/opt/riscv-tests/isa")
-    HEX_OUT_DIR = "/tmp/riscv_hex"
-
-    os.makedirs(HEX_OUT_DIR, exist_ok=True)
+def get_test_cases():
+    TC_DIR = "../../data/"
     tests = []
-    for fname in sorted(os.listdir(ISA_TESTS_DIR)):
-        if fname.startswith("rv32ui-p-") and "." not in fname:
-            elf = os.path.join(ISA_TESTS_DIR, fname)
-            hex_path = os.path.join(HEX_OUT_DIR, fname + ".hex")
-            tests.append(pytest.param(fname, elf, hex_path, id=fname))
+    for dname in sorted(os.listdir(TC_DIR)):
+        if dname.startswith("tc_"):
+            hex_file = os.path.join(TC_DIR, dname + f"/{dname}.hex")
+            tests.append(pytest.param(hex_file, id=dname))
+
     return tests
 
-@pytest.mark.parametrize("test_name,elf_path,hex_path", get_rv32ui_tests())
-def test_runner_RippleV_Mc(test_name, elf_path, hex_path):
-    # Convert ELF to hex before simulation
-    from conftest import elf_to_hex
-    elf_to_hex(elf_path, hex_path)
-
-    os.environ["TEST_HEX"] = hex_path
-    os.environ["TEST_ELF"] = elf_path
+@pytest.mark.parametrize("hex_file", get_test_cases())
+def test_runner_RippleV_Mc(hex_file):
 
     SIM = os.getenv("SIM", "verilator")
     WAVES = os.getenv("WAVES", 1)
@@ -41,8 +32,8 @@ def test_runner_RippleV_Mc(test_name, elf_path, hex_path):
     "../../src/program_counter.sv",
     "../../src/reg_file.sv",
     "../../src/RippleV_Mc.sv",
-    "../../src/temp_alu.sv",
-    ]
+    "../../src/temp_alu.sv"
+        ]
 
     runner = get_runner(SIM)
 
@@ -50,13 +41,16 @@ def test_runner_RippleV_Mc(test_name, elf_path, hex_path):
         sources=SOURCES,
         hdl_toplevel="RippleV_Mc",
         waves=WAVES,
-        clean=True,         
+        clean=False,
+        parameters={"FILE":f'"{hex_file}"'},      
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
         hdl_toplevel="RippleV_Mc",
         test_module="tests_RippleV_Mc", 
+        parameters={"FILE":f'"{hex_file}"'}, 
+        verbose=True,     
         waves=WAVES
     )
 

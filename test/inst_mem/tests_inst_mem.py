@@ -2,14 +2,14 @@ import os
 import sys 
 import random
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/utils/")
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cocotb
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb.types import LogicArray
 from cocotb_tools.runner import get_runner
 
-from simulation import clk_, NextClockCycle, ResetTrigger
+from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
@@ -71,14 +71,14 @@ def test_runner_inst_mem():
         hdl_toplevel="inst_mem",
         waves=waves,
         clean=True,
-        parameters={"TEST" : 1},
+        parameters={"FILE":f'"{FILE}"'},  
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
         hdl_toplevel="inst_mem",
         test_module="tests_inst_mem",
-        parameters={"TEST" : 1},
+        parameters={"FILE":f'"{FILE}"'},  
         waves=waves
     )
 

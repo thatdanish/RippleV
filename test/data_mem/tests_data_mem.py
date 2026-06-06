@@ -2,14 +2,14 @@ import os
 import sys 
 import random
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/utils/")
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cocotb
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb.types import LogicArray
 from cocotb_tools.runner import get_runner
 
-from simulation import clk_, NextClockCycle, ResetTrigger
+from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
@@ -155,11 +155,6 @@ async def smoke_test(dut):
         await NextClockCycle(dut)
         dut.en_i.value = 0
 
-        # cocotb.log.info("SPACE")
-        # cocotb.log.info(f"Address : {addr}, actual address : {(addr >> 2) - (addr >> 2)%4}, transfer : {transfer},  addr >> 2%4 : {(addr >> 2)%4}, addr >> 2 %2 : {(addr >> 2) %2}")
-        # cocotb.log.info(f"Expected data mem : {LogicArray.from_unsigned(data_mem_dict[(addr >> 2) - (addr >> 2)%4], 32)}")
-        # cocotb.log.info(f"Hardware data mem : {dut.int_data_mem[(addr >> 2) - (addr >> 2)%4].value}")
-
     # read
     dut.data_i.value = 0
     for _ in range(int(N_TESTS/2)):
@@ -189,7 +184,7 @@ async def smoke_test(dut):
         except:
             cocotb.log.info(f"Address : {addr}, actual address : {(addr >> 2) - (addr >> 2)%4}, transfer : {transfer},  addr >> 2%4 : {(addr >> 2)%4}, addr >> 2 %2 : {(addr >> 2) %2}")
             cocotb.log.info(f"Expected data mem : {LogicArray.from_unsigned(data_mem_dict[(addr >> 2) - (addr >> 2)%4], 32)}")
-            cocotb.log.info(f"Hardware data mem : {dut.int_data_mem[(addr >> 2) - (addr >> 2)%4].value}")
+            cocotb.log.info(f"Hardware data mem : {dut.dmem[(addr >> 2) - (addr >> 2)%4].value}")
             raise AssertionError(f"Invalid read --> ADDR {addr} expected : {expected_value}, got : {dut.data_o.value}")
 
 def test_runner_data_mem():

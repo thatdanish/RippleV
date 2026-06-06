@@ -7,9 +7,9 @@ import cocotb
 from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb_tools.runner import get_runner
 
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/utils/")
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from simulation import clk_, ResetTrigger, NextClockCycle
+from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 

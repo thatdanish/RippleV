@@ -1,39 +1,52 @@
-import os
 import sys
 from pathlib import Path
 
-import pytest
 import cocotb
-from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb_tools.runner import get_runner
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.loader import load_hex_to_imem, get_symbol_address, addr_to_dmem_index
-from utils.monitor import wait_for_tohost
+from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
+MAX_CLKS = 10000
+N_TESTS = 1
+TO_HOST = 0x01FC
+RST_HND = 0x0000
+INT_HND = 0x3FF8
+SUCCESS = 0xCAFECAFE
+
+# Initialize Inputs
+
+async def init_inputs(dut):
+    dut.ext_interrupt_i.value = 0
+    dut.main_enable_i.value = 0
 
 @cocotb.test()
-async def run_riscv_test(dut):
-    hex_path = os.environ["TEST_HEX"]
-    elf_path = os.environ["TEST_ELF"]
+async def run_test(dut):
+    clk = cocotb.start_soon(clk_(dut, MAX_CLKS))
 
-    tohost_addr = get_symbol_address(elf_path, "tohost")
-    assert tohost_addr is not None, f"tohost symbol not found in {elf_path}"
-    tohost_idx = addr_to_dmem_index(tohost_addr, DMEM_BASE)
+    await init_inputs(dut)
+    await ResetTrigger(dut)
 
-    dut.rst_i.value = 0
-    cocotb.start_soon(Clock(dut.clk_i, 10, unit="ns").start())
-    await Timer(50, unit="ns")
+    await ClockCycles(dut.clk_i, 3)
+    
+    # Check Reset Handler Address
+    try: 
+        assert dut.pc_final.value == RST_HND
+    except:
+        raise AssertionError(f"Invalid RST_HND : expected : {RST_HND}, got : {dut.pc_final.value}")
 
-    load_hex_to_imem(dut, hex_path)
+    dut.main_enable_i.value = 1
 
-    dut.rst_i.value = 1
+    await ClockCycles(dut.clk_i, 200)
+    
+    try:
+        assert dut.data_mem_inst.dmem[TO_HOST].value == SUCCESS
+    except:
+        raise AssertionError(f"Incorrect TO_HOST value. expected : {SUCCESS}, got : {dut.data_mem_inst.dmem[TO_HOST].value}")
+    
 
-    passed, val = await wait_for_tohost(dut, tohost_idx)
-    assert passed, f"Test FAILED: tohost=0x{val:08x}, failing case={(val >> 1) & 0xFFFF}"
-
-
+    cocotb.pass_test()

@@ -8,9 +8,10 @@
 module RippleV_Mc #( 
     parameter ADDR_WIDTH = 32,
     parameter MEM_SIZE = 32,
-    parameter RST_HND = 4,
-    parameter EXP_HND = 8,
-    parameter INT_HND = 0
+    parameter string FILE = "../../../data/sample/sample_instructions.hex",
+    parameter RST_HND = 32'h0,
+    parameter EXP_HND = 32'd8,
+    parameter INT_HND = 32'h3FF8
 ) (
     input clk_i,
     input rst_i,
@@ -50,11 +51,12 @@ module RippleV_Mc #(
         .alu_a_mux_sel_o(sel_mux_alu_a),
         .alu_b_mux_sel_o(sel_mux_alu_b),
         .data_mem_en_o(data_mem_enable),
-        .data_mem_transfer_type_o(transfer_type)
+        .data_mem_transfer_type_o(transfer_type),
         .data_mem_rw_o(data_mem_rw)
     );
 
     inst_mem #(
+        .FILE(FILE),
         .ADDR_WIDTH(ADDR_WIDTH),
         .MEM_SIZE(MEM_SIZE)
     ) inst_mem_inst (
@@ -72,7 +74,7 @@ module RippleV_Mc #(
         .rst_i,
         .en_i(data_mem_enable),
         .rw_i(data_mem_rw),
-        .transfer_type_i(transfer_type)
+        .transfer_type_i(transfer_type),
         .addr_i(alu_output[ADDR_WIDTH-1:0]),
         .data_i(reg_file_output),    
         .data_o(data_mem_output)  

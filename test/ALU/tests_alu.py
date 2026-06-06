@@ -3,7 +3,7 @@ import sys
 import random
 from pathlib import Path
 import math
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/utils/")
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import numpy as np
 import cocotb
@@ -11,7 +11,7 @@ from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb.types import LogicArray, Logic
 from cocotb_tools.runner import get_runner
 
-from simulation import clk_, NextClockCycle, ResetTrigger
+from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 

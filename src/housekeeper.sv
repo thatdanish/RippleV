@@ -22,6 +22,7 @@ module housekeeper #(
 );
     import sel_pkg::*;
     import CSR_pkg::*;
+    import Transfer_pkg::*;
 
     logic [ADDR_WIDTH-1:0] reset_handler, exception_handler, interrupt_handler;
 
