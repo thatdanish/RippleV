@@ -27,7 +27,7 @@ always_ff @( posedge clk_i ) begin
     end else begin
         if (en_i) begin
             data_o <= imem[addr_i >> 2];
-        end else data_o <= 'd0;
+        end
     end
 end
 

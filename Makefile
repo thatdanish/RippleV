@@ -85,13 +85,13 @@ coverage_alu:
 TC ?= undefined
 
 tc_gen:
-	cd sw && make TC=$(TC)
+	cd sw && make TC=tc_$(TC)
 
 tc_clean:
-	cd data && rm -rf $(TC)
+	cd data && rm -rf tc_$(TC)
 
 rvmc:
-	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -sk $(TC) 
+	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -sk tc_$(TC) 
 
 wave_rvmc:
 	cd test/RippleV_Mc/sim_build && $(WAVE) dump.fst

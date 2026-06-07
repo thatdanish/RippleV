@@ -6,6 +6,7 @@ module ctrl_unit(
     input clk_i,
     input rst_i,
     input main_enable_i, 
+    // TODO : output interrupt_ack_o
     // CSR
     input interrupt_i,
     // Decoder
@@ -43,18 +44,22 @@ module ctrl_unit(
     import sel_pkg::*;
 
     typedef enum bit[3:0] { RESET_TRIGGER, UPDATE_PC_AFTER_RESET, IDLE, TAKE_BRANCH, INST_START, READ_RS1, READ_RS2,
-                            ALU_COMPUTE, WRITE_RD, LOAD_FROM_DATA_MEM, STORE_DATA_MEM} state_t;
+                            ALU_COMPUTE, WRITE_RD, LOAD_FROM_DATA_MEM, STORE_DATA_MEM, BUFF_1} state_t;
     
     state_t current_state, next_state;
     logic take_branch_delayed;
+    logic [5:0] current_instruction;
 
     always_ff @( posedge clk_i ) begin : StateUpdateBlock
         if (!rst_i) begin
             current_state <= RESET_TRIGGER;
             take_branch_delayed <= 1'b0;
+            current_instruction <= 'd0;
         end else begin
             current_state <= next_state;
             take_branch_delayed <= take_branch_i;
+            if (current_state == INST_START) current_instruction <= instruction_i;
+            else current_instruction <= current_instruction;
         end
     end
 
@@ -69,9 +74,10 @@ module ctrl_unit(
                 next_state = IDLE; 
             end
             IDLE: begin
-                if (interrupt_i == 1'b0) next_state = (main_enable_i == 1'b1) ? INST_START : IDLE; 
+                if (interrupt_i == 1'b0) next_state = (main_enable_i == 1'b1) ? BUFF_1 : IDLE; 
                 else next_state = IDLE;
             end
+            BUFF_1: next_state = INST_START;
             INST_START: begin
                 unique case (instruction_i)
                     CTRL_ADDI: next_state  = READ_RS1;
@@ -132,26 +138,26 @@ module ctrl_unit(
                 next_state = ALU_COMPUTE;
             end
             ALU_COMPUTE: begin
-                if (instruction_i inside {CTRL_LW,CTRL_LH,CTRL_LHU,CTRL_LB,CTRL_LBU}) 
+                if (current_instruction inside {CTRL_LW, CTRL_LH,CTRL_LHU,CTRL_LB,CTRL_LBU}) 
                     next_state = LOAD_FROM_DATA_MEM;
-                else if (instruction_i inside {CTRL_SW,CTRL_SH,CTRL_SB})
+                else if (current_instruction inside {CTRL_SW,CTRL_SH,CTRL_SB})
                     next_state = STORE_DATA_MEM;
-                else if (instruction_i inside {CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE})
+                else if (current_instruction inside {CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE})
                     if (take_branch_i == 1'b1 && take_branch_delayed == 1'b0) 
                         next_state = ALU_COMPUTE;
                     else if (take_branch_i == 1'b0 && take_branch_delayed == 1'b1) 
                         next_state = TAKE_BRANCH;
                     else
                         next_state = IDLE;
-                else if (instruction_i inside {CTRL_JAL, CTRL_JALR})
+                else if (current_instruction inside {CTRL_JAL, CTRL_JALR})
                     next_state = TAKE_BRANCH;
                 else 
                     next_state = WRITE_RD;
             end
             WRITE_RD: begin
-                if (instruction_i == CTRL_JAL) 
+                if (current_instruction == CTRL_JAL) 
                     next_state = ALU_COMPUTE;
-                else if (instruction_i == CTRL_JALR)
+                else if (current_instruction == CTRL_JALR)
                     next_state = READ_RS1;
                 else
                     next_state = IDLE;
@@ -209,7 +215,9 @@ module ctrl_unit(
             IDLE: begin
                 if (main_enable_i == 1'b1 && interrupt_i == 1'b0) begin
                     inst_mem_en_o = 1'b1;    
-                    // Update PC
+                    
+                    // Update PC                    
+                    alu_en_o = 1'b1;
                     alu_opr_o = ALU_ADD;
                     alu_a_mux_sel_o = sel_alu_const_4;
                     alu_b_mux_sel_o = sel_alu_pc;
@@ -238,7 +246,7 @@ module ctrl_unit(
                     alu_b_mux_sel_o = sel_alu_pc;
                     alu_opr_o = ALU_JAL;
                 end else begin
-                    case (instruction_i)
+                    case (current_instruction)
                         CTRL_ADDI: begin
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_sign_ext_offset;
@@ -440,7 +448,7 @@ module ctrl_unit(
                         CTRL_SW: begin
                             alu_en_o = 1'b1; 
                             alu_a_mux_sel_o = sel_alu_sign_ext_offset; 
-                            alu_b_mux_sel_o = sel_reg_file_rs1;
+                            alu_b_mux_sel_o = sel_alu_rs1;
                             alu_opr_o = ALU_ADD;
 
                             // Read RS2 for storing
@@ -541,11 +549,11 @@ module ctrl_unit(
                 reg_file_en_o = 1'b1;
                 reg_file_addr_mux_sel_o =  sel_reg_file_rd;
                 reg_file_rw_o = write;
-                if (instruction_i inside {CTRL_LW,CTRL_LH,CTRL_LHU,CTRL_LB,CTRL_LBU})
+                if (current_instruction inside {CTRL_LW,CTRL_LH,CTRL_LHU,CTRL_LB,CTRL_LBU})
                     reg_file_data_mux_sel_o =  sel_reg_file_data_mem;
-                else if (instruction_i inside {CTRL_JAL, CTRL_JALR})
+                else if (current_instruction inside {CTRL_JAL, CTRL_JALR})
                     reg_file_data_mux_sel_o = sel_reg_file_pc;
-                else if (instruction_i == CTRL_LUI)
+                else if (current_instruction == CTRL_LUI)
                     reg_file_data_mux_sel_o =  sel_reg_file_decoder;
                 else
                     reg_file_data_mux_sel_o =  sel_reg_file_alu;
@@ -553,10 +561,24 @@ module ctrl_unit(
             LOAD_FROM_DATA_MEM: begin
                 data_mem_en_o = 1'b1;
                 data_mem_rw_o = read;
+                case (current_instruction)
+                    CTRL_LW :  data_mem_transfer_type_o = transfer_word;
+                    CTRL_LH :  data_mem_transfer_type_o = transfer_hex_byte;
+                    CTRL_LHU :  data_mem_transfer_type_o = transfer_hex_byte;
+                    CTRL_LB :  data_mem_transfer_type_o = transfer_byte;
+                    CTRL_LBU :  data_mem_transfer_type_o = transfer_byte;
+                    default: data_mem_transfer_type_o = 'd0;
+                endcase
             end
             STORE_DATA_MEM: begin
                 data_mem_en_o = 1'b1;
                 data_mem_rw_o = write;
+                case (current_instruction)
+                    CTRL_SW :  data_mem_transfer_type_o = transfer_word;
+                    CTRL_SH :  data_mem_transfer_type_o = transfer_hex_byte;
+                    CTRL_SB :  data_mem_transfer_type_o = transfer_hex_byte;
+                    default: data_mem_transfer_type_o = 'd0;
+                endcase
             end
             TAKE_BRANCH: begin
                 pc_mux_sel_o = sel_pc_update;

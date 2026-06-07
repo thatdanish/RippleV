@@ -22,7 +22,7 @@ logic [2:0] funct_3;
 assign rd_o = inst_i[11:7];
 assign rs1_o = inst_i[19:15];
 assign rs2_o = inst_i[24:20];
-assign imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+
 assign lui_o = {inst_i[31:12], 12'd0};
 
 assign op_code = inst_i[6:0];
@@ -130,6 +130,59 @@ always_ff @( posedge clk_i ) begin
             default: inst_to_ctrl_o <= 'd0;
         endcase
     end
+end
+
+always_comb begin : ImmOutputBlock
+    case (inst_to_ctrl_o)
+        CTRL_ADDI: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_SLTI: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_SLTIU: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_ANDI: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_ORI: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_XORI: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_SLLI: imm_offset_o = 32'(inst_i[24:20]);
+        CTRL_SRLI: imm_offset_o = 32'(inst_i[24:20]);
+        CTRL_SRAI: imm_offset_o = 32'(inst_i[24:20]);
+        CTRL_LUI: imm_offset_o = {inst_i[31:12], 12'd0};
+        CTRL_AUIPC: imm_offset_o = {inst_i[31:12], 12'd0};
+        CTRL_ADD: imm_offset_o = 'd0;
+        CTRL_SUB: imm_offset_o = 'd0;
+        CTRL_SLTU: imm_offset_o = 'd0;
+        CTRL_SLT: imm_offset_o = 'd0;
+        CTRL_AND: imm_offset_o = 'd0;
+        CTRL_OR: imm_offset_o = 'd0;
+        CTRL_XOR: imm_offset_o = 'd0;
+        CTRL_SLL: imm_offset_o = 'd0;
+        CTRL_SRL: imm_offset_o = 'd0;
+        CTRL_SRA: imm_offset_o = 'd0;
+        CTRL_JAL: imm_offset_o = (inst_i[31] == 1) ? {11'hFFF, {inst_i[31], inst_i[19:12], inst_i[20], inst_i[30:21], 1'b0}} : {11'b0, {inst_i[31], inst_i[19:12], inst_i[20], inst_i[30:21], 1'b0}};
+        CTRL_JALR: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_BEQ: imm_offset_o = (inst_i[31] == 1) ? {19'hFFFFF, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}} : {19'b0, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}};
+        CTRL_BNE: imm_offset_o = (inst_i[31] == 1) ? {19'hFFFFF, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}} : {19'b0, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}};
+        CTRL_BGE: imm_offset_o = (inst_i[31] == 1) ? {19'hFFFFF, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}} : {19'b0, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}};
+        CTRL_BLT: imm_offset_o = (inst_i[31] == 1) ? {19'hFFFFF, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}} : {19'b0, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}};
+        CTRL_BLTU: imm_offset_o = (inst_i[31] == 1) ? {19'hFFFFF, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}} : {19'b0, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}};
+        CTRL_BGEU: imm_offset_o = (inst_i[31] == 1) ? {19'hFFFFF, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}} : {19'b0, {inst_i[31], inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0}};
+        CTRL_LW: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_LH: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_LHU: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_LB: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_LBU: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_SW: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:25], inst_i[11:7]} : {20'b0, inst_i[31:25], inst_i[11:7]};
+        CTRL_SH: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:25], inst_i[11:7]} : {20'b0, inst_i[31:25], inst_i[11:7]};
+        CTRL_SB: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:25], inst_i[11:7]} : {20'b0, inst_i[31:25], inst_i[11:7]};
+        CTRL_MUL: imm_offset_o = (inst_i[31] == 1) ? {20'hFFFFF, inst_i[31:20]} : {20'b0, inst_i[31:20]};
+        CTRL_MULH: imm_offset_o = 'd0;
+        CTRL_MULHU: imm_offset_o = 'd0;
+        CTRL_MULHSU: imm_offset_o = 'd0;
+        CTRL_DIV: imm_offset_o = 'd0;
+        CTRL_DIVU: imm_offset_o = 'd0;
+        CTRL_REM: imm_offset_o = 'd0;
+        CTRL_REMU: imm_offset_o = 'd0;
+        CTRL_MRET: imm_offset_o = 'd0;
+        CTRL_WFI: imm_offset_o = 'd0;
+        default: imm_offset_o = 'd0;
+    endcase
 end
 
 

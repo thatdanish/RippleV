@@ -54,11 +54,6 @@ async def smoketest(dut):
         except:
             raise AssertionError(f"expected LUI [12:31] : {''.join(reversed(inst_bin[12:32]))}, got : {dut.lui_o.value[31:12]}"
                                  f"LUI : {dut.lui_o.value}")   
-        try:
-            assert (((inst_bin[31] == '1' and dut.imm_offset_o.value[31] == 1) or (inst_bin[31] == '0' and dut.imm_offset_o.value[31] == 0)) and dut.imm_offset_o.value[11:0] == "".join(reversed(inst_bin[20:32])))
-        except:
-            raise AssertionError(f"instruction: {inst_bin}, dut.imm_offset_o.value : {dut.imm_offset_o.value}\n"
-                                 f"expected Imm/Offset[11:0]: {"".join(reversed(inst_bin[20:32]))}, got : {dut.imm_offset_o.value[11:0]}")
       
     await ClockCycles(dut.clk_i, 5)
     cocotb.pass_test()

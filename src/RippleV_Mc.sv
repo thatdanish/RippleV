@@ -153,6 +153,8 @@ module RippleV_Mc #(
         .pc_o(pc_final)
     );
 
+    assign pc_update_from_alu = alu_output;
+    
     mux_pc #( 
         .ADDR_WIDTH(ADDR_WIDTH)
     ) mux_pc_inst (
@@ -172,7 +174,7 @@ module RippleV_Mc #(
     );
 
     mux_reg_file_data mux_reg_file_data_inst (
-        .sel_i(sel_mux_reg_file_addr), 
+        .sel_i(sel_mux_reg_file_data), 
         .from_data_mem_i(data_mem_output), 
         .from_ALU_i(alu_output), 
         .from_decoder_i(lui), 

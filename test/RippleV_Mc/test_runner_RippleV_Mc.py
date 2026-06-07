@@ -9,16 +9,17 @@ def get_test_cases():
     tests = []
     for dname in sorted(os.listdir(TC_DIR)):
         if dname.startswith("tc_"):
-            hex_file = os.path.join(TC_DIR, dname + f"/{dname}.hex")
-            tests.append(pytest.param(hex_file, id=dname))
+            test_case = os.path.join(f"{dname}")
+            tests.append(pytest.param(test_case, id=dname))
 
     return tests
 
-@pytest.mark.parametrize("hex_file", get_test_cases())
-def test_runner_RippleV_Mc(hex_file):
+@pytest.mark.parametrize("test_case", get_test_cases())
+def test_runner_RippleV_Mc(test_case):
 
     SIM = os.getenv("SIM", "verilator")
     WAVES = os.getenv("WAVES", 1)
+    HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}.hex"
 
     SOURCES = [
     "../../src/csr.sv",
@@ -42,15 +43,16 @@ def test_runner_RippleV_Mc(hex_file):
         hdl_toplevel="RippleV_Mc",
         waves=WAVES,
         clean=False,
-        parameters={"FILE":f'"{hex_file}"'},      
+        parameters={"FILE":f'"{HEX_FILE_PATH}"'},     
+        timescale=("1ns", "1ns"), 
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
         hdl_toplevel="RippleV_Mc",
         test_module="tests_RippleV_Mc", 
-        parameters={"FILE":f'"{hex_file}"'}, 
-        verbose=True,     
+        parameters={"FILE":f'"{HEX_FILE_PATH}"'}, 
+        timescale=("1ns", "1ns"), 
         waves=WAVES
     )
 

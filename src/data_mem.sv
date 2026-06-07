@@ -16,7 +16,7 @@ module data_mem #(
 
 import Transfer_pkg::*;
 
-logic [31:0] dmem[4096+1];
+logic [31:0] dmem[4096];
 
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin
@@ -27,20 +27,20 @@ always_ff @( posedge clk_i ) begin
                 /* verilator lint_off CASEINCOMPLETE */
                 unique case (transfer_type_i)
                     transfer_byte :  begin
-                        case (32'((addr_i >> 2) % 32'd4))
-                            'd0: data_o <= 32'(dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][7:0]);
-                            'd1: data_o <= 32'(dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][15:8]);
-                            'd2: data_o <= 32'(dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][23:16]);
-                            'd3: data_o <= 32'(dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][31:24]);
+                        case (addr_i[1:0])
+                            2'd0: data_o <= 32'(dmem[12'(addr_i[31:2])][7:0]);
+                            2'd1: data_o <= 32'(dmem[12'(addr_i[31:2])][15:8]);
+                            2'd2: data_o <= 32'(dmem[12'(addr_i[31:2])][23:16]);
+                            2'd3: data_o <= 32'(dmem[12'(addr_i[31:2])][31:24]);
                         endcase
                     end
                     transfer_hex_byte : begin
-                        case (32'((addr_i >> 2) % 32'd4))
-                            'd0: data_o <= 32'(dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][15:0]);
-                            'd2: data_o <= 32'(dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][31:16]);
+                        case (addr_i[1:0])
+                            2'd0: data_o <= 32'(dmem[12'(addr_i[31:2])][15:0]);
+                            2'd2: data_o <= 32'(dmem[12'(addr_i[31:2])][31:16]);
                         endcase
                     end
-                    transfer_word : data_o <= dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))];
+                    transfer_word : data_o <= dmem[12'(addr_i[31:2])];
                 endcase
                /* verilator lint_on CASEINCOMPLETE */
             end
@@ -48,25 +48,28 @@ always_ff @( posedge clk_i ) begin
                 /* verilator lint_off CASEINCOMPLETE */
                 unique case (transfer_type_i)
                     transfer_byte :  begin
-                        case (32'((addr_i >> 2) % 32'd4))
-                            'd0: dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][7:0] <= data_i[7:0];
-                            'd1: dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][15:8] <= data_i[7:0];
-                            'd2: dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][23:16] <= data_i[7:0];
-                            'd3: dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][31:24] <= data_i[7:0];
+                        case (addr_i[1:0])
+                            2'd0: dmem[12'(addr_i[31:2])][7:0] <= data_i[7:0];
+                            2'd1: dmem[12'(addr_i[31:2])][15:8] <= data_i[7:0];
+                            2'd2: dmem[12'(addr_i[31:2])][23:16] <= data_i[7:0];
+                            2'd3: dmem[12'(addr_i[31:2])][31:24] <= data_i[7:0];
                         endcase
                     end
                     transfer_hex_byte : begin
-                        case (32'((addr_i >> 2) % 32'd4))
-                            'd0: dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][15:0] <= data_i[15:0];
-                            'd2: dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))][31:16] <= data_i[15:0];
+                        case (addr_i[1:0])
+                            2'd0: dmem[12'(addr_i[31:2])][15:0] <= data_i[15:0];
+                            2'd2: dmem[12'(addr_i[31:2])][31:16] <= data_i[15:0];
                         endcase
                     end
-                    transfer_word : dmem[32'((addr_i >> 2)-((addr_i >> 2)%4))] <= data_i;
+                    transfer_word : dmem[12'(addr_i[31:2])] <= data_i;
                 endcase
                /* verilator lint_on CASEINCOMPLETE */
             end 
         end
     end    
 end
+
+always_comb begin : blockName
     
+end
 endmodule

@@ -37,7 +37,7 @@ always_comb begin
     int_out = 'd0;
     int_take_branch = 1'b0;
     case (opr_i)
-        ALU_ADD : int_out = a_i + b_i; 
+        ALU_ADD : int_out = signed'(a_i) + (b_i); 
         ALU_SUB : int_out = a_i - b_i;
         ALU_MUL : int_out = func_mul(a_i, b_i);
         ALU_MULH : int_out = func_mulh(a_i, b_i);
