@@ -1,0 +1,117 @@
+
+sw_tc/tc_factorial.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .reset:
+
+00000000 <_reset>:
+ */
+
+__attribute__((section(".reset"), naked))
+void _reset(void) {
+    /* Set up stack pointer: top of data memory */
+    __asm__ volatile (
+   0:	00004137          	lui	sp,0x4
+   4:	09c0006f          	j	a0 <main>
+        "li sp, 0x4000\n"   /* 16K = top of 4096-word data memory */
+        "j  main\n"
+    );
+}
+   8:	00000013          	nop
+
+Disassembly of section .trap:
+
+00000010 <_trap_handler>:
+
+__attribute__((section(".trap"), interrupt))
+void _trap_handler(void) {
+  10:	fe010113          	addi	sp,sp,-32 # 3fe0 <main+0x3f40>
+  14:	00112e23          	sw	ra,28(sp)
+  18:	00812c23          	sw	s0,24(sp)
+  1c:	00e12a23          	sw	a4,20(sp)
+  20:	00f12823          	sw	a5,16(sp)
+  24:	02010413          	addi	s0,sp,32
+    volatile uint32_t *tohost = (volatile uint32_t *)0x3FF8;
+  28:	000047b7          	lui	a5,0x4
+  2c:	ff878793          	addi	a5,a5,-8 # 3ff8 <main+0x3f58>
+  30:	fef42623          	sw	a5,-20(s0)
+    *tohost = 0xDEADBEEF;   /* signal that a trap occurred */
+  34:	fec42783          	lw	a5,-20(s0)
+  38:	deadc737          	lui	a4,0xdeadc
+  3c:	eef70713          	addi	a4,a4,-273 # deadbeef <main+0xdeadbe4f>
+  40:	00e7a023          	sw	a4,0(a5)
+    while (1);               /* halt — or use wfi */
+  44:	0000006f          	j	44 <_trap_handler+0x34>
+
+Disassembly of section .text:
+
+00000048 <factorial>:
+#include "handlers.c"
+#include <stdint.h>
+
+int factorial(int val) {
+  48:	fe010113          	addi	sp,sp,-32
+  4c:	00112e23          	sw	ra,28(sp)
+  50:	00812c23          	sw	s0,24(sp)
+  54:	02010413          	addi	s0,sp,32
+  58:	fea42623          	sw	a0,-20(s0)
+    if (val <= 1) {
+  5c:	fec42703          	lw	a4,-20(s0)
+  60:	00100793          	li	a5,1
+  64:	00e7c663          	blt	a5,a4,70 <factorial+0x28>
+        return 1;
+  68:	00100793          	li	a5,1
+  6c:	0200006f          	j	8c <factorial+0x44>
+    } else {
+        return val * factorial(val-1);
+  70:	fec42783          	lw	a5,-20(s0)
+  74:	fff78793          	addi	a5,a5,-1
+  78:	00078513          	mv	a0,a5
+  7c:	fcdff0ef          	jal	48 <factorial>
+  80:	00050713          	mv	a4,a0
+  84:	fec42783          	lw	a5,-20(s0)
+  88:	02f707b3          	mul	a5,a4,a5
+    }
+}
+  8c:	00078513          	mv	a0,a5
+  90:	01c12083          	lw	ra,28(sp)
+  94:	01812403          	lw	s0,24(sp)
+  98:	02010113          	addi	sp,sp,32
+  9c:	00008067          	ret
+
+000000a0 <main>:
+
+int main(void) {
+  a0:	fe010113          	addi	sp,sp,-32
+  a4:	00112e23          	sw	ra,28(sp)
+  a8:	00812c23          	sw	s0,24(sp)
+  ac:	02010413          	addi	s0,sp,32
+    volatile uint32_t *result = (volatile uint32_t*)0x0100; // RESULT
+  b0:	10000793          	li	a5,256
+  b4:	fef42623          	sw	a5,-20(s0)
+
+    uint32_t val = 4; // val = 4
+  b8:	00400793          	li	a5,4
+  bc:	fef42423          	sw	a5,-24(s0)
+
+    *result = factorial(val); // call sub-function
+  c0:	fe842783          	lw	a5,-24(s0)
+  c4:	00078513          	mv	a0,a5
+  c8:	f81ff0ef          	jal	48 <factorial>
+  cc:	00050793          	mv	a5,a0
+  d0:	00078713          	mv	a4,a5
+  d4:	fec42783          	lw	a5,-20(s0)
+  d8:	00e7a023          	sw	a4,0(a5)
+    
+    volatile uint32_t *done = (volatile uint32_t*)0x01FC; // TO_HOST
+  dc:	1fc00793          	li	a5,508
+  e0:	fef42223          	sw	a5,-28(s0)
+    *done = 0xCAFECAFE; // SUCCESS
+  e4:	fe442783          	lw	a5,-28(s0)
+  e8:	cafed737          	lui	a4,0xcafed
+  ec:	afe70713          	addi	a4,a4,-1282 # cafecafe <main+0xcafeca5e>
+  f0:	00e7a023          	sw	a4,0(a5)
+      
+
+    while (1); // halt
+  f4:	0000006f          	j	f4 <main+0x54>

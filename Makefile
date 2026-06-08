@@ -1,6 +1,7 @@
 # Vars
 
 WAVE ?= surfer
+TC ?=
 
 # Decoder
 
@@ -82,7 +83,6 @@ coverage_alu:
 # --------------------------------------------------------------------------------------- #
 
 # RippleV
-TC ?= undefined
 
 tc_gen:
 	cd sw && make TC=tc_$(TC)
@@ -98,3 +98,11 @@ wave_rvmc:
 
 coverage_rvmc:
 	cd test/RippleV_Mc/sim_build && verilator_coverage --annotate . coverage.dat
+
+# C
+
+gcc: 
+	cd sw/sw_tc && gcc tc_$(TC).c -o tc_$(TC) && ./tc_$(TC)
+
+gcc_clean: 
+	cd sw/sw_tc && rm -rf tc_$(TC)

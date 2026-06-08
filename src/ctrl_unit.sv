@@ -377,7 +377,7 @@ module ctrl_unit(
                             alu_en_o = 1'b1;
                             alu_a_mux_sel_o = sel_alu_sign_ext_offset;
                             alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_JAL;
+                            alu_opr_o = ALU_JALR;
                         end
                         CTRL_BEQ: begin
                             alu_en_o = 1'b1;

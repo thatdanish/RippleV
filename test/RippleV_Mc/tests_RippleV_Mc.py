@@ -11,9 +11,10 @@ from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
-MAX_CLKS = 320
+MAX_CLKS = 500
 N_TESTS = 1
 TO_HOST = 0x01FC>>2
+RESULT = 0x0100>>2
 RST_HND = 0x0000
 INT_HND = 0x3FF8
 SUCCESS = 0xCAFECAFE
@@ -29,6 +30,7 @@ async def init_inputs(dut):
 async def monitor(dut):
     while True:
         await NextClockCycle(dut)
+
         if dut.data_mem_inst.dmem[TO_HOST].value == SUCCESS:
             cocotb.pass_test()
 
@@ -50,7 +52,8 @@ async def run_test(dut):
 
     # Start Test
     dut.main_enable_i.value = 1
-
+    
+    
     await clk
     
     # If not passed till now, then fail
