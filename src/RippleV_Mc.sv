@@ -20,11 +20,11 @@ module RippleV_Mc #(
 );
     import CTRL_pkg::*;
 
-    logic interrupt, housekeeper_enable, csr_rw, csr_enable, pc_enable, inst_mem_enable, reg_file_rw, reg_file_enable;
+    logic interrupt, csr_ctrl_enable, csr_rw, csr_enable, pc_enable, inst_mem_enable, reg_file_rw, reg_file_enable;
     logic take_branch, alu_enable, data_mem_enable, data_mem_rw;
-    logic [1:0] housekeeper_task, transfer_type, sel_mux_pc, sel_mux_reg_file_addr, sel_mux_reg_file_data, sel_mux_alu_a, sel_mux_alu_b;
+    logic [1:0] csr_ctrl_task, transfer_type, sel_mux_pc, sel_mux_reg_file_addr, sel_mux_reg_file_data, sel_mux_alu_a, sel_mux_alu_b;
     logic [ADDR_WIDTH-1:0] handler_address, pc_update_from_alu, pc_update, pc_final;
-    logic [2:0] csr_addr;
+    logic [11:0] csr_addr;
     logic [4:0] alu_operations, register_rs1, register_rs2, register_rd, final_register_addr;
     logic [5:0] ctrl_instruction;
     logic [31:0] csr_data, new_instruction, alu_output, reg_file_output, data_mem_output, immediate_offset, lui, final_register_data;
@@ -38,8 +38,8 @@ module RippleV_Mc #(
         .instruction_i(ctrl_instruction),
         .pc_mux_sel_o(sel_mux_pc), 
         .pc_en_o(pc_enable), 
-        .housekeeper_en_o(housekeeper_enable), 
-        .housekeeper_task_o(housekeeper_task),
+        .csr_ctrl_en_o(csr_ctrl_enable), 
+        .csr_ctrl_task_o(csr_ctrl_task),
         .inst_mem_en_o(inst_mem_enable),
         .reg_file_addr_mux_sel_o(sel_mux_reg_file_addr),
         .reg_file_data_mux_sel_o(sel_mux_reg_file_data),
@@ -113,16 +113,16 @@ module RippleV_Mc #(
         .take_branch_o(take_branch)
     );
 
-    housekeeper #(
+    csr_ctrl #(
         .ADDR_WIDTH(ADDR_WIDTH),
         .RST_HND(RST_HND), 
         .EXP_HND(EXP_HND), 
         .INT_HND(INT_HND)
-    ) housekeeper_inst (
+    ) csr_ctrl_inst (
         .clk_i,
         .rst_i,
-        .en_i(housekeeper_enable),
-        .task_i(housekeeper_task),
+        .en_i(csr_ctrl_enable),
+        .task_i(csr_ctrl_task),
         .csr_en_o(csr_enable),
         .csr_rw_o(csr_rw),
         .csr_addr_o(csr_addr),

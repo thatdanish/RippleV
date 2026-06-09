@@ -26,7 +26,7 @@ def test_runner_RippleV_Mc(test_case):
     "../../src/ctrl_unit.sv",
     "../../src/data_mem.sv",
     "../../src/decoder.sv",
-    "../../src/housekeeper.sv",
+    "../../src/csr_ctrl.sv",
     "../../src/inst_mem.sv",
     "../../src/MUXs.sv",
     "../../src/all_pkgs.sv",
@@ -42,7 +42,7 @@ def test_runner_RippleV_Mc(test_case):
         sources=SOURCES,
         hdl_toplevel="RippleV_Mc",
         waves=WAVES,
-        clean=False,
+        clean=True,
         parameters={"FILE":f'"{HEX_FILE_PATH}"'},     
         timescale=("1ns", "1ns"), 
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]

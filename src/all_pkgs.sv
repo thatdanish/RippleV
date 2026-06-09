@@ -63,6 +63,13 @@ localparam REG_T = 7'b0110011;
     localparam AND_REMU = 3'b111;
         localparam AND_F7 = 7'b0000000;
         localparam REMU_F7 = 7'b0000001;
+localparam ZICSR = 7'b1110011;
+    localparam CSRRW = 3'b001;
+    localparam CSRRS = 3'b010;
+    localparam CSRRC = 3'b011;
+    localparam CSRRWI = 3'b101;
+    localparam CSRRSI = 3'b110;
+    localparam CSRRCI = 3'b111;
 endpackage
 
 package CTRL_pkg;
@@ -156,11 +163,19 @@ package CSR_pkg;
 
 // Address to CSR
 
-localparam CSR_mstatus = 3'd0;
-localparam CSR_mepc = 3'd1;
-localparam CSR_mcause = 3'd2;
-localparam CSR_misa = 3'd3;
-localparam CSR_mtvec = 3'd4;
+localparam CSR_stvec = 12'h105;
+localparam CSR_satp = 12'h180;
+localparam CSR_mhartid = 12'hF12;
+localparam CSR_mstatus = 12'h300;
+localparam CSR_medeleg = 12'h302;
+localparam CSR_mideleg = 12'h303;
+localparam CSR_mie = 12'h304;
+localparam CSR_mtvec = 12'h305;
+localparam CSR_mepc = 12'h341;
+localparam CSR_mcause = 12'h342;    
+localparam CSR_mnstatus = 12'h744;
+localparam CSR_pmpcfg0 = 12'h3A0;
+localparam CSR_pmpaddr0 = 12'h3B0;
 
 endpackage
 

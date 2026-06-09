@@ -52,8 +52,7 @@ async def run_test(dut):
 
     # Start Test
     dut.main_enable_i.value = 1
-    
-    
+        
     await clk
     
     # If not passed till now, then fail

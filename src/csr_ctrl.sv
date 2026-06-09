@@ -5,7 +5,7 @@
 `timescale 1ns/1ns
 `default_nettype none
 
-module housekeeper #( 
+module csr_ctrl #( 
     parameter ADDR_WIDTH = 32,
     parameter RST_HND = 4, 
     parameter EXP_HND = 8, 
@@ -17,7 +17,7 @@ module housekeeper #(
     input  logic [1:0] task_i,
     output csr_en_o,
     output csr_rw_o,
-    output logic [2:0] csr_addr_o,
+    output logic [11:0] csr_addr_o,
     output logic [ADDR_WIDTH-1:0] handler_addr_o
 );
     import sel_pkg::*;

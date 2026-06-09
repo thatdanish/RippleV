@@ -14,9 +14,9 @@ module ctrl_unit(
     // PC
     output logic [1:0] pc_mux_sel_o, 
     output logic pc_en_o,
-    // Housekeeper
-    output logic housekeeper_en_o, 
-    output logic [1:0] housekeeper_task_o,
+    // CSR CTRL
+    output logic csr_ctrl_en_o, 
+    output logic [1:0] csr_ctrl_task_o,
     // Instruction Memory
     output inst_mem_en_o,
     // Reg-file
@@ -179,9 +179,9 @@ module ctrl_unit(
     end
     
     always_comb begin : OutputBlock
-        // Housekeeper 
-        housekeeper_en_o = 1'b0;
-        housekeeper_task_o = 'd0;
+        // CSR CTRL 
+        csr_ctrl_en_o = 1'b0;
+        csr_ctrl_task_o = 'd0;
         // PC
         pc_mux_sel_o = 'd0;
         pc_en_o = 1'b0;
@@ -205,8 +205,8 @@ module ctrl_unit(
         case (current_state)
             RESET_TRIGGER: begin
                 // make core come out of reset
-                housekeeper_en_o = 1'b1;
-                housekeeper_task_o = task_reset;
+                csr_ctrl_en_o = 1'b1;
+                csr_ctrl_task_o = task_reset;
             end
             UPDATE_PC_AFTER_RESET : begin
                 pc_en_o = 1'b1;
