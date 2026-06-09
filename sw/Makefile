@@ -1,7 +1,7 @@
 TC ?= undefined
 FINAL ?= ../data/$(TC)
 
-CROSS   := riscv64-unknown-elf
+CROSS   := riscv32-unknown-elf
 CC      := $(CROSS)-gcc
 OBJCOPY := $(CROSS)-objcopy
 OBJDUMP := $(CROSS)-objdump

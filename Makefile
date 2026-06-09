@@ -84,14 +84,17 @@ coverage_alu:
 
 # RippleV
 
+# generate .hex, .efl, .dump from .c & copy into a  new $(TC) directory
 tc_gen:
 	cd sw && make TC=tc_$(TC)
 
+# delete $(TC) directory
 tc_clean:
 	cd data && rm -rf tc_$(TC)
 
+# run simulations with $(TC) hex
 rvmc:
-	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -sk tc_$(TC) 
+	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -vk tc_$(TC) 
 
 wave_rvmc:
 	cd test/RippleV_Mc/sim_build && $(WAVE) dump.fst
@@ -101,8 +104,33 @@ coverage_rvmc:
 
 # C
 
+# compile $(TC), a C code 
 gcc: 
 	cd sw/sw_tc && gcc tc_$(TC).c -o tc_$(TC) && ./tc_$(TC)
 
+# clean leftovers
 gcc_clean: 
 	cd sw/sw_tc && rm -rf tc_$(TC)
+
+
+# Generate .elf, .hex, .dump in $(TC) directories for riscv-tests - ONLY NEED TO RUN ONCE
+
+compile_rvtests:
+	for test in /opt/riscv-tests/isa/rv32ui-p* /opt/riscv-tests/isa/rv32um-p*; do \
+		    name=$${test##*-p-}; \
+    		mkdir -p data/tc_$$name; \
+			\
+			riscv32-unknown-elf-objcopy \
+        	-O verilog \
+			--verilog-data-width 4\
+        	$$test data/tc_$$name/tc_$$name.hex; \
+			\
+			riscv32-unknown-elf-objdump -d -M no-aliases $$test > data/tc_$$name/tc_$$name.dump;\
+	done
+
+# clean $(TC) directories
+clean_rvtests:
+	for test in /opt/riscv-tests/isa/rv32ui-p* /opt/riscv-tests/isa/rv32um-p*; do \
+		name=$${test##*-p-};\
+		rm -rf data/tc_$$name; \
+	done

@@ -11,5 +11,8 @@ results.xml
 
 # Env
 
-rippleVenv
+venv
 .envrc
+
+# Todo
+TODO
