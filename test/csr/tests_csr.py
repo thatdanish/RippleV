@@ -38,9 +38,9 @@ async def smoke_test(dut):
     await ClockCycles(dut.clk_i, 5)
 
     # Test
-    addr_read_csrs = {"mstatus" : 0, "mepc": 1, "mcause": 2, "misa": 3, "mtvec":4}
-    addr_write_csrs = {"mepc": 1, "mcause": 2}
-    data_csrs = {"mstatus" : 6144, "mepc": 0, "mcause": 0, "misa": 1073744000, "mtvec": 0}
+    addr_read_csrs = {"mstatus" : 0x300, "mepc": 0x341, "mcause": 0x342, "mtvec":0x305}
+    addr_write_csrs = {"mepc": 0x341, "mcause": 0x342}
+    data_csrs = {"mstatus" : 6144, "mepc": 0, "mcause": 0, "mtvec": 0}
 
     for _ in range(N_TESTS):
         rw = random.randint(0,1)

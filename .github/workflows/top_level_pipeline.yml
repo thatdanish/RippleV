@@ -60,5 +60,5 @@ jobs:
         run: echo "$HOME/verilator/bin" >> $GITHUB_PATH
       
       - name: Run Tests
-        run: cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -sk tc_first and tc_factorial and tc_subfunc
+        run: cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -vk "tc_first or tc_factorial or tc_subfunc"
   
