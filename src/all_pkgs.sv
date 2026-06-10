@@ -63,6 +63,8 @@ localparam REG_T = 7'b0110011;
     localparam AND_REMU = 3'b111;
         localparam AND_F7 = 7'b0000000;
         localparam REMU_F7 = 7'b0000001;
+localparam MRET =  32'b00110000001000000000000001110011;
+localparam WFI =  32'b00010000010100000000000001110011;
 localparam ZICSR = 7'b1110011;
     localparam CSRRW = 3'b001;
     localparam CSRRS = 3'b010;
@@ -70,6 +72,9 @@ localparam ZICSR = 7'b1110011;
     localparam CSRRWI = 3'b101;
     localparam CSRRSI = 3'b110;
     localparam CSRRCI = 3'b111;
+localparam FENCE = 7'b0001111;
+localparam ECALL =  32'b00000000000000000000000001110011;
+localparam EBREAK =  32'b00000000000100000000000001110011;
 endpackage
 
 package CTRL_pkg;
@@ -129,6 +134,9 @@ localparam CTRL_CSRRC = 6'd49;
 localparam CTRL_CSRRWI = 6'd50;
 localparam CTRL_CSRRSI = 6'd51;
 localparam CTRL_CSRRCI = 6'd52;
+localparam CTRL_FENCE = 6'd53;
+localparam CTRL_ECALL = 6'd54;
+localparam CTRL_EBREAK = 6'd55;
 
 endpackage
 
@@ -183,6 +191,11 @@ localparam CSR_mnstatus = 12'h744;
 localparam CSR_pmpcfg0 = 12'h3A0;
 localparam CSR_pmpaddr0 = 12'h3B0;
 
+localparam cause_ecall = {1'b0, 31'd11};
+localparam cause_illegal_instruction = {1'b0, 31'd2};
+localparam cause_break = {1'b0, 31'd3};
+localparam cause_interrupt = {1'b1, 31'd11};
+
 endpackage
 
 package sel_pkg;
@@ -216,8 +229,8 @@ localparam  sel_alu_rs1 = 2'd1;
 // mux_pc
 
 localparam  sel_pc_update = 2'd0;
-localparam  sel_pc_mret = 2'd1;
-localparam  sel_pc_handler_addr = 2'd2;
+localparam  sel_pc_jump_vec = 2'd1;
+localparam  sel_pc_int_hnd = 2'd2;
 
 // housekeeper tasks
 
@@ -231,6 +244,7 @@ localparam  task_mret = 2'd3;
 localparam sel_csr_data_pc = 2'd0;
 localparam sel_csr_data_uimm = 2'd1;
 localparam sel_csr_data_rs1 = 2'd2;
+localparam sel_csr_data_ctrl_unit = 2'd3;
 
 // mux_csr_addr
 

@@ -6,7 +6,7 @@ module ctrl_unit(
     input clk_i,
     input rst_i,
     input main_enable_i, 
-    // TODO : output interrupt_ack_o
+    output logic interrupt_ack_o,
     // CSR
     input interrupt_i,
     // Decoder
@@ -16,6 +16,7 @@ module ctrl_unit(
     output logic pc_en_o,
     // CSR
     output logic [11:0] csr_addr_from_ctrl_o, 
+    output logic [31:0] csr_data_from_ctrl_o, 
     output logic [1:0] csr_addr_mux_sel_o, 
     output logic [1:0] csr_data_mux_sel_o, 
     output logic [1:0] csr_write_type_o, 
@@ -47,8 +48,9 @@ module ctrl_unit(
     import Transfer_pkg::*;
     import sel_pkg::*;
 
-    typedef enum bit[4:0] { IDLE, TAKE_BRANCH, INST_START, READ_RS1, READ_RS2, ALU_COMPUTE, WRITE_RD,
-                            LOAD_FROM_DATA_MEM, STORE_DATA_MEM, BUFF_1,READ_CSR, WRITE_CSR} state_t;
+    typedef enum bit[4:0] { IDLE, JUMP_PC, INST_START, READ_RS1, READ_RS2, ALU_COMPUTE, WRITE_RD,
+                            LOAD_FROM_DATA_MEM, STORE_DATA_MEM, BUFF_1,READ_CSR, WRITE_CSR, NOP,
+                            WRITE_MCAUSE, WRITE_MEPC, READ_MTVEC_MEPC, WFI_STALL} state_t;
 
     state_t current_state, next_state;
     logic take_branch_delayed;                        
@@ -72,7 +74,7 @@ module ctrl_unit(
         case (current_state)
             IDLE: begin
                 if (interrupt_i == 1'b0) next_state = (main_enable_i == 1'b1) ? BUFF_1 : IDLE; 
-                else next_state = IDLE;
+                else next_state = WRITE_MCAUSE;
             end
             BUFF_1: next_state = INST_START;
             INST_START: begin
@@ -128,10 +130,11 @@ module ctrl_unit(
                     CTRL_CSRRWI: next_state = READ_CSR;
                     CTRL_CSRRSI: next_state = READ_CSR;
                     CTRL_CSRRCI: next_state = READ_CSR;
-                    // TODO : Implement MRET, WFI
-                    // CTRL_MRET: next_state  = 
-                    // CTRL_WFI: next_state = 
-                    default: next_state = IDLE;
+                    CTRL_FENCE: next_state = NOP;
+                    CTRL_ECALL: next_state = WRITE_MCAUSE;
+                    CTRL_MRET: next_state  = READ_MTVEC_MEPC;
+                    CTRL_WFI: next_state = WFI_STALL;
+                    default: next_state = WRITE_MCAUSE; // illegal instruction exception
                 endcase
             end
             READ_RS2: begin
@@ -149,11 +152,11 @@ module ctrl_unit(
                     if (take_branch_i == 1'b1 && take_branch_delayed == 1'b0) 
                         next_state = ALU_COMPUTE;
                     else if (take_branch_i == 1'b0 && take_branch_delayed == 1'b1) 
-                        next_state = TAKE_BRANCH;
+                        next_state = JUMP_PC;
                     else
                         next_state = IDLE;
                 else if (current_instruction inside {CTRL_JAL, CTRL_JALR})
-                    next_state = TAKE_BRANCH;
+                    next_state = JUMP_PC;
                 else 
                     next_state = WRITE_RD;
             end
@@ -173,7 +176,7 @@ module ctrl_unit(
             STORE_DATA_MEM: begin
                 next_state = IDLE;
             end
-            TAKE_BRANCH: begin
+            JUMP_PC: begin
                 next_state =  IDLE;
             end
             READ_CSR: begin
@@ -182,15 +185,34 @@ module ctrl_unit(
             WRITE_CSR: begin
                 next_state = IDLE;
             end
+            NOP: begin
+                next_state = IDLE;
+            end
+            WRITE_MCAUSE: begin
+                next_state = WRITE_MEPC;
+            end
+            WRITE_MEPC: begin
+                next_state = (interrupt_i == 1'b1) ? JUMP_PC : READ_MTVEC_MEPC;
+            end
+            READ_MTVEC_MEPC: begin
+                next_state = JUMP_PC;
+            end
+            WFI_STALL: begin
+                // Core hang
+                next_state = WFI_STALL;
+            end
             default: begin
-               // TODO : Fill default condition
+               // UGLY : Fill default condition
             end
         endcase
         
     end
     
     always_comb begin : OutputBlock
+        // External
+        interrupt_ack_o = 1'b0;
         // CSR  
+        csr_data_from_ctrl_o = 'd0; 
         csr_addr_from_ctrl_o = 'd0; 
         csr_addr_mux_sel_o = 'd0;
         csr_data_mux_sel_o = 'd0;
@@ -532,21 +554,8 @@ module ctrl_unit(
                             alu_b_mux_sel_o = sel_alu_rs1;
                             alu_opr_o = ALU_REMU;
                         end
-                        // TODO : Implement MRET, WFI
-                        // CTRL_MRET: begin
-                        //     alu_en_o =
-                        //     alu_a_mux_sel_o =
-                        //     alu_b_mux_sel_o = 
-                        //     alu_opr_o = 
-                        // end
-                        // CTRL_WFI : begin
-                        //     alu_en_o = 
-                        //     alu_a_mux_sel_o = 
-                        //     alu_b_mux_sel_o = 
-                        //     alu_opr_o = 
-                        // end
                         default: begin
-                            // TODO : Fill default condition
+                            // UGLY : Fill default condition
                         end
                     endcase
                 end
@@ -588,9 +597,17 @@ module ctrl_unit(
                     default: data_mem_transfer_type_o = 'd0;
                 endcase
             end
-            TAKE_BRANCH: begin
-                pc_mux_sel_o = sel_pc_update;
+            JUMP_PC: begin
                 pc_en_o = 1'b1;
+                if (interrupt_i == 1'b1) begin
+                    interrupt_ack_o = 1'b1;
+                    pc_mux_sel_o = sel_pc_int_hnd;
+                end else begin
+                    if (current_instruction inside {CTRL_JAL, CTRL_JALR, CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE})
+                        pc_mux_sel_o = sel_pc_update;
+                    else
+                        pc_mux_sel_o = sel_pc_jump_vec;
+                end
             end
             READ_CSR: begin
                 csr_en_o = 1'b1;
@@ -611,8 +628,40 @@ module ctrl_unit(
                     default: csr_write_type_o = 'd0;
                 endcase
             end
+            WRITE_MCAUSE: begin
+                csr_en_o = 1'b1;
+                csr_rw_o = write;
+                csr_addr_mux_sel_o =  sel_csr_addr_ctrl_unit;
+                csr_addr_from_ctrl_o =  CSR_mcause;
+                csr_data_mux_sel_o =  sel_csr_data_ctrl_unit;
+                if (interrupt_i == 1'b1) begin
+                    csr_data_from_ctrl_o = cause_interrupt;
+                end else begin
+                    case (current_instruction)
+                        CTRL_ECALL: csr_data_from_ctrl_o = cause_ecall;
+                        CTRL_EBREAK:csr_data_from_ctrl_o =  cause_break;
+                        default: csr_data_from_ctrl_o = cause_illegal_instruction;
+                    endcase
+                end
+            end
+            WRITE_MEPC: begin
+                csr_en_o = 1'b1;
+                csr_rw_o = write;
+                csr_addr_mux_sel_o =  sel_csr_addr_ctrl_unit;
+                csr_addr_from_ctrl_o =  CSR_mepc;
+                csr_data_mux_sel_o =  sel_csr_data_pc;
+            end
+            READ_MTVEC_MEPC: begin
+                csr_en_o = 1'b1;
+                csr_rw_o = read;
+                csr_addr_mux_sel_o =  sel_csr_addr_ctrl_unit;
+                if (current_instruction == CTRL_MRET)
+                    csr_addr_from_ctrl_o =  CSR_mepc;
+                else 
+                    csr_addr_from_ctrl_o =  CSR_mtvec;
+            end
             default: begin
-                // TODO : Fill default condition
+                // UGLY : Fill default condition
             end
         endcase
     end

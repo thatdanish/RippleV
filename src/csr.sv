@@ -2,7 +2,9 @@
 `default_nettype none
 
 module csr #(
-    parameter ADDR_WIDTH = 32
+    parameter ADDR_WIDTH = 32,
+    parameter B_TEST = 0,
+    parameter TRAP_HND = 32'd0
 ) (
     input clk_i,
     input rst_i,
@@ -34,7 +36,7 @@ always_ff @( posedge clk_i ) begin
         mideleg <= 'd0;
         mie <= 'd0;
         mepc <= 'd0;
-        mtvec <= 'd0;
+        mtvec <= TRAP_HND;
         mcause <= 'd0;
         mnstatus <= 'd0;
         pmpcfg0 <= 'd0;
@@ -174,4 +176,15 @@ always_ff @( posedge clk_i ) begin
         end
     end
 end
+
+// Assertions
+
+// property valid_csr_write;
+//     @(posedge clk_i) (B_TEST == 0) && (rw_i == write) && (en_i == 1'b1) 
+//         |-> (csr_addr_i != CSR_mtvec && csr_addr_i != CSR_mhartid);
+// endproperty
+
+//     assert property (valid_csr_write)
+//     else $fatal(0, "Invalid CSR write attempted");
+
 endmodule

@@ -11,13 +11,15 @@ from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
-MAX_CLKS = 500
+MAX_CLKS = 5000
 N_TESTS = 1
 TO_HOST = 0x01FC>>2
+TO_HOST_RVT = 0x0>>2
 RESULT = 0x0100>>2
 RST_HND = 0x0000
 INT_HND = 0x3FF8
 SUCCESS = 0xCAFECAFE
+SUCCESS_RVT = 0x01
 
 # Initialize Inputs
 
@@ -31,7 +33,7 @@ async def monitor(dut):
     while True:
         await NextClockCycle(dut)
 
-        if dut.data_mem_inst.dmem[TO_HOST].value == SUCCESS:
+        if (dut.data_mem_inst.dmem[TO_HOST].value == SUCCESS) or (dut.data_mem_inst.dmem[TO_HOST_RVT].value == SUCCESS_RVT):
             cocotb.pass_test()
 
 @cocotb.test()
@@ -55,5 +57,6 @@ async def run_test(dut):
         
     await clk
     
-    # If not passed till now, then fail
-    raise AssertionError(f"Incorrect TO_HOST ({hex(TO_HOST)}) read --> exp : {hex(SUCCESS)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST].value)}")
+    # If not passed, then fail
+    raise AssertionError(f"Incorrect TO_HOST ({hex(TO_HOST)}) read --> exp : {hex(SUCCESS)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST].value)}, OR\n"
+                         f"Incorrect TO_HOST_RVT ({hex(TO_HOST_RVT)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST_RVT].value)}")

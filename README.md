@@ -6,7 +6,7 @@
 
 RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions. 
 
-## Design Features
+## Design
 
 ### Supportted Instruction
 
@@ -17,8 +17,9 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions.
 | Uncodtional Jump      |  JAL, JALR                                                        |
 | Conditional Jump      |  BEQ, BNE, BLT, BLTU                                              |
 | Load/Store            |  LW, LH, LHU, LB,LBU, SW, SH, SB                                  |
+| System                |  ECALL, EBREAK, FENCE                                             |
 | M-Extension           |  MUL, MULH, MULHU, MULHSU, DIV, DIVU, REM, REMU                   |
-| *Zicsr*               |  CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI                      |
+| Zicsr                 |  CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI                      |
 | *Priviledged*         |  MRET, WFI                                                        |
 
 ### Supported CSRs
@@ -36,6 +37,17 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions.
 - pmpcfg0 
 - pmpaddr0
 
+### Default Handler Addresses
+| Type          | Address       |
+|  :----:       |  :----:       |
+| Reset         |  0x0          |
+| Exception     |  0x4          |
+| Interrupt     |  0x8          |
+
+### Design Decisions
+- FENCE instruction in implemented as a NoP
+- Interrupt can only be asserted via interrupt bit of *mstatus* CSR.
+
 ### Core Diagram
 <center> 
 
@@ -49,11 +61,12 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions.
 - White = Incomplete design and/or verification
 - Yellow = Temporary design and/or verification
 
-#### Note: 
-Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagram as closely as possible. Hence, both the diagram and implementation might be updated from time to time. 
+**Note**: Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagram as closely as possible. Hence, both the diagram and implementation might be updated from time to time. 
 
-### Verification Coverage
 
+## Verification 
+
+### Coverage
 see [here](test/README.md)
 
 ## Supported/Recommended Tools

@@ -89,21 +89,27 @@ module mux_alu_b(
 endmodule
 
 module mux_pc #( 
-    parameter ADDR_WIDTH = 32
+    parameter ADDR_WIDTH = 32,
+    parameter INT_HND = 32'd8
 ) (
+    input clk_i,
     input logic [1:0] sel_i, 
     input logic [ADDR_WIDTH-1:0] pc_update_i, 
-    input logic [ADDR_WIDTH-1:0] mret_i,  
-    input logic [ADDR_WIDTH-1:0] handler_addr_i,  
+    input logic [ADDR_WIDTH-1:0] jump_vec_i,    
     output logic [ADDR_WIDTH-1:0] data_o
 );
     import sel_pkg::*;
+    logic [ADDR_WIDTH-1:0] int_hnd;
+    
+    always_ff @( posedge clk_i ) begin 
+        int_hnd <= INT_HND;
+    end
 
     always_comb begin 
         case (sel_i)
             sel_pc_update : data_o = pc_update_i;
-            sel_pc_mret : data_o = mret_i;
-            sel_pc_handler_addr : data_o = handler_addr_i;
+            sel_pc_jump_vec : data_o = jump_vec_i;
+            sel_pc_int_hnd : data_o = int_hnd;
             default: data_o = 'd0;
         endcase
     end
@@ -114,6 +120,7 @@ module mux_csr_data (
     input logic [31:0] pc_i,
     input logic [31:0] uimm_i,
     input logic [31:0] rs1_i,
+    input logic [31:0] from_ctrl_unit_i,
     output logic [31:0] data_o
 );
     import sel_pkg::*;
@@ -123,6 +130,7 @@ module mux_csr_data (
             sel_csr_data_pc : data_o = pc_i;
             sel_csr_data_uimm : data_o = uimm_i;
             sel_csr_data_rs1 : data_o = rs1_i;
+            sel_csr_data_ctrl_unit : data_o = from_ctrl_unit_i;
             default: data_o = 'd0;
         endcase
     end

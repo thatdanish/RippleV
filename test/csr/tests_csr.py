@@ -13,8 +13,8 @@ from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
-MAX_CLKS = 2000
-N_TESTS = 1000
+MAX_CLKS = 4000
+N_TESTS = 2000
 
 # Init-inputs
 
@@ -107,12 +107,14 @@ def test_runner_csr():
         hdl_toplevel="csr",
         waves=waves, 
         clean=True,
-        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
+        parameters={"B_TEST": 1},
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs", "--timing"]
     )
 
     runner.test(
         hdl_toplevel="csr",
         test_module="tests_csr",
+        parameters={"B_TEST": 1},
         waves=waves
     )
 

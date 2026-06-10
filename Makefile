@@ -39,7 +39,7 @@ coverage_program_counter:
 # CSR
 
 csr:
-	cd test/csr && pytest tests_csr.py -s
+	cd test/csr && pytest tests_csr.py -vvvs
 
 wave_csr:
 	cd test/csr/sim_build && $(WAVE) dump.fst
@@ -94,7 +94,7 @@ tc_clean:
 
 # run simulations with $(TC) hex
 rvmc:
-	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -vk "tc_$(TC)"
+	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -vvvk "tc_$(TC)"
 
 wave_rvmc:
 	cd test/RippleV_Mc/sim_build && $(WAVE) dump.fst
