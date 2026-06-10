@@ -20,6 +20,7 @@ N_TESTS = 1000
 
 async def init_inputs(dut):
     dut.en_i.value = 0
+    dut.write_type_i.value = 0
     dut.rw_i.value = 0
     dut.ext_interrupt_i.value = 0
     dut.csr_addr_i.value = 0
@@ -38,9 +39,11 @@ async def smoke_test(dut):
     await ClockCycles(dut.clk_i, 5)
 
     # Test
-    addr_read_csrs = {"mstatus" : 0x300, "mepc": 0x341, "mcause": 0x342, "mtvec":0x305}
-    addr_write_csrs = {"mepc": 0x341, "mcause": 0x342}
-    data_csrs = {"mstatus" : 6144, "mepc": 0, "mcause": 0, "mtvec": 0}
+    addr_write_csrs = {"mhartid": 0xF14, "mstatus" : 0x300, "mepc": 0x341, "mcause": 0x342, "mtvec":0x305}
+    addr_read_csrs = {"stvec": 0x105, "satp": 0x180, "mhartid": 0xF14, "mstatus" : 0x300, "medeleg":0x302, "mideleg":0x303,
+                       "mie":0x304,  "mepc": 0x341, "mcause": 0x342, "mtvec":0x305, "mnstatus":0x744, "pmpcfg0":0x3A0, "pmpaddr0":0x3B0}
+    data_csrs = {"stvec": 0, "satp": 0, "mhartid": 0, "mstatus" : 0, "medeleg":0, "mideleg":0,
+                    "mie":0,  "mepc": 0, "mcause": 0, "mtvec":0, "mnstatus":0, "pmpcfg0":0, "pmpaddr0":0}
 
     for _ in range(N_TESTS):
         rw = random.randint(0,1)

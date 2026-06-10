@@ -123,6 +123,12 @@ localparam CTRL_REM = 6'd40;
 localparam CTRL_REMU = 6'd41;
 localparam CTRL_MRET = 6'd42;
 localparam CTRL_WFI = 6'd43;
+localparam CTRL_CSRRW = 6'd47;
+localparam CTRL_CSRRS = 6'd48;
+localparam CTRL_CSRRC = 6'd49;
+localparam CTRL_CSRRWI = 6'd50;
+localparam CTRL_CSRRSI = 6'd51;
+localparam CTRL_CSRRCI = 6'd52;
 
 endpackage
 
@@ -165,7 +171,7 @@ package CSR_pkg;
 
 localparam CSR_stvec = 12'h105;
 localparam CSR_satp = 12'h180;
-localparam CSR_mhartid = 12'hF12;
+localparam CSR_mhartid = 12'hF14;
 localparam CSR_mstatus = 12'h300;
 localparam CSR_medeleg = 12'h302;
 localparam CSR_mideleg = 12'h303;
@@ -189,10 +195,11 @@ localparam  sel_reg_file_rd = 2'd2;
 
 // mux_reg_file_data
 
-localparam  sel_reg_file_data_mem = 2'd0;
-localparam  sel_reg_file_alu = 2'd1;
-localparam  sel_reg_file_decoder = 2'd2;
-localparam  sel_reg_file_pc = 2'd3;
+localparam  sel_reg_file_data_mem = 3'd0;
+localparam  sel_reg_file_alu = 3'd1;
+localparam  sel_reg_file_decoder = 3'd2;
+localparam  sel_reg_file_pc = 3'd3;
+localparam  sel_reg_file_csr = 3'd4;
 
 // mux_alu_a
 
@@ -219,6 +226,17 @@ localparam  task_exception = 2'd1;
 localparam  task_interrupt = 2'd2;
 localparam  task_mret = 2'd3;
 
+// mux_csr_data
+
+localparam sel_csr_data_pc = 2'd0;
+localparam sel_csr_data_uimm = 2'd1;
+localparam sel_csr_data_rs1 = 2'd2;
+
+// mux_csr_addr
+
+localparam sel_csr_addr_decoder = 2'd0;
+localparam sel_csr_addr_ctrl_unit = 2'd1;
+
 endpackage
 
 package Transfer_pkg;
@@ -230,5 +248,9 @@ localparam write = 1'b0;
 localparam transfer_byte = 2'b00;
 localparam transfer_hex_byte = 2'b01;
 localparam transfer_word = 2'b10;
+
+localparam write_complete = 2'd0;
+localparam write_set = 2'd1;
+localparam write_clear = 2'd2;
 
 endpackage

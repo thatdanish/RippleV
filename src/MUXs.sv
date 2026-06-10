@@ -21,11 +21,12 @@ module mux_reg_file_addr(
 endmodule
 
 module mux_reg_file_data(
-    input logic [1:0] sel_i, 
+    input logic [2:0] sel_i, 
     input logic [31:0] from_data_mem_i, 
     input logic [31:0] from_ALU_i, 
     input logic [31:0] from_decoder_i, 
     input logic [31:0] from_pc_i, 
+    input logic [31:0] from_csr_i, 
     output logic [31:0] data_o
 );
     import sel_pkg::*;
@@ -36,6 +37,7 @@ module mux_reg_file_data(
             sel_reg_file_alu : data_o = from_ALU_i;
             sel_reg_file_decoder : data_o = from_decoder_i;
             sel_reg_file_pc : data_o = from_pc_i;
+            sel_reg_file_csr : data_o = from_csr_i;
             default: data_o = 'd0;
         endcase
     end
@@ -103,6 +105,42 @@ module mux_pc #(
             sel_pc_mret : data_o = mret_i;
             sel_pc_handler_addr : data_o = handler_addr_i;
             default: data_o = 'd0;
+        endcase
+    end
+endmodule
+
+module mux_csr_data (
+    input logic [1:0] sel_i,
+    input logic [31:0] pc_i,
+    input logic [31:0] uimm_i,
+    input logic [31:0] rs1_i,
+    output logic [31:0] data_o
+);
+    import sel_pkg::*;
+
+    always_comb begin 
+        case (sel_i)
+            sel_csr_data_pc : data_o = pc_i;
+            sel_csr_data_uimm : data_o = uimm_i;
+            sel_csr_data_rs1 : data_o = rs1_i;
+            default: data_o = 'd0;
+        endcase
+    end
+endmodule
+
+module mux_csr_addr (
+    input logic [1:0] sel_i,
+    input logic [11:0] from_ctrl_unit_i,
+    input logic [11:0] from_decoder_i,
+    output logic [11:0] addr_o
+);
+    import sel_pkg::*;
+
+    always_comb begin 
+        case (sel_i)
+            sel_csr_addr_decoder : addr_o = from_decoder_i;
+            sel_csr_addr_ctrl_unit : addr_o = from_ctrl_unit_i;
+            default: addr_o = 'd0;
         endcase
     end
 endmodule

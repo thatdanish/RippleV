@@ -1,32 +1,40 @@
 <center>
 
-# RippleV : A Pipelined RISC-V (32IM) Core
+# RippleV : A Pipelined RISC-V (RV32IMZicsr) Core
 
 </center>
 
-RippleV is a RISC-V core, supporting 32 bits *I* & *M* extensions. 
-
+RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions. 
 
 ## Design Features
 
 ### Supportted Instruction
 
-| Type        | Instructions |
-|  :----:     |  :----:      |
-| I-type      |  ADDI, SLTI, SLTIU, ANDI, ORI, XORI, SLLI, SRLI, SRAI, LUI, AUIPC |
-| R-type      |  ADD, SUB,SLTU, SLT, AND, OR, XOR,SLL, SRL |
-| Uncodtional Jump  | JAL, JALR |
-| Conditional Jump  |  BEQ, BNE, BLT, BLTU |
-| Load/Store |  LW, LH, LHU, LB,LBU, SW, SH, SB |
-| M-Extension |  MUL, MULH, MULHU, MULHSU, DIV, DIVU, REM, REMU |
-| *Priviledged Instructions* |  MRET, WFI |
+| Type                  | Instructions                                                      |
+|  :----:               |  :----:                                                           |
+| I-type                |  ADDI, SLTI, SLTIU, ANDI, ORI, XORI, SLLI, SRLI, SRAI, LUI, AUIPC |
+| R-type                |  ADD, SUB,SLTU, SLT, AND, OR, XOR,SLL, SRL                        |
+| Uncodtional Jump      |  JAL, JALR                                                        |
+| Conditional Jump      |  BEQ, BNE, BLT, BLTU                                              |
+| Load/Store            |  LW, LH, LHU, LB,LBU, SW, SH, SB                                  |
+| M-Extension           |  MUL, MULH, MULHU, MULHSU, DIV, DIVU, REM, REMU                   |
+| *Zicsr*               |  CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI                      |
+| *Priviledged*         |  MRET, WFI                                                        |
 
-### Implemented CSRs
-- mstatus
-- mepc
-- mcause
-- misa
-- mtvec
+### Supported CSRs
+- stvec
+- satp 
+- mhartid 
+- mstatus 
+- medeleg 
+- mideleg 
+- mie 
+- mtvec  
+- mepc 
+- mcause 
+- mnstatus
+- pmpcfg0 
+- pmpaddr0
 
 ### Core Diagram
 <center> 

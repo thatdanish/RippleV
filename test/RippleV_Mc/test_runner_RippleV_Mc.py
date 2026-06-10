@@ -26,7 +26,6 @@ def test_runner_RippleV_Mc(test_case):
     "../../src/ctrl_unit.sv",
     "../../src/data_mem.sv",
     "../../src/decoder.sv",
-    "../../src/csr_ctrl.sv",
     "../../src/inst_mem.sv",
     "../../src/MUXs.sv",
     "../../src/all_pkgs.sv",

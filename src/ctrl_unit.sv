@@ -14,14 +14,18 @@ module ctrl_unit(
     // PC
     output logic [1:0] pc_mux_sel_o, 
     output logic pc_en_o,
-    // CSR CTRL
-    output logic csr_ctrl_en_o, 
-    output logic [1:0] csr_ctrl_task_o,
+    // CSR
+    output logic [11:0] csr_addr_from_ctrl_o, 
+    output logic [1:0] csr_addr_mux_sel_o, 
+    output logic [1:0] csr_data_mux_sel_o, 
+    output logic [1:0] csr_write_type_o, 
+    output logic csr_rw_o, 
+    output logic csr_en_o, 
     // Instruction Memory
     output inst_mem_en_o,
     // Reg-file
     output logic [1:0] reg_file_addr_mux_sel_o,
-    output logic [1:0] reg_file_data_mux_sel_o,
+    output logic [2:0] reg_file_data_mux_sel_o,
     output logic reg_file_rw_o,
     output logic reg_file_en_o,
     // ALU
@@ -43,16 +47,16 @@ module ctrl_unit(
     import Transfer_pkg::*;
     import sel_pkg::*;
 
-    typedef enum bit[3:0] { RESET_TRIGGER, UPDATE_PC_AFTER_RESET, IDLE, TAKE_BRANCH, INST_START, READ_RS1, READ_RS2,
-                            ALU_COMPUTE, WRITE_RD, LOAD_FROM_DATA_MEM, STORE_DATA_MEM, BUFF_1} state_t;
-    
+    typedef enum bit[4:0] { IDLE, TAKE_BRANCH, INST_START, READ_RS1, READ_RS2, ALU_COMPUTE, WRITE_RD,
+                            LOAD_FROM_DATA_MEM, STORE_DATA_MEM, BUFF_1,READ_CSR, WRITE_CSR} state_t;
+
     state_t current_state, next_state;
-    logic take_branch_delayed;
-    logic [5:0] current_instruction;
+    logic take_branch_delayed;                        
+    logic [5:0] current_instruction;                    
 
     always_ff @( posedge clk_i ) begin : StateUpdateBlock
         if (!rst_i) begin
-            current_state <= RESET_TRIGGER;
+            current_state <= IDLE;
             take_branch_delayed <= 1'b0;
             current_instruction <= 'd0;
         end else begin
@@ -66,13 +70,6 @@ module ctrl_unit(
     always_comb begin : NextStateComputeBlock
         next_state = IDLE;
         case (current_state)
-            RESET_TRIGGER: begin
-                // make core come out of reset
-                next_state = UPDATE_PC_AFTER_RESET;
-            end
-            UPDATE_PC_AFTER_RESET : begin
-                next_state = IDLE; 
-            end
             IDLE: begin
                 if (interrupt_i == 1'b0) next_state = (main_enable_i == 1'b1) ? BUFF_1 : IDLE; 
                 else next_state = IDLE;
@@ -125,6 +122,12 @@ module ctrl_unit(
                     CTRL_DIVU: next_state  = READ_RS2;
                     CTRL_REM: next_state  = READ_RS2;
                     CTRL_REMU: next_state  = READ_RS2;
+                    CTRL_CSRRW: next_state = READ_CSR;
+                    CTRL_CSRRS: next_state = READ_CSR;
+                    CTRL_CSRRC: next_state = READ_CSR;
+                    CTRL_CSRRWI: next_state = READ_CSR;
+                    CTRL_CSRRSI: next_state = READ_CSR;
+                    CTRL_CSRRCI: next_state = READ_CSR;
                     // TODO : Implement MRET, WFI
                     // CTRL_MRET: next_state  = 
                     // CTRL_WFI: next_state = 
@@ -159,6 +162,8 @@ module ctrl_unit(
                     next_state = ALU_COMPUTE;
                 else if (current_instruction == CTRL_JALR)
                     next_state = READ_RS1;
+                else if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI})
+                    next_state = WRITE_CSR;
                 else
                     next_state = IDLE;
             end
@@ -171,6 +176,12 @@ module ctrl_unit(
             TAKE_BRANCH: begin
                 next_state =  IDLE;
             end
+            READ_CSR: begin
+                next_state = WRITE_RD;
+            end
+            WRITE_CSR: begin
+                next_state = IDLE;
+            end
             default: begin
                // TODO : Fill default condition
             end
@@ -179,9 +190,13 @@ module ctrl_unit(
     end
     
     always_comb begin : OutputBlock
-        // CSR CTRL 
-        csr_ctrl_en_o = 1'b0;
-        csr_ctrl_task_o = 'd0;
+        // CSR  
+        csr_addr_from_ctrl_o = 'd0; 
+        csr_addr_mux_sel_o = 'd0;
+        csr_data_mux_sel_o = 'd0;
+        csr_write_type_o = 'd0;
+        csr_en_o = 1'b0; 
+        csr_rw_o = 1'b0; 
         // PC
         pc_mux_sel_o = 'd0;
         pc_en_o = 1'b0;
@@ -203,15 +218,6 @@ module ctrl_unit(
         data_mem_transfer_type_o = 2'b0;
 
         case (current_state)
-            RESET_TRIGGER: begin
-                // make core come out of reset
-                csr_ctrl_en_o = 1'b1;
-                csr_ctrl_task_o = task_reset;
-            end
-            UPDATE_PC_AFTER_RESET : begin
-                pc_en_o = 1'b1;
-                pc_mux_sel_o = sel_pc_handler_addr;
-            end
             IDLE: begin
                 if (main_enable_i == 1'b1 && interrupt_i == 1'b0) begin
                     inst_mem_en_o = 1'b1;    
@@ -555,6 +561,8 @@ module ctrl_unit(
                     reg_file_data_mux_sel_o = sel_reg_file_pc;
                 else if (current_instruction == CTRL_LUI)
                     reg_file_data_mux_sel_o =  sel_reg_file_decoder;
+                else if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI})
+                    reg_file_data_mux_sel_o = sel_reg_file_csr;
                 else
                     reg_file_data_mux_sel_o =  sel_reg_file_alu;
             end
@@ -584,10 +592,28 @@ module ctrl_unit(
                 pc_mux_sel_o = sel_pc_update;
                 pc_en_o = 1'b1;
             end
+            READ_CSR: begin
+                csr_en_o = 1'b1;
+                csr_rw_o = read;
+                csr_addr_mux_sel_o = sel_csr_addr_decoder;
+            end
+            WRITE_CSR: begin
+                csr_en_o = 1'b1;
+                csr_rw_o = write;
+                csr_addr_mux_sel_o =  sel_csr_addr_decoder;
+                case (current_instruction)
+                    CTRL_CSRRW: csr_write_type_o = write_complete;
+                    CTRL_CSRRS: csr_write_type_o = write_set;
+                    CTRL_CSRRC: csr_write_type_o = write_clear;
+                    CTRL_CSRRWI: csr_write_type_o = write_complete;
+                    CTRL_CSRRSI: csr_write_type_o = write_set;
+                    CTRL_CSRRCI: csr_write_type_o = write_clear;
+                    default: csr_write_type_o = 'd0;
+                endcase
+            end
             default: begin
                 // TODO : Fill default condition
             end
         endcase
     end
-   
 endmodule

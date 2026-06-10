@@ -22,13 +22,15 @@ module RippleV_Mc #(
 
     logic interrupt, csr_ctrl_enable, csr_rw, csr_enable, pc_enable, inst_mem_enable, reg_file_rw, reg_file_enable;
     logic take_branch, alu_enable, data_mem_enable, data_mem_rw;
-    logic [1:0] csr_ctrl_task, transfer_type, sel_mux_pc, sel_mux_reg_file_addr, sel_mux_reg_file_data, sel_mux_alu_a, sel_mux_alu_b;
+    logic [1:0] csr_ctrl_task, transfer_type, sel_mux_pc, sel_mux_reg_file_addr, sel_mux_alu_a, sel_mux_alu_b;
+    logic [1:0] sel_mux_csr_data, sel_mux_csr_addr, csr_write_type;
+    logic [2:0] sel_mux_reg_file_data;
     logic [ADDR_WIDTH-1:0] handler_address, pc_update_from_alu, pc_update, pc_final;
-    logic [11:0] csr_addr;
+    logic [11:0] csr_addr_from_cu, csr_addr_from_decoder, csr_address;
     logic [4:0] alu_operations, register_rs1, register_rs2, register_rd, final_register_addr;
     logic [5:0] ctrl_instruction;
     logic [31:0] csr_data, new_instruction, alu_output, reg_file_output, data_mem_output, immediate_offset, lui, final_register_data;
-    logic [31:0] final_alu_a, final_alu_b;
+    logic [31:0] final_alu_a, final_alu_b, csr_new_data;
 
     ctrl_unit ctrl_unit_inst (
         .clk_i,
@@ -38,8 +40,12 @@ module RippleV_Mc #(
         .instruction_i(ctrl_instruction),
         .pc_mux_sel_o(sel_mux_pc), 
         .pc_en_o(pc_enable), 
-        .csr_ctrl_en_o(csr_ctrl_enable), 
-        .csr_ctrl_task_o(csr_ctrl_task),
+        .csr_addr_from_ctrl_o(csr_addr_from_cu),
+        .csr_addr_mux_sel_o(sel_mux_csr_addr),
+        .csr_data_mux_sel_o(sel_mux_csr_data),
+        .csr_write_type_o(csr_write_type),
+        .csr_rw_o(csr_rw),
+        .csr_en_o(csr_enable),
         .inst_mem_en_o(inst_mem_enable),
         .reg_file_addr_mux_sel_o(sel_mux_reg_file_addr),
         .reg_file_data_mux_sel_o(sel_mux_reg_file_data),
@@ -87,6 +93,7 @@ module RippleV_Mc #(
         .rd_o(register_rd),
         .rs1_o(register_rs1),
         .rs2_o(register_rs2),
+        .csr_addr_o(csr_addr_from_decoder),
         .imm_offset_o(immediate_offset),
         .lui_o(lui),
         .inst_to_ctrl_o(ctrl_instruction) 
@@ -113,32 +120,17 @@ module RippleV_Mc #(
         .take_branch_o(take_branch)
     );
 
-    csr_ctrl #(
-        .ADDR_WIDTH(ADDR_WIDTH),
-        .RST_HND(RST_HND), 
-        .EXP_HND(EXP_HND), 
-        .INT_HND(INT_HND)
-    ) csr_ctrl_inst (
-        .clk_i,
-        .rst_i,
-        .en_i(csr_ctrl_enable),
-        .task_i(csr_ctrl_task),
-        .csr_en_o(csr_enable),
-        .csr_rw_o(csr_rw),
-        .csr_addr_o(csr_addr),
-        .handler_addr_o(handler_address)
-    );
-
     csr # ( 
         .ADDR_WIDTH(ADDR_WIDTH)
     ) csr_inst (
         .clk_i,
         .rst_i,
         .ext_interrupt_i,
+        .write_type_i(csr_write_type),
         .rw_i(csr_rw),
         .en_i(csr_enable),
-        .csr_addr_i(csr_addr),
-        .new_data_i(pc_final),
+        .csr_addr_i(csr_address),
+        .new_data_i(csr_new_data),
         .interrupt_status_o(interrupt),
         .csr_data_o(csr_data)
     );
@@ -178,7 +170,8 @@ module RippleV_Mc #(
         .from_data_mem_i(data_mem_output), 
         .from_ALU_i(alu_output), 
         .from_decoder_i(lui), 
-        .from_pc_i(32'(pc_final)), 
+        .from_pc_i(pc_final), 
+        .from_csr_i(csr_data),
         .data_o(final_register_data)
     );
 
@@ -194,9 +187,24 @@ module RippleV_Mc #(
 
     mux_alu_b mux_alu_b_inst (
         .sel_i(sel_mux_alu_b), 
-        .pc_i(32'(pc_final)), 
+        .pc_i(pc_final), 
         .rs1_i(reg_file_output),  
         .data_o(final_alu_b)
+    );
+
+    mux_csr_addr mux_csr_addr_inst (
+        .sel_i(sel_mux_csr_addr),
+        .from_ctrl_unit_i(csr_addr_from_cu),
+        .from_decoder_i(csr_addr_from_decoder),
+        .addr_o(csr_address)
+    );
+
+    mux_csr_data mux_csr_data_inst (
+        .sel_i(sel_mux_csr_data),
+        .pc_i(pc_final),
+        .uimm_i(immediate_offset),
+        .rs1_i(reg_file_output),
+        .data_o(csr_new_data)
     );
 
 

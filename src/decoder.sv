@@ -8,6 +8,7 @@ module decoder(
     output logic [4:0] rd_o,
     output logic [4:0] rs1_o,
     output logic [4:0] rs2_o,
+    output logic [11:0] csr_addr_o,
     output logic [31:0] imm_offset_o,
     output logic [31:0] lui_o,
     output logic [5:0] inst_to_ctrl_o
@@ -22,6 +23,8 @@ logic [2:0] funct_3;
 assign rd_o = inst_i[11:7];
 assign rs1_o = inst_i[19:15];
 assign rs2_o = inst_i[24:20];
+
+assign csr_addr_o = inst_i[31:20];
 
 assign lui_o = {inst_i[31:12], 12'd0};
 
@@ -181,6 +184,12 @@ always_comb begin : ImmOutputBlock
         CTRL_REMU: imm_offset_o = 'd0;
         CTRL_MRET: imm_offset_o = 'd0;
         CTRL_WFI: imm_offset_o = 'd0;
+        CTRL_CSRRW: imm_offset_o = 'd0; 
+        CTRL_CSRRS: imm_offset_o = 'd0; 
+        CTRL_CSRRC: imm_offset_o = 'd0; 
+        CTRL_CSRRWI: imm_offset_o = 32'(inst_i[19:15]); 
+        CTRL_CSRRSI: imm_offset_o = 32'(inst_i[19:15]); 
+        CTRL_CSRRCI:imm_offset_o = 32'(inst_i[19:15]); 
         default: imm_offset_o = 'd0;
     endcase
 end
