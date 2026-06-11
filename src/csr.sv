@@ -8,18 +8,17 @@ module csr #(
 ) (
     input clk_i,
     input rst_i,
-    input rw_i,
+    input typed_pkg::rw_t rw_i,
     input en_i,
     input ext_interrupt_i,
-    input logic[1:0] write_type_i,
-    input logic[11:0] csr_addr_i,
+    input typed_pkg::write_t write_type_i,
+    input typed_pkg::csr_addr_t csr_addr_i,
     input logic[ADDR_WIDTH-1:0] new_data_i,
     output interrupt_status_o,
     output logic [31:0] csr_data_o    
 );
 
-import CSR_pkg::*;
-import Transfer_pkg::*;
+import typed_pkg::*;
 
 logic [31:0] stvec, satp, mhartid, mstatus, medeleg, mideleg, mie;
 logic [31:0] mepc, mtvec, mcause, mnstatus, pmpcfg0, pmpaddr0;

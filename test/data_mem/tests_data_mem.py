@@ -199,7 +199,7 @@ def test_runner_data_mem():
     
     sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
-    sources = ["../../src/all_pkgs.sv", "../../src/data_mem.sv"]
+    sources = ["../../src/typed_pkg.sv", "../../src/data_mem.sv"]
 
     runner = get_runner(sim)
 

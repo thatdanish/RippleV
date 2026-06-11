@@ -1,0 +1,79 @@
+`timescale 1ns/1ns  // for making verilator happy
+
+package Opcodes_pkg;
+
+// Opcode & funct-codes
+
+localparam LUI = 7'b0110111;
+localparam AUIPC = 7'b0010111;
+localparam JAL = 7'b1101111;
+localparam JALR = 7'b1100111;
+localparam CJ = 7'b1100011;
+    localparam BEQ = 3'b000;
+    localparam BNE = 3'b001;
+    localparam BGE = 3'b101;
+    localparam BLTU = 3'b110;
+    localparam BGEU = 3'b111;
+localparam LOAD = 7'b0000011;
+    localparam LB = 3'b000;
+    localparam LH = 3'b001;
+    localparam LW = 3'b010;
+    localparam LBU = 3'b100;
+    localparam LHU = 3'b101;
+localparam STORE = 7'b0100011;
+    localparam SB = 3'b000;
+    localparam SH = 3'b001;
+    localparam SW = 3'b010;
+localparam IMM_T = 7'b0010011;
+    localparam ADDI = 3'b000;
+    localparam SLTI = 3'b010;
+    localparam SLTIU = 3'b011;
+    localparam XORI = 3'b100;
+    localparam ORI = 3'b110;
+    localparam ANDI = 3'b111;
+    localparam SLLI = 3'b001;
+        localparam SLLI_F7 = 7'b0000000;
+    localparam SRLI_SRAI = 3'b101;
+        localparam SRLI_F7 = 7'b0000000;
+        localparam SRAI_F7 = 7'b0100000;
+localparam REG_T = 7'b0110011;
+    localparam ADD_SUB_MUL = 3'b000;
+        localparam ADD_F7 = 7'b0000000;
+        localparam SUB_F7 = 7'b0100000;
+        localparam MUL_F7 = 7'b0000001;
+    localparam SLL_MULH = 3'b001;
+        localparam SLL_F7 = 7'b0000000;
+        localparam MULH_F7 = 7'b0000001;
+    localparam SLT_MULHSU = 3'b010;
+        localparam SLT_F7 = 7'b0000000;
+        localparam MULHSU_F7 = 7'b0000001;
+    localparam SLTU_MULHU = 3'b011;
+        localparam SLTU_F7 = 7'b0000000;
+        localparam MULHU_F7 = 7'b0000001;
+    localparam XOR_DIV = 3'b100;
+        localparam XOR_F7 = 7'b0000000;
+        localparam DIV_F7 = 7'b0000001;
+    localparam SRL_SRA_DIVU = 3'b101;
+        localparam SRL_F7 = 7'b0000000;
+        localparam SRA_F7 = 7'b0100000;
+        localparam DIVU_F7 = 7'b0000001;
+    localparam OR_REM = 3'b110;
+        localparam OR_F7 = 7'b0000000;
+        localparam REM_F7 = 7'b0000001;
+    localparam AND_REMU = 3'b111;
+        localparam AND_F7 = 7'b0000000;
+        localparam REMU_F7 = 7'b0000001;
+localparam MRET =  32'b00110000001000000000000001110011;
+localparam WFI =  32'b00010000010100000000000001110011;
+localparam ZICSR = 7'b1110011;
+    localparam CSRRW = 3'b001;
+    localparam CSRRS = 3'b010;
+    localparam CSRRC = 3'b011;
+    localparam CSRRWI = 3'b101;
+    localparam CSRRSI = 3'b110;
+    localparam CSRRCI = 3'b111;
+localparam FENCE = 7'b0001111;
+localparam ECALL =  32'b00000000000000000000000001110011;
+localparam EBREAK =  32'b00000000000100000000000001110011;
+
+endpackage

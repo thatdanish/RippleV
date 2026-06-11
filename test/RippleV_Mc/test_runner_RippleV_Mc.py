@@ -22,13 +22,14 @@ def test_runner_RippleV_Mc(test_case):
     HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}.hex"
 
     SOURCES = [
+    "../../src/Opcodes_pkg.sv",
+    "../../src/typed_pkg.sv",
     "../../src/csr.sv",
     "../../src/ctrl_unit.sv",
     "../../src/data_mem.sv",
     "../../src/decoder.sv",
     "../../src/inst_mem.sv",
     "../../src/MUXs.sv",
-    "../../src/all_pkgs.sv",
     "../../src/program_counter.sv",
     "../../src/reg_file.sv",
     "../../src/RippleV_Mc.sv",

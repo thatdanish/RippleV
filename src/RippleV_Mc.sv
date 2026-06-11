@@ -19,17 +19,24 @@ module RippleV_Mc #(
     input main_enable_i,
     output interrupt_ack_o    
 );
-    import CTRL_pkg::*;
+    import typed_pkg::*;
 
-    logic interrupt, csr_ctrl_enable, csr_rw, csr_enable, pc_enable, inst_mem_enable, reg_file_rw, reg_file_enable;
-    logic take_branch, alu_enable, data_mem_enable, data_mem_rw;
-    logic [1:0] csr_ctrl_task, transfer_type, sel_mux_pc, sel_mux_reg_file_addr, sel_mux_alu_a, sel_mux_alu_b;
-    logic [1:0] sel_mux_csr_data, sel_mux_csr_addr, csr_write_type;
-    logic [2:0] sel_mux_reg_file_data;
+    rw_t csr_rw, data_mem_rw, reg_file_rw;
+    transfer_t transfer_type;
+    sel_reg_file_addr_t sel_mux_reg_file_addr;
+    sel_reg_file_data_t sel_mux_reg_file_data;
+    sel_pc_t sel_mux_pc;
+    sel_alu_a_t sel_mux_alu_a;
+    sel_alu_b_t sel_mux_alu_b;
+    sel_csr_data_t sel_mux_csr_data;
+    sel_csr_addr_t sel_mux_csr_addr;
+    write_t csr_write_type;
+    alu_opr_t alu_operations;
+    csr_addr_t csr_addr_from_cu, csr_addr_from_decoder, csr_address;
+    ctrl_inst_t ctrl_instruction;
+    logic interrupt, csr_ctrl_enable, csr_enable, pc_enable, inst_mem_enable, reg_file_enable, take_branch, alu_enable, data_mem_enable;
     logic [ADDR_WIDTH-1:0] pc_update_from_alu, pc_update, pc_final;
-    logic [11:0] csr_addr_from_cu, csr_addr_from_decoder, csr_address;
-    logic [4:0] alu_operations, register_rs1, register_rs2, register_rd, final_register_addr;
-    logic [5:0] ctrl_instruction;
+    logic [4:0] register_rs1, register_rs2, register_rd, final_register_addr;
     logic [31:0] csr_data, new_instruction, alu_output, reg_file_output, data_mem_output, immediate_offset, lui, final_register_data;
     logic [31:0] final_alu_a, final_alu_b, csr_new_data, csr_data_from_cu;
 

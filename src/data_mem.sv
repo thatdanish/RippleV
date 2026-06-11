@@ -7,14 +7,14 @@ module data_mem #(
     input clk_i,
     input rst_i,
     input en_i,
-    input rw_i,
-    input logic [1:0] transfer_type_i,
+    input typed_pkg::rw_t rw_i,
+    input typed_pkg::transfer_t transfer_type_i,
     input logic [ADDR_WIDTH-1:0] addr_i,
     input logic [31:0] data_i,    
     output logic [31:0] data_o    
 );
 
-import Transfer_pkg::*;
+import typed_pkg::*;
 
 logic [31:0] dmem[4096];
 

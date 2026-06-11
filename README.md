@@ -23,19 +23,10 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions.
 | *Priviledged*         |  MRET, WFI                                                        |
 
 ### Supported CSRs
-- stvec
-- satp 
-- mhartid 
-- mstatus 
-- medeleg 
-- mideleg 
-- mie 
-- mtvec  
-- mepc 
-- mcause 
-- mnstatus
-- pmpcfg0 
-- pmpaddr0
+
+        1) stvec        2) satp        3) mhartid       4) mstatus      
+        5) medeleg      6) mideleg     7) mie           8) mtvec   
+        9) mepc         10) mcause     11) mnstatus     12) pmpcfg0     13) pmpaddr0
 
 ### Default Handler Addresses
 | Type          | Address       |

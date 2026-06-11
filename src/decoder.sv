@@ -1,22 +1,21 @@
 `timescale 1ns/1ns
 `default_nettype none
 
-module decoder(
+module decoder (
     input clk_i,
     input rst_i,
     input logic [31:0] inst_i,
     output logic [4:0] rd_o,
     output logic [4:0] rs1_o,
     output logic [4:0] rs2_o,
-    output logic [11:0] csr_addr_o,
+    output typed_pkg::csr_addr_t csr_addr_o,
     output logic [31:0] imm_offset_o,
     output logic [31:0] lui_o,
-    output logic [5:0] inst_to_ctrl_o
+    output typed_pkg::ctrl_inst_t inst_to_ctrl_o
 );
-
-import Opcodes_pkg::*;
-import CTRL_pkg::*;
-
+    import Opcodes_pkg::*;
+    import typed_pkg::*;
+    
 logic [6:0] op_code, funct_7;
 logic [2:0] funct_3;
 
@@ -24,7 +23,7 @@ assign rd_o = inst_i[11:7];
 assign rs1_o = inst_i[19:15];
 assign rs2_o = inst_i[24:20];
 
-assign csr_addr_o = inst_i[31:20];
+assign csr_addr_o = csr_addr_t'(inst_i[31:20]);
 
 assign lui_o = {inst_i[31:12], 12'd0};
 
@@ -34,7 +33,7 @@ assign funct_7 = inst_i[31:25];
 
 always_ff @( posedge clk_i ) begin 
     if(!rst_i) begin
-        inst_to_ctrl_o <= 'd0;
+        inst_to_ctrl_o <= ctrl_inst_t'('d0);
     end else begin
         case (inst_i)
             MRET: inst_to_ctrl_o <= CTRL_MRET;
@@ -54,7 +53,7 @@ always_ff @( posedge clk_i ) begin
                             BGE : inst_to_ctrl_o <= CTRL_BGE;
                             BLTU : inst_to_ctrl_o <= CTRL_BLTU;
                             BGEU : inst_to_ctrl_o <= CTRL_BGEU;
-                            default: inst_to_ctrl_o <= 'd0;
+                            default: inst_to_ctrl_o <= ctrl_inst_t'('d0);
                         endcase
                     end
                     LOAD :  begin
@@ -64,7 +63,7 @@ always_ff @( posedge clk_i ) begin
                             LW : inst_to_ctrl_o <= CTRL_LW;
                             LBU : inst_to_ctrl_o <= CTRL_LBU;
                             LHU : inst_to_ctrl_o <= CTRL_LHU;
-                            default: inst_to_ctrl_o <= 'd0;
+                            default: inst_to_ctrl_o <= ctrl_inst_t'('d0);
                         endcase
                     end
                     STORE :  begin
@@ -72,7 +71,7 @@ always_ff @( posedge clk_i ) begin
                             SB : inst_to_ctrl_o <= CTRL_SB;
                             SH : inst_to_ctrl_o <= CTRL_SH;
                             SW : inst_to_ctrl_o <= CTRL_SW;
-                            default: inst_to_ctrl_o <= 'd0;
+                            default: inst_to_ctrl_o <= ctrl_inst_t'('d0);
                         endcase
                     end
                     IMM_T :  begin
@@ -88,7 +87,7 @@ always_ff @( posedge clk_i ) begin
                                 if (funct_7 == SRLI_F7) inst_to_ctrl_o <= CTRL_SRLI;
                                 else inst_to_ctrl_o <= CTRL_SRAI;
                             end
-                            default: inst_to_ctrl_o <= 'd0;
+                            default: inst_to_ctrl_o <= ctrl_inst_t'('d0);
                         endcase
                     end
                     REG_T :  begin
@@ -98,7 +97,7 @@ always_ff @( posedge clk_i ) begin
                                     ADD_F7 : inst_to_ctrl_o <= CTRL_ADD;
                                     SUB_F7 : inst_to_ctrl_o <= CTRL_SUB;
                                     MUL_F7 : inst_to_ctrl_o <= CTRL_MUL;
-                                    default: inst_to_ctrl_o <= 'd0;
+                                    default: inst_to_ctrl_o <= ctrl_inst_t'('d0);
                                 endcase
                             end 
                             SLL_MULH : begin
@@ -122,7 +121,7 @@ always_ff @( posedge clk_i ) begin
                                     SRL_F7 : inst_to_ctrl_o <= CTRL_SRL;
                                     SRA_F7 : inst_to_ctrl_o <= CTRL_SRA;
                                     DIVU_F7 : inst_to_ctrl_o <= CTRL_DIVU;
-                                    default: inst_to_ctrl_o <= 'd0;
+                                    default: inst_to_ctrl_o <= ctrl_inst_t'('d0);
                                 endcase
                             end
                             OR_REM : begin
@@ -133,7 +132,7 @@ always_ff @( posedge clk_i ) begin
                             if (funct_7 == AND_F7) inst_to_ctrl_o <= CTRL_AND;
                             else inst_to_ctrl_o <= CTRL_REMU;
                             end
-                            default: inst_to_ctrl_o <= 'd0;
+                            default: inst_to_ctrl_o <= ctrl_inst_t'('d0);
                         endcase
                     end
                     ZICSR: begin
@@ -144,11 +143,11 @@ always_ff @( posedge clk_i ) begin
                             CSRRWI: inst_to_ctrl_o <= CTRL_CSRRWI;
                             CSRRSI: inst_to_ctrl_o <= CTRL_CSRRSI;
                             CSRRCI: inst_to_ctrl_o <= CTRL_CSRRCI;
-                            default:  inst_to_ctrl_o <= 'd0;
+                            default:  inst_to_ctrl_o <= ctrl_inst_t'('d0);
                         endcase
                     end
                     FENCE: inst_to_ctrl_o <= CTRL_FENCE;
-                    default: inst_to_ctrl_o <= 'd0;
+                    default: inst_to_ctrl_o <= ctrl_inst_t'('d0);
                 endcase
             end
         endcase

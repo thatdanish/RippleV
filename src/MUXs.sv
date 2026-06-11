@@ -2,13 +2,13 @@
 `default_nettype none
 
 module mux_reg_file_addr(
-    input logic [1:0] sel_i, 
+    input typed_pkg::sel_reg_file_addr_t sel_i, 
     input logic [4:0] rs1_i, 
     input logic [4:0] rs2_i, 
     input logic [4:0] rd_i, 
     output logic [4:0] addr_reg_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     always_comb begin 
         case (sel_i)
@@ -21,7 +21,7 @@ module mux_reg_file_addr(
 endmodule
 
 module mux_reg_file_data(
-    input logic [2:0] sel_i, 
+    input typed_pkg::sel_reg_file_data_t sel_i, 
     input logic [31:0] from_data_mem_i, 
     input logic [31:0] from_ALU_i, 
     input logic [31:0] from_decoder_i, 
@@ -29,7 +29,7 @@ module mux_reg_file_data(
     input logic [31:0] from_csr_i, 
     output logic [31:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     always_comb begin 
         case (sel_i)
@@ -45,14 +45,14 @@ endmodule
 
 module mux_alu_a(
     input clk_i,
-    input logic [1:0] sel_i, 
+    input typed_pkg::sel_alu_a_t sel_i, 
     input logic [31:0] const_4_i, 
     input logic [31:0] sign_ext_offset_i, 
     input logic [31:0] lui_i, 
     input logic [31:0] rs2_i, 
     output logic [31:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     logic [31:0] rs2_delayed;
 
@@ -72,12 +72,12 @@ module mux_alu_a(
 endmodule
 
 module mux_alu_b(
-    input logic [1:0] sel_i, 
+    input typed_pkg::sel_alu_b_t sel_i, 
     input logic [31:0] pc_i, 
     input logic [31:0] rs1_i,  
     output logic [31:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     always_comb begin 
         case (sel_i)
@@ -93,12 +93,12 @@ module mux_pc #(
     parameter INT_HND = 32'd8
 ) (
     input clk_i,
-    input logic [1:0] sel_i, 
+    input typed_pkg::sel_pc_t sel_i, 
     input logic [ADDR_WIDTH-1:0] pc_update_i, 
     input logic [ADDR_WIDTH-1:0] jump_vec_i,    
     output logic [ADDR_WIDTH-1:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
     logic [ADDR_WIDTH-1:0] int_hnd;
     
     always_ff @( posedge clk_i ) begin 
@@ -116,14 +116,14 @@ module mux_pc #(
 endmodule
 
 module mux_csr_data (
-    input logic [1:0] sel_i,
+    input typed_pkg::sel_csr_data_t sel_i,
     input logic [31:0] pc_i,
     input logic [31:0] uimm_i,
     input logic [31:0] rs1_i,
     input logic [31:0] from_ctrl_unit_i,
     output logic [31:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     always_comb begin 
         case (sel_i)
@@ -137,12 +137,12 @@ module mux_csr_data (
 endmodule
 
 module mux_csr_addr (
-    input logic [1:0] sel_i,
+    input typed_pkg::sel_csr_addr_t sel_i,
     input logic [11:0] from_ctrl_unit_i,
     input logic [11:0] from_decoder_i,
     output logic [11:0] addr_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     always_comb begin 
         case (sel_i)

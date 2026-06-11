@@ -3,6 +3,14 @@
 WAVE ?= surfer
 TC ?=
 
+# All
+
+all: all_blocks rvmc 
+
+# All blocks
+
+all_blocks: decoder reg_file program_counter csr inst_mem data_mem alu
+
 # Decoder
 
 decoder:
@@ -39,7 +47,7 @@ coverage_program_counter:
 # CSR
 
 csr:
-	cd test/csr && pytest tests_csr.py -vvvs
+	cd test/csr && pytest tests_csr.py -s
 
 wave_csr:
 	cd test/csr/sim_build && $(WAVE) dump.fst

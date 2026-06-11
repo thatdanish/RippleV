@@ -5,14 +5,14 @@ module temp_alu (
     input clk_i,
     input rst_i,
     input en_i,
-    input logic [4:0] opr_i,
+    input typed_pkg::alu_opr_t opr_i,
     input logic [31:0] a_i, 
     input logic [31:0] b_i,
     output logic [31:0] out_o,
     output logic take_branch_o
 );
 
-import ALU_pkg::*;
+import typed_pkg::*;
 
 logic [31:0] int_out;
 logic int_take_branch;

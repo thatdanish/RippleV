@@ -10,43 +10,38 @@ module ctrl_unit(
     // CSR
     input interrupt_i,
     // Decoder
-    input logic [5:0] instruction_i,
+    input typed_pkg::ctrl_inst_t instruction_i,
     // PC
-    output logic [1:0] pc_mux_sel_o, 
+    output typed_pkg::sel_pc_t pc_mux_sel_o, 
     output logic pc_en_o,
     // CSR
-    output logic [11:0] csr_addr_from_ctrl_o, 
-    output logic [31:0] csr_data_from_ctrl_o, 
-    output logic [1:0] csr_addr_mux_sel_o, 
-    output logic [1:0] csr_data_mux_sel_o, 
-    output logic [1:0] csr_write_type_o, 
-    output logic csr_rw_o, 
+    output typed_pkg::csr_addr_t csr_addr_from_ctrl_o, 
+    output typed_pkg::sel_csr_addr_t csr_addr_mux_sel_o, 
+    output typed_pkg::sel_csr_data_t csr_data_mux_sel_o, 
+    output typed_pkg::write_t csr_write_type_o, 
+    output typed_pkg::rw_t csr_rw_o, 
     output logic csr_en_o, 
+    output logic [31:0] csr_data_from_ctrl_o, 
     // Instruction Memory
     output inst_mem_en_o,
     // Reg-file
-    output logic [1:0] reg_file_addr_mux_sel_o,
-    output logic [2:0] reg_file_data_mux_sel_o,
-    output logic reg_file_rw_o,
+    output typed_pkg::sel_reg_file_addr_t reg_file_addr_mux_sel_o,
+    output typed_pkg::sel_reg_file_data_t reg_file_data_mux_sel_o,
+    output typed_pkg::rw_t reg_file_rw_o,
     output logic reg_file_en_o,
     // ALU
+    output typed_pkg::alu_opr_t alu_opr_o,
+    output typed_pkg::sel_alu_a_t alu_a_mux_sel_o,
+    output typed_pkg::sel_alu_b_t alu_b_mux_sel_o,
     input take_branch_i, 
     output logic alu_en_o, 
-    output logic [4:0] alu_opr_o,
-    output logic[1:0] alu_a_mux_sel_o,
-    output logic[1:0] alu_b_mux_sel_o,
     // Data Memory
-    output logic data_mem_en_o,
-    output logic [1:0] data_mem_transfer_type_o,
-    output data_mem_rw_o
+    output typed_pkg::transfer_t data_mem_transfer_type_o,
+    output typed_pkg::rw_t data_mem_rw_o,
+    output logic data_mem_en_o
 );
 
-    import Opcodes_pkg::*;
-    import ALU_pkg::*;
-    import CTRL_pkg::*;
-    import CSR_pkg::*;
-    import Transfer_pkg::*;
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     typedef enum bit[4:0] { IDLE, JUMP_PC, INST_START, READ_RS1, READ_RS2, ALU_COMPUTE, WRITE_RD,
                             LOAD_FROM_DATA_MEM, STORE_DATA_MEM, BUFF_1,READ_CSR, WRITE_CSR, NOP,
@@ -212,32 +207,32 @@ module ctrl_unit(
         // External
         interrupt_ack_o = 1'b0;
         // CSR  
-        csr_data_from_ctrl_o = 'd0; 
-        csr_addr_from_ctrl_o = 'd0; 
-        csr_addr_mux_sel_o = 'd0;
-        csr_data_mux_sel_o = 'd0;
-        csr_write_type_o = 'd0;
+        csr_rw_o = rw_t'(1'b0); 
+        csr_addr_from_ctrl_o = csr_addr_t'('d0); 
+        csr_addr_mux_sel_o = sel_csr_addr_t'('d0);
+        csr_data_mux_sel_o = sel_csr_data_t'('d0);
+        csr_write_type_o = write_t'('d0);
         csr_en_o = 1'b0; 
-        csr_rw_o = 1'b0; 
+        csr_data_from_ctrl_o = 'd0; 
         // PC
-        pc_mux_sel_o = 'd0;
+        pc_mux_sel_o = sel_pc_t'('d0);
         pc_en_o = 1'b0;
         // Inst-mem
         inst_mem_en_o = 1'b0;
         // Reg-file
-        reg_file_addr_mux_sel_o = 'b0;
-        reg_file_data_mux_sel_o = 'b0;
-        reg_file_rw_o = 1'b0;
+        reg_file_rw_o = rw_t'(1'b0);
+        reg_file_addr_mux_sel_o = sel_reg_file_addr_t'('b0);
+        reg_file_data_mux_sel_o = sel_reg_file_data_t'('b0);
         reg_file_en_o = 1'b0;
         // ALU
+        alu_a_mux_sel_o = sel_alu_a_t'('d0);
+        alu_b_mux_sel_o = sel_alu_b_t'('d0);
+        alu_opr_o = alu_opr_t'('b0);
         alu_en_o = 1'b0;
-        alu_a_mux_sel_o = 'd0;
-        alu_b_mux_sel_o = 'd0;
-        alu_opr_o = 'b0;
         // Data-mem
+        data_mem_rw_o = rw_t'(1'b0);
+        data_mem_transfer_type_o = transfer_t'(2'b0);
         data_mem_en_o = 1'b0;
-        data_mem_rw_o = 1'b0;
-        data_mem_transfer_type_o = 2'b0;
 
         case (current_state)
             IDLE: begin
@@ -487,7 +482,7 @@ module ctrl_unit(
                         CTRL_SH: begin
                             alu_en_o = 1'b1; 
                             alu_a_mux_sel_o = sel_alu_sign_ext_offset; 
-                            alu_b_mux_sel_o = sel_reg_file_rs1;
+                            alu_b_mux_sel_o = sel_alu_rs1;
                             alu_opr_o = ALU_ADD;
                             
                             // Read RS2 for storing
@@ -498,7 +493,7 @@ module ctrl_unit(
                         CTRL_SB: begin
                             alu_en_o = 1'b1; 
                             alu_a_mux_sel_o = sel_alu_sign_ext_offset; 
-                            alu_b_mux_sel_o = sel_reg_file_rs1;
+                            alu_b_mux_sel_o = sel_alu_rs1;
                             alu_opr_o = ALU_ADD; 
 
                             // Read RS2 for storing
@@ -584,7 +579,7 @@ module ctrl_unit(
                     CTRL_LHU :  data_mem_transfer_type_o = transfer_hex_byte;
                     CTRL_LB :  data_mem_transfer_type_o = transfer_byte;
                     CTRL_LBU :  data_mem_transfer_type_o = transfer_byte;
-                    default: data_mem_transfer_type_o = 'd0;
+                    default: data_mem_transfer_type_o = transfer_t'('d0);
                 endcase
             end
             STORE_DATA_MEM: begin
@@ -594,7 +589,7 @@ module ctrl_unit(
                     CTRL_SW :  data_mem_transfer_type_o = transfer_word;
                     CTRL_SH :  data_mem_transfer_type_o = transfer_hex_byte;
                     CTRL_SB :  data_mem_transfer_type_o = transfer_hex_byte;
-                    default: data_mem_transfer_type_o = 'd0;
+                    default: data_mem_transfer_type_o = transfer_t'('d0);
                 endcase
             end
             JUMP_PC: begin
@@ -625,7 +620,7 @@ module ctrl_unit(
                     CTRL_CSRRWI: csr_write_type_o = write_complete;
                     CTRL_CSRRSI: csr_write_type_o = write_set;
                     CTRL_CSRRCI: csr_write_type_o = write_clear;
-                    default: csr_write_type_o = 'd0;
+                    default: csr_write_type_o = write_t'('d0);
                 endcase
             end
             WRITE_MCAUSE: begin
