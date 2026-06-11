@@ -12,6 +12,7 @@ localparam CJ = 7'b1100011;
     localparam BEQ = 3'b000;
     localparam BNE = 3'b001;
     localparam BGE = 3'b101;
+    localparam BLT = 3'b100;
     localparam BLTU = 3'b110;
     localparam BGEU = 3'b111;
 localparam LOAD = 7'b0000011;

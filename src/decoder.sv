@@ -51,6 +51,7 @@ always_ff @( posedge clk_i ) begin
                             BEQ : inst_to_ctrl_o <= CTRL_BEQ;
                             BNE : inst_to_ctrl_o <= CTRL_BNE;
                             BGE : inst_to_ctrl_o <= CTRL_BGE;
+                            BLT : inst_to_ctrl_o <= CTRL_BLT;
                             BLTU : inst_to_ctrl_o <= CTRL_BLTU;
                             BGEU : inst_to_ctrl_o <= CTRL_BGEU;
                             default: inst_to_ctrl_o <= ctrl_inst_t'('d0);

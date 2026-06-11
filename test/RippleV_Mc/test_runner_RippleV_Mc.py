@@ -34,7 +34,7 @@ def test_runner_RippleV_Mc(test_case):
     "../../src/reg_file.sv",
     "../../src/RippleV_Mc.sv",
     "../../src/temp_alu.sv"
-        ]
+    ]
 
     runner = get_runner(SIM)
 

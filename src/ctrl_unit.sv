@@ -45,17 +45,17 @@ module ctrl_unit(
 
     typedef enum bit[4:0] { IDLE, JUMP_PC, INST_START, READ_RS1, READ_RS2, ALU_COMPUTE, WRITE_RD,
                             LOAD_FROM_DATA_MEM, STORE_DATA_MEM, BUFF_1,READ_CSR, WRITE_CSR, NOP,
-                            WRITE_MCAUSE, WRITE_MEPC, READ_MTVEC_MEPC, WFI_STALL} state_t;
+                            WRITE_MCAUSE, WRITE_MEPC, READ_MTVEC_MEPC, WFI_STALL, JUMP_OR_NOT} state_t;
 
     state_t current_state, next_state;
     logic take_branch_delayed;                        
-    logic [5:0] current_instruction;                    
+    ctrl_inst_t current_instruction;                    
 
     always_ff @( posedge clk_i ) begin : StateUpdateBlock
         if (!rst_i) begin
             current_state <= IDLE;
             take_branch_delayed <= 1'b0;
-            current_instruction <= 'd0;
+            current_instruction <= ctrl_inst_t'('d0);
         end else begin
             current_state <= next_state;
             take_branch_delayed <= take_branch_i;
@@ -136,20 +136,25 @@ module ctrl_unit(
                 next_state = READ_RS1;
             end
             READ_RS1: begin
-                next_state = ALU_COMPUTE;
+                if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI})
+                    next_state = WRITE_CSR;
+                else
+                    next_state = ALU_COMPUTE;
             end
             ALU_COMPUTE: begin
                 if (current_instruction inside {CTRL_LW, CTRL_LH,CTRL_LHU,CTRL_LB,CTRL_LBU}) 
                     next_state = LOAD_FROM_DATA_MEM;
                 else if (current_instruction inside {CTRL_SW,CTRL_SH,CTRL_SB})
                     next_state = STORE_DATA_MEM;
-                else if (current_instruction inside {CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE})
-                    if (take_branch_i == 1'b1 && take_branch_delayed == 1'b0) 
-                        next_state = ALU_COMPUTE;
-                    else if (take_branch_i == 1'b0 && take_branch_delayed == 1'b1) 
+                else if (current_instruction inside {CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE}) begin
+                    // Conditonal Branch --> ALU_COMPUTE-1(evaluate br condition)
+                    // JUMP_OR_NOT --> If branch valid --> ALU_COMPUTE-2 else --> IDLE
+                    // ALU_COMPUTE-2 (evaluate jump address) --> JUMP_PC --> IDLE
+                   if (take_branch_delayed == 1'b1) begin
                         next_state = JUMP_PC;
-                    else
-                        next_state = IDLE;
+                   end else 
+                        next_state = JUMP_OR_NOT;
+                end
                 else if (current_instruction inside {CTRL_JAL, CTRL_JALR})
                     next_state = JUMP_PC;
                 else 
@@ -161,7 +166,7 @@ module ctrl_unit(
                 else if (current_instruction == CTRL_JALR)
                     next_state = READ_RS1;
                 else if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI})
-                    next_state = WRITE_CSR;
+                    next_state = READ_RS1;
                 else
                     next_state = IDLE;
             end
@@ -170,6 +175,12 @@ module ctrl_unit(
             end
             STORE_DATA_MEM: begin
                 next_state = IDLE;
+            end
+            JUMP_OR_NOT: begin
+                if (take_branch_i == 1'b1) 
+                    next_state = ALU_COMPUTE;
+                else 
+                    next_state = IDLE;
             end
             JUMP_PC: begin
                 next_state =  IDLE;
@@ -404,39 +415,75 @@ module ctrl_unit(
                         end
                         CTRL_BEQ: begin
                             alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_BEQ;
+                            if (take_branch_i == 1'b0) begin
+                                alu_a_mux_sel_o = sel_alu_rs2;
+                                alu_b_mux_sel_o = sel_alu_rs1;
+                                alu_opr_o = ALU_BEQ;
+                            end else begin
+                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                                alu_b_mux_sel_o = sel_alu_pc;
+                                alu_opr_o = ALU_ADD;
+                            end
                         end
                         CTRL_BNE: begin
                             alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_BNE;
+                            if (take_branch_i == 1'b0) begin
+                                alu_a_mux_sel_o = sel_alu_rs2;
+                                alu_b_mux_sel_o = sel_alu_rs1;
+                                alu_opr_o = ALU_BNE;
+                            end else begin
+                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                                alu_b_mux_sel_o = sel_alu_pc;
+                                alu_opr_o = ALU_ADD;
+                            end
                         end
                         CTRL_BGE: begin
                             alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_BGE;
+                            if (take_branch_i == 1'b0) begin
+                                alu_a_mux_sel_o = sel_alu_rs2;
+                                alu_b_mux_sel_o = sel_alu_rs1;
+                                alu_opr_o = ALU_BGE;
+                            end else begin
+                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                                alu_b_mux_sel_o = sel_alu_pc;
+                                alu_opr_o = ALU_ADD;
+                            end
                         end
                         CTRL_BLT: begin
                             alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_BLT;
+                            if (take_branch_i == 1'b0) begin
+                                alu_a_mux_sel_o = sel_alu_rs2;
+                                alu_b_mux_sel_o = sel_alu_rs1;
+                                alu_opr_o = ALU_BLT;
+                            end else begin
+                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                                alu_b_mux_sel_o = sel_alu_pc;
+                                alu_opr_o = ALU_ADD;
+                            end
                         end
                         CTRL_BLTU: begin
                             alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_BLTU;
+                            if (take_branch_i == 1'b0) begin
+                                alu_a_mux_sel_o = sel_alu_rs2;
+                                alu_b_mux_sel_o = sel_alu_rs1;
+                                alu_opr_o = ALU_BLTU;
+                            end else begin
+                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                                alu_b_mux_sel_o = sel_alu_pc;
+                                alu_opr_o = ALU_ADD;
+                            end
                         end
                         CTRL_BGEU: begin
                             alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_BGEU;
+                            if (take_branch_i == 1'b0) begin
+                                alu_a_mux_sel_o = sel_alu_rs2;
+                                alu_b_mux_sel_o = sel_alu_rs1;
+                                alu_opr_o = ALU_BGEU;
+                            end else begin
+                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                                alu_b_mux_sel_o = sel_alu_pc;
+                                alu_opr_o = ALU_ADD;
+                            end
                         end
                         CTRL_LW: begin
                             alu_en_o = 1'b1;
@@ -613,6 +660,7 @@ module ctrl_unit(
                 csr_en_o = 1'b1;
                 csr_rw_o = write;
                 csr_addr_mux_sel_o =  sel_csr_addr_decoder;
+                csr_data_mux_sel_o = sel_csr_data_rs1;
                 case (current_instruction)
                     CTRL_CSRRW: csr_write_type_o = write_complete;
                     CTRL_CSRRS: csr_write_type_o = write_set;
