@@ -38,13 +38,13 @@ always_comb begin
     int_take_branch = 1'b0;
     case (opr_i)
         ALU_ADD : int_out = signed'(a_i) + (b_i); 
-        ALU_SUB : int_out = a_i - b_i;
+        ALU_SUB : int_out = b_i - a_i;
         ALU_MUL : int_out = func_mul(a_i, b_i);
         ALU_MULH : int_out = func_mulh(a_i, b_i);
         ALU_MULHU : int_out = func_mulhu(a_i, b_i);
         ALU_MULHSU : int_out = func_mulhsu(a_i, b_i);
-        ALU_DIV : int_out = signed'(b_i)/signed'(a_i);
-        ALU_DIVU : int_out = unsigned'(b_i)/unsigned'(a_i);
+        ALU_DIV : int_out = func_div(a_i,b_i);
+        ALU_DIVU : int_out = func_divu(a_i, b_i);
         ALU_REM : int_out = func_rem(a_i, b_i);
         ALU_REMU : int_out = unsigned'(b_i)%unsigned'(a_i);
         ALU_SLT : int_out = 32'(signed'(b_i)<signed'(a_i));
@@ -72,6 +72,22 @@ always_comb begin
 end
 
 // Functions
+
+function logic [31:0] func_div (logic [31:0] a, b);
+    if (b == 32'h80000000 && a == 32'hFFFFFFFF) 
+        return b;
+    else if (a == 32'd0)
+        return 32'hFFFFFFFF;
+    else
+        return signed'(b_i)/signed'(a_i);
+endfunction
+
+function logic [31:0] func_divu (logic [31:0] a, b);
+    if (a == 32'd0)
+        return 32'hFFFFFFFF;
+    else
+        return unsigned'(b_i)/unsigned'(a_i);
+endfunction
 
 function logic [31:0] func_mul (logic [31:0] a, b);
     bit [63:0] int_result;

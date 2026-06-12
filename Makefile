@@ -1,7 +1,9 @@
 # Vars
 
-WAVE ?= surfer
-TC ?=
+WAVE ?= surfer # wave views
+TC ?=		# test case
+RVMC_PYTEST_FLAG ?=	# top test
+B_PYTEST_FLAG ?= -s	# block test
 
 # All
 
@@ -9,12 +11,13 @@ all: all_blocks rvmc
 
 # All blocks
 
-all_blocks: decoder reg_file program_counter csr inst_mem data_mem alu
+all_blocks: B_PYTEST_FLAG=-ra 
+all_blocks: decoder reg_file program_counter csr inst_mem data_mem alu  
 
 # Decoder
 
 decoder:
-	cd test/decoder && pytest test_runner_decoder.py -s
+	cd test/decoder && pytest test_runner_decoder.py $(B_PYTEST_FLAG)
 
 wave_decoder:
 	cd test/decoder/sim_build && $(WAVE) dump.fst
@@ -25,7 +28,7 @@ coverage_decoder:
 # Reg-file
 
 reg_file:
-	cd test/reg_file && pytest tests_reg_file.py -s
+	cd test/reg_file && pytest tests_reg_file.py $(B_PYTEST_FLAG)
 
 wave_reg_file:
 	cd test/reg_file/sim_build && $(WAVE) dump.fst
@@ -36,7 +39,7 @@ coverage_reg_file:
 # Program-counter
 
 program_counter:
-	cd test/program_counter && pytest tests_program_counter.py -s
+	cd test/program_counter && pytest tests_program_counter.py $(B_PYTEST_FLAG)
 
 wave_program_counter:
 	cd test/program_counter/sim_build && $(WAVE) dump.fst
@@ -47,7 +50,7 @@ coverage_program_counter:
 # CSR
 
 csr:
-	cd test/csr && pytest tests_csr.py -s
+	cd test/csr && pytest tests_csr.py $(B_PYTEST_FLAG)
 
 wave_csr:
 	cd test/csr/sim_build && $(WAVE) dump.fst
@@ -58,7 +61,7 @@ coverage_csr:
 # Instruction-memory
 
 inst_mem:
-	cd test/inst_mem && pytest tests_inst_mem.py -s
+	cd test/inst_mem && pytest tests_inst_mem.py $(B_PYTEST_FLAG)
 
 wave_inst_mem:
 	cd test/inst_mem/sim_build && $(WAVE) dump.fst
@@ -69,7 +72,7 @@ coverage_inst_mem:
 # Data-memory
 
 data_mem:
-	cd test/data_mem && pytest tests_data_mem.py -s
+	cd test/data_mem && pytest tests_data_mem.py $(B_PYTEST_FLAG)
 
 wave_data_mem:
 	cd test/data_mem/sim_build && $(WAVE) dump.fst
@@ -80,7 +83,7 @@ coverage_data_mem:
 # ALU
 
 alu:
-	cd test/ALU && pytest tests_alu.py -s
+	cd test/ALU && pytest tests_alu.py $(B_PYTEST_FLAG)
 
 wave_alu:
 	cd test/ALU/sim_build && $(WAVE) dump.fst
@@ -102,7 +105,7 @@ tc_clean:
 
 # run simulations with $(TC) hex
 rvmc:
-	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -vvvk "tc_$(TC)"
+	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -vvvk "tc_$(TC)" $(RVMC_PYTEST_FLAG) -x -ra
 
 wave_rvmc:
 	cd test/RippleV_Mc/sim_build && $(WAVE) dump.fst

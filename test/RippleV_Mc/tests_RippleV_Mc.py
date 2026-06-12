@@ -11,7 +11,7 @@ from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
-MAX_CLKS = 5000
+MAX_CLKS = 8000
 N_TESTS = 1
 TO_HOST = 0x01FC>>2
 TO_HOST_RVT = 0x0>>2

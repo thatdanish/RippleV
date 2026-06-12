@@ -39,7 +39,7 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
         #  SUB
         a = a.to_unsigned()
         b = b.to_unsigned()
-        z = LogicArray.from_signed(a - b , 33)
+        z = LogicArray.from_signed(b-a , 33)
         return z[31:0]
     elif opr == "ALU_MUL":
         # MUL
@@ -69,17 +69,25 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
         # DIV
         a = a.to_signed()
         b = b.to_signed()
-        z = b/a
-        if z >= 0:
-            z = math.floor(z)
-        else: 
-            z = math.ceil(z)
-        return LogicArray.from_signed(z, 32)
+        if (b == 0x80000000 and a == 0xFFFFFFFF):
+            return LogicArray.from_signed(b, 32)
+        elif (a == 0):
+            return LogicArray.from_signed(-1, 32)
+        else:
+            z = b/a
+            if z >= 0:
+                z = math.floor(z)
+            else: 
+                z = math.ceil(z)
+            return LogicArray.from_signed(z, 32)
     elif opr == "ALU_DIVU":
         # DIVU
         a = a.to_unsigned()
         b = b.to_unsigned()
-        return LogicArray(int(b/a), 32)
+        if (a == 0):
+            return LogicArray.from_signed(-1, 32)
+        else:
+            return LogicArray(int(b/a), 32)
     elif opr == "ALU_REM":
         # REM 
         a = a.to_signed()
