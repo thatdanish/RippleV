@@ -57,6 +57,40 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions.
 
 ## Verification 
 
+### Custom Software Verification (C Program)
+
+#### Pre-requisites
+
+- Simulator & compilers mentioned under [Supported/Recommended Tool](#Supported/Recommened-Tool)
+- [RISC-V GNU toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain), with *Prefix = riscv32-unknown-elf*
+- Python 3.13 =<
+  
+#### Steps
+- Save your C code as *[sw/sw_tc/](sw/sw_tc/)tc_<test_name>*.c .
+- DON'T OMIT **tc_** prefix in the file name.  Include *handler.c* file as header, generic template for C-program is given in [*sw/sw_tc/tc_first.c*](sw/sw_tc/tc_first.c) .
+- Run the below command from home directory:        
+ ```bash
+# Omit tc_ and .c
+make tc_gen TC=<test_name> 
+```
+- A new directory would be created at *data/tc_<test_name>*, containing *.elf*, *.hex* and *.dump* files.
+- Execute the generated *.hex* file with :
+```bash
+# Omit tc_ and .c
+# RVMC_PYTEST_FLAG can be used to pass legal pytest flags
+make rvmc TC=<test_name> RVMC_PYTEST_FLAG=
+```
+
+#### NOTE
+
+- For the test to pass, one of the *SUCCESS* values is to be written at its corresponding *to_host* address. 
+
+| TO HOST ADDRESS       | SUCCESS VALUE |
+|  :----:               |  :----:       |
+| 0x01FC                |  0xCAFECAFE   |
+| 0x0                   |  0x01         |
+| 0x40                  |  0x01         |
+
 ### Coverage
 see [here](test/README.md)
 

@@ -656,7 +656,7 @@ module ctrl_unit(
                 case (current_instruction)
                     CTRL_SW :  data_mem_transfer_type_o = transfer_word;
                     CTRL_SH :  data_mem_transfer_type_o = transfer_hex_byte;
-                    CTRL_SB :  data_mem_transfer_type_o = transfer_hex_byte;
+                    CTRL_SB :  data_mem_transfer_type_o = transfer_byte;
                     default: data_mem_transfer_type_o = transfer_t'('d0);
                 endcase
             end

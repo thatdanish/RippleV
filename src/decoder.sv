@@ -79,7 +79,7 @@ always_ff @( posedge clk_i ) begin
                         case (funct_3)
                             ADDI : inst_to_ctrl_o <= CTRL_ADDI;
                             SLTI : inst_to_ctrl_o <= CTRL_SLTI;
-                            SLTIU : inst_to_ctrl_o <= CTRL_SLTU;
+                            SLTIU : inst_to_ctrl_o <= CTRL_SLTIU;
                             XORI : inst_to_ctrl_o <= CTRL_XORI;
                             ORI : inst_to_ctrl_o <= CTRL_ORI;
                             ANDI : inst_to_ctrl_o <= CTRL_ANDI;

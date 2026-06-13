@@ -75,12 +75,12 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 
 ## Top Level
 
-### Software Tests
+### Software Tests + riscv-tests
 
 | Type                  | Coverage    | Percentage    |
 |  :----:               |  :----:     |    :----:     |
-| Line                  |   121/348   |     34.8 %    |
-| Toggle                |   2377/4252 |     55.9 %    |
-| Branch                |   57/118    |     48.3 %    |
-| Expression            |   92/112    |     82.1 %    |
-| USER (Instructions)   |   8/47      |     17.0 %    |
+| Line                  |   397/503   |     78.9 %    |
+| Toggle                |   3680/5470 |     67.3 %    |
+| Branch                |   154/236   |     65.3 %    |
+| Expression            |   206/231   |     89.2 %    |
+| USER (Instructions)   |   51/56     |     91.1 %    |

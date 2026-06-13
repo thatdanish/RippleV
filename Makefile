@@ -105,13 +105,13 @@ tc_clean:
 
 # run simulations with $(TC) hex
 rvmc:
-	cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -vvvk "tc_$(TC)" $(RVMC_PYTEST_FLAG) -x -ra
+	cd test/RippleV_Mc && rm -rf coverage_per_test && pytest test_runner_RippleV_Mc.py -vvvk "tc_$(TC)" $(RVMC_PYTEST_FLAG) -x -ra
 
 wave_rvmc:
 	cd test/RippleV_Mc/sim_build && $(WAVE) dump.fst
 
 coverage_rvmc:
-	cd test/RippleV_Mc/sim_build && verilator_coverage --annotate . coverage.dat
+	cd test/RippleV_Mc/coverage_per_test && verilator_coverage --annotate . merged.dat
 
 # C
 

@@ -49,7 +49,7 @@ def test_runner_RippleV_Mc(test_case):
         sources=SOURCES,
         hdl_toplevel="RippleV_Mc",
         waves=WAVES,
-        clean=True,
+        clean=False,
         parameters={"IMEM_FILE":f'"{IMEM_HEX_FILE_PATH}"', "DMEM_FILE":f'"{DMEM_HEX_FILE_PATH}"',
                     "LOAD_FROM_DMEM_HEX": LOAD_FROM_DMEM_HEX},     
         timescale=("1ns", "1ns"), 

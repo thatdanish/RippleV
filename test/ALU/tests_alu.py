@@ -92,21 +92,27 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
         # REM 
         a = a.to_signed()
         b = b.to_signed()
-        if a < 0 and b >=0:
-            a = a*-1
+        if (a == 0):
+            return LogicArray.from_signed(b, 32)
+        else:
+            if a < 0 and b >=0:
+                a = a*-1
+                z = LogicArray.from_signed(b%a, 32)
+                return z
+            if a > 0 and b < 0:
+                b = b*-1
+                z = LogicArray.from_signed(-1*(b%a), 32)
+                return z
             z = LogicArray.from_signed(b%a, 32)
             return z
-        if a > 0 and b < 0:
-            b = b*-1
-            z = LogicArray.from_signed(-1*(b%a), 32)
-            return z
-        z = LogicArray.from_signed(b%a, 32)
-        return z
     elif opr == "ALU_REMU":
         # REMU
         a = a.to_unsigned()
         b = b.to_unsigned()
-        return LogicArray(int(b%a), 32)
+        if (a == 0):
+            return LogicArray.from_unsigned(b, 32)
+        else:
+            return LogicArray.from_unsigned(b%a, 32)
     elif opr == "ALU_SLT":
         # SLT
         a = a.to_signed()
@@ -140,10 +146,10 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
         return LogicArray(b_unsigned >> a_shift, 32)
     elif opr == "ALU_SRA":
         # SRA
-        b = b.to_unsigned()
+        b = b.to_signed()
         a_shift = a[4:0]
         a_shift = a_shift.to_unsigned()
-        return LogicArray( b >> a_shift, 32)
+        return LogicArray.from_signed( b >> a_shift, 32)
     elif opr == "ALU_BEQ":
         # BEQ
         return a == b

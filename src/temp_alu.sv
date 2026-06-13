@@ -46,7 +46,7 @@ always_comb begin
         ALU_DIV : int_out = func_div(a_i,b_i);
         ALU_DIVU : int_out = func_divu(a_i, b_i);
         ALU_REM : int_out = func_rem(a_i, b_i);
-        ALU_REMU : int_out = unsigned'(b_i)%unsigned'(a_i);
+        ALU_REMU : int_out = func_remu(a_i, b_i);
         ALU_SLT : int_out = 32'(signed'(b_i)<signed'(a_i));
         ALU_SLTU : int_out = 32'(unsigned'(b_i)<unsigned'(a_i));
         ALU_AND : int_out = b_i & a_i;
@@ -54,7 +54,7 @@ always_comb begin
         ALU_XOR : int_out = b_i ^ a_i;
         ALU_SLL : int_out = (b_i == 32'b0) ? 32'b0 : b_i << a_i[4:0];
         ALU_SRL : int_out = (b_i == 32'b0) ? 32'b0 : b_i >> a_i[4:0];
-        ALU_SRA : int_out = (b_i == 32'b0) ? 32'b0 : b_i >>> a_i[4:0];
+        ALU_SRA : int_out = (b_i == 32'b0) ? 32'b0 : unsigned'(signed'(b_i) >>> a_i[4:0]);
         ALU_JAL : int_out = func_jal(a_i,b_i);
         ALU_JALR : int_out = func_jalr(a_i,b_i);
         ALU_BEQ : int_take_branch = (a_i == b_i);
@@ -115,9 +115,22 @@ endfunction
 
 function logic [31:0] func_rem (logic [31:0] a, b);
     bit [31:0] int_result;
-    int_result = signed'(b) % signed'(a);
-    int_result[31] = b[31];
-    return int_result;
+    if (a == 32'd0) 
+        return b;
+    else begin
+        int_result = signed'(b) % signed'(a);
+        return int_result;
+    end
+endfunction
+
+function logic [31:0] func_remu (logic [31:0] a, b);
+    bit [31:0] int_result;
+    if (a == 32'd0) 
+        return b;
+    else begin
+        int_result = unsigned'(b) % unsigned'(a);
+        return int_result;
+    end
 endfunction
 
 function logic [31:0] func_jal (logic [31:0] a, b);
