@@ -133,8 +133,19 @@ compile_rvtests:
 			\
 			riscv32-unknown-elf-objcopy \
         	-O verilog \
+    		--only-section=.text \
+    		--only-section=.rodata \
+    		--only-section=.data \
 			--verilog-data-width 4\
-        	$$test data/tc_$$name/tc_$$name.hex; \
+        	$$test data/tc_$$name/tc_$$name-imem.hex; \
+			\
+			riscv32-unknown-elf-objcopy \
+        	-O verilog \
+			--only-section=.data \
+    		--only-section=.tohost \
+    		--change-section-vma .data=0x00000000 \
+			--verilog-data-width 4\
+        	$$test data/tc_$$name/tc_$$name-dmem.hex; \
 			\
 			riscv32-unknown-elf-objdump -d -M no-aliases $$test > data/tc_$$name/tc_$$name.dump;\
 	done

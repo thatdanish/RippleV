@@ -8,7 +8,9 @@
 module RippleV_Mc #( 
     parameter ADDR_WIDTH = 32,
     parameter MEM_SIZE = 32,
-    parameter string FILE = "../../../data/sample/sample_instructions.hex",
+    parameter string IMEM_FILE = "../../../data/sample/sample_instructions.hex",
+    parameter string DMEM_FILE = "../../../data/sample/sample_instructions.hex",
+    parameter LOAD_FROM_DMEM_HEX = 0,
     parameter RST_HND = 32'h0,
     parameter TRAP_HND = 32'd4,
     parameter INT_HND = 32'h3FF8
@@ -72,7 +74,7 @@ module RippleV_Mc #(
     );
 
     inst_mem #(
-        .FILE(FILE),
+        .FILE(IMEM_FILE),
         .ADDR_WIDTH(ADDR_WIDTH),
         .MEM_SIZE(MEM_SIZE)
     ) inst_mem_inst (
@@ -84,7 +86,9 @@ module RippleV_Mc #(
     );
 
     data_mem #( 
-        .ADDR_WIDTH(ADDR_WIDTH)
+        .ADDR_WIDTH(ADDR_WIDTH),
+        .LOAD_FROM_DMEM_HEX(LOAD_FROM_DMEM_HEX),
+        .FILE(DMEM_FILE)
     ) data_mem_inst (
         .clk_i,
         .rst_i,

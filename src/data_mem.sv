@@ -2,7 +2,9 @@
 `default_nettype none
 
 module data_mem #( 
-    parameter ADDR_WIDTH = 32
+    parameter ADDR_WIDTH = 32,
+    parameter LOAD_FROM_DMEM_HEX = 0,
+    parameter string FILE = "../../../data/sample/sample_instructions.hex"
 ) (
     input clk_i,
     input rst_i,
@@ -18,8 +20,13 @@ import typed_pkg::*;
 
 logic [31:0] dmem[4096];
 
+initial begin
+    if (LOAD_FROM_DMEM_HEX)
+        $readmemh(FILE, dmem);
+end
+
 always_ff @( posedge clk_i ) begin
-    if (!rst_i) begin
+    if (!rst_i && !LOAD_FROM_DMEM_HEX) begin
         data_o <= 'd0;
     end else begin
         if (en_i == 1'b1) begin

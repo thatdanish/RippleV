@@ -19,7 +19,14 @@ def test_runner_RippleV_Mc(test_case):
 
     SIM = os.getenv("SIM", "verilator")
     WAVES = os.getenv("WAVES", 1)
-    HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}.hex"
+   
+    DMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}-dmem.hex"
+    if os.path.exists(DMEM_HEX_FILE_PATH[3:]):
+        IMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}-imem.hex"
+        LOAD_FROM_DMEM_HEX = 1
+    else:
+        IMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}.hex"
+        LOAD_FROM_DMEM_HEX = 0
 
     SOURCES = [
     "../../src/Opcodes_pkg.sv",
@@ -43,7 +50,8 @@ def test_runner_RippleV_Mc(test_case):
         hdl_toplevel="RippleV_Mc",
         waves=WAVES,
         clean=True,
-        parameters={"FILE":f'"{HEX_FILE_PATH}"'},     
+        parameters={"IMEM_FILE":f'"{IMEM_HEX_FILE_PATH}"', "DMEM_FILE":f'"{DMEM_HEX_FILE_PATH}"',
+                    "LOAD_FROM_DMEM_HEX": LOAD_FROM_DMEM_HEX},     
         timescale=("1ns", "1ns"), 
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
@@ -51,7 +59,8 @@ def test_runner_RippleV_Mc(test_case):
     runner.test(
         hdl_toplevel="RippleV_Mc",
         test_module="tests_RippleV_Mc", 
-        parameters={"FILE":f'"{HEX_FILE_PATH}"'}, 
+        parameters={"IMEM_FILE":f'"{IMEM_HEX_FILE_PATH}"', "DMEM_FILE":f'"{DMEM_HEX_FILE_PATH}"',
+                    "LOAD_FROM_DMEM_HEX": LOAD_FROM_DMEM_HEX},    
         timescale=("1ns", "1ns"), 
         waves=WAVES
     )

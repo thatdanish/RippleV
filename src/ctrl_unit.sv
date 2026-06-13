@@ -96,7 +96,11 @@ module ctrl_unit(
                     CTRL_SRL: next_state  = READ_RS2;
                     CTRL_SRA: next_state  = READ_RS2;
                     CTRL_JAL: next_state  = WRITE_RD;
-                    CTRL_JALR: next_state  = WRITE_RD;
+                    // JALR --> READ_RS1 --> JUMP_PC ( + WRITE_RD compute jump address & WRITE RD BEFORE UPDATING) --> IDLE
+                    CTRL_JALR: next_state  = READ_RS1;
+                    // Conditional Branch --> ALU_COMPUTE-1(evaluate br condition)
+                    // JUMP_OR_NOT --> If branch valid --> ALU_COMPUTE-2 else --> IDLE
+                    // ALU_COMPUTE-2 (evaluate jump address) --> JUMP_PC --> IDLE
                     CTRL_BEQ: next_state  = READ_RS2;
                     CTRL_BNE: next_state  = READ_RS2;
                     CTRL_BGE: next_state  = READ_RS2;
@@ -147,9 +151,6 @@ module ctrl_unit(
                 else if (current_instruction inside {CTRL_SW,CTRL_SH,CTRL_SB})
                     next_state = STORE_DATA_MEM;
                 else if (current_instruction inside {CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE}) begin
-                    // Conditonal Branch --> ALU_COMPUTE-1(evaluate br condition)
-                    // JUMP_OR_NOT --> If branch valid --> ALU_COMPUTE-2 else --> IDLE
-                    // ALU_COMPUTE-2 (evaluate jump address) --> JUMP_PC --> IDLE
                    if (take_branch_delayed == 1'b1) begin
                         next_state = JUMP_PC;
                    end else 
@@ -164,7 +165,7 @@ module ctrl_unit(
                 if (current_instruction == CTRL_JAL) 
                     next_state = ALU_COMPUTE;
                 else if (current_instruction == CTRL_JALR)
-                    next_state = READ_RS1;
+                    next_state = IDLE;
                 else if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI})
                     next_state = READ_RS1;
                 else
@@ -649,6 +650,13 @@ module ctrl_unit(
                         pc_mux_sel_o = sel_pc_update;
                     else
                         pc_mux_sel_o = sel_pc_jump_vec;
+                end
+                // JALR --> Write RD before updating. 
+                if (current_instruction == CTRL_JALR) begin
+                    reg_file_en_o = 1'b1;
+                    reg_file_addr_mux_sel_o =  sel_reg_file_rd;
+                    reg_file_rw_o = write;
+                    reg_file_data_mux_sel_o = sel_reg_file_pc;
                 end
             end
             READ_CSR: begin
