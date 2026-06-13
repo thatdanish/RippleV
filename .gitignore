@@ -7,7 +7,7 @@ __pycache__
 # Sim files
 
 sim_build
-**/coverage_per_test/**
+coverage_per_test
 results.xml
 
 # Env
