@@ -11,6 +11,7 @@ module data_mem #(
     input en_i,
     input typed_pkg::rw_t rw_i,
     input typed_pkg::transfer_t transfer_type_i,
+    input typed_pkg::load_t load_type_i, 
     input logic [ADDR_WIDTH-1:0] addr_i,
     input logic [31:0] data_i,    
     output logic [31:0] data_o    
@@ -35,16 +36,16 @@ always_ff @( posedge clk_i ) begin
                 unique case (transfer_type_i)
                     transfer_byte :  begin
                         case (addr_i[1:0])
-                            2'd0: data_o <= 32'(dmem[12'(addr_i[31:2])][7:0]);
-                            2'd1: data_o <= 32'(dmem[12'(addr_i[31:2])][15:8]);
-                            2'd2: data_o <= 32'(dmem[12'(addr_i[31:2])][23:16]);
-                            2'd3: data_o <= 32'(dmem[12'(addr_i[31:2])][31:24]);
+                            2'd0: data_o <= (dmem[12'(addr_i[31:2])][7] == 1'b1 && load_type_i == load_signed) ? {24'hFFFFFF, dmem[12'(addr_i[31:2])][7:0]} : {24'h0, dmem[12'(addr_i[31:2])][7:0]};
+                            2'd1: data_o <= (dmem[12'(addr_i[31:2])][15] == 1'b1 && load_type_i == load_signed) ? {24'hFFFFFF, dmem[12'(addr_i[31:2])][15:8]} : {24'h0, dmem[12'(addr_i[31:2])][15:8]};
+                            2'd2: data_o <= (dmem[12'(addr_i[31:2])][23] == 1'b1 && load_type_i == load_signed) ? {24'hFFFFFF, dmem[12'(addr_i[31:2])][23:16]} : {24'h0, dmem[12'(addr_i[31:2])][23:16]};
+                            2'd3: data_o <= (dmem[12'(addr_i[31:2])][31] == 1'b1 && load_type_i == load_signed) ? {24'hFFFFFF, dmem[12'(addr_i[31:2])][31:24]} : {24'h0, dmem[12'(addr_i[31:2])][31:24]};
                         endcase
                     end
                     transfer_hex_byte : begin
                         case (addr_i[1:0])
-                            2'd0: data_o <= 32'(dmem[12'(addr_i[31:2])][15:0]);
-                            2'd2: data_o <= 32'(dmem[12'(addr_i[31:2])][31:16]);
+                            2'd0: data_o <= (dmem[12'(addr_i[31:2])][15] == 1'b1 && load_type_i == load_signed) ? {16'hFFFF, dmem[12'(addr_i[31:2])][15:0]} : {16'h0, dmem[12'(addr_i[31:2])][15:0]};
+                            2'd2: data_o <= (dmem[12'(addr_i[31:2])][31] == 1'b1 && load_type_i == load_signed) ? {16'hFFFF, dmem[12'(addr_i[31:2])][31:16]} : {16'h0, dmem[12'(addr_i[31:2])][31:16]};
                         endcase
                     end
                     transfer_word : data_o <= dmem[12'(addr_i[31:2])];

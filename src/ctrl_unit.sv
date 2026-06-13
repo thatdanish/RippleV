@@ -38,6 +38,7 @@ module ctrl_unit(
     // Data Memory
     output typed_pkg::transfer_t data_mem_transfer_type_o,
     output typed_pkg::rw_t data_mem_rw_o,
+    output typed_pkg::load_t data_mem_load_type_o, 
     output logic data_mem_en_o
 );
 
@@ -244,6 +245,7 @@ module ctrl_unit(
         // Data-mem
         data_mem_rw_o = rw_t'(1'b0);
         data_mem_transfer_type_o = transfer_t'(2'b0);
+        data_mem_load_type_o = load_t'('d0);
         data_mem_en_o = 1'b0;
 
         case (current_state)
@@ -622,12 +624,30 @@ module ctrl_unit(
                 data_mem_en_o = 1'b1;
                 data_mem_rw_o = read;
                 case (current_instruction)
-                    CTRL_LW :  data_mem_transfer_type_o = transfer_word;
-                    CTRL_LH :  data_mem_transfer_type_o = transfer_hex_byte;
-                    CTRL_LHU :  data_mem_transfer_type_o = transfer_hex_byte;
-                    CTRL_LB :  data_mem_transfer_type_o = transfer_byte;
-                    CTRL_LBU :  data_mem_transfer_type_o = transfer_byte;
-                    default: data_mem_transfer_type_o = transfer_t'('d0);
+                    CTRL_LW : begin
+                       data_mem_load_type_o = load_signed;
+                       data_mem_transfer_type_o = transfer_word;
+                    end
+                    CTRL_LH : begin
+                       data_mem_load_type_o = load_signed;
+                       data_mem_transfer_type_o = transfer_hex_byte;
+                    end
+                    CTRL_LHU : begin
+                       data_mem_load_type_o = load_unsigned;
+                       data_mem_transfer_type_o = transfer_hex_byte;
+                    end
+                    CTRL_LB : begin
+                       data_mem_load_type_o = load_signed;
+                       data_mem_transfer_type_o = transfer_byte;
+                    end
+                    CTRL_LBU : begin
+                       data_mem_load_type_o = load_unsigned;
+                       data_mem_transfer_type_o = transfer_byte;
+                    end
+                    default: begin
+                       data_mem_load_type_o = load_signed;
+                       data_mem_transfer_type_o = transfer_t'('d0);
+                    end
                 endcase
             end
             STORE_DATA_MEM: begin

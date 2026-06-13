@@ -15,6 +15,7 @@ MAX_CLKS = 8000
 N_TESTS = 1
 TO_HOST = 0x01FC>>2
 TO_HOST_RVT = 0x0>>2
+TO_HOST_RVT_2 = 0x40>>2
 RESULT = 0x0100>>2
 RST_HND = 0x0000
 INT_HND = 0x3FF8
@@ -33,7 +34,7 @@ async def monitor(dut):
     while True:
         await NextClockCycle(dut)
 
-        if (dut.data_mem_inst.dmem[TO_HOST].value == SUCCESS) or (dut.data_mem_inst.dmem[TO_HOST_RVT].value == SUCCESS_RVT):
+        if (dut.data_mem_inst.dmem[TO_HOST].value == SUCCESS) or (dut.data_mem_inst.dmem[TO_HOST_RVT].value == SUCCESS_RVT) or (dut.data_mem_inst.dmem[TO_HOST_RVT_2].value == SUCCESS_RVT):
             cocotb.pass_test()
 
 @cocotb.test()

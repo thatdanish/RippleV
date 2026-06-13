@@ -33,6 +33,7 @@ module RippleV_Mc #(
     sel_csr_data_t sel_mux_csr_data;
     sel_csr_addr_t sel_mux_csr_addr;
     write_t csr_write_type;
+    load_t data_load_type;
     alu_opr_t alu_operations;
     csr_addr_t csr_addr_from_cu, csr_addr_from_decoder, csr_address;
     ctrl_inst_t ctrl_instruction;
@@ -70,7 +71,8 @@ module RippleV_Mc #(
         .alu_b_mux_sel_o(sel_mux_alu_b),
         .data_mem_en_o(data_mem_enable),
         .data_mem_transfer_type_o(transfer_type),
-        .data_mem_rw_o(data_mem_rw)
+        .data_mem_rw_o(data_mem_rw),
+        .data_mem_load_type_o(data_load_type)
     );
 
     inst_mem #(
@@ -95,7 +97,8 @@ module RippleV_Mc #(
         .en_i(data_mem_enable),
         .rw_i(data_mem_rw),
         .transfer_type_i(transfer_type),
-        .addr_i(alu_output[ADDR_WIDTH-1:0]),
+        .load_type_i(data_load_type),
+        .addr_i(alu_output),
         .data_i(reg_file_output),    
         .data_o(data_mem_output)  
     );

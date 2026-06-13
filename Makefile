@@ -143,7 +143,8 @@ compile_rvtests:
         	-O verilog \
 			--only-section=.data \
     		--only-section=.tohost \
-    		--change-section-vma .data=0x00000000 \
+    		--change-section-lma .data=0x00000000 \
+    		--change-section-lma .tohost=0x00000040 \
 			--verilog-data-width 4\
         	$$test data/tc_$$name/tc_$$name-dmem.hex; \
 			\

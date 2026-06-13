@@ -27,12 +27,13 @@ async def init_inputs(dut):
     dut.en_i.value = 0
     dut.rw_i.value = 0
     dut.transfer_type_i.value = 0
+    dut.load_type_i.value = 0
     dut.addr_i.value = 0
     dut.data_i.value = 0
 
 # Data mem model
 
-def data_mem_model(data=0, addr=0, transfer=0, READ=False):
+def data_mem_model(data=0, addr=0, transfer=0, load=0, READ=False):
     
     # Read 
     if READ:
@@ -42,21 +43,29 @@ def data_mem_model(data=0, addr=0, transfer=0, READ=False):
                 data_to_send = LogicArray(0, 32)
                 data_ = LogicArray.from_unsigned(data_mem_dict[int(addr[31:2])], 32)
                 data_to_send[7:0] = data_[7:0]
+                if (int(data_[7]) == 1 and load == 0):
+                    data_to_send[31:8] = 0xFFFFFF
                 return data_to_send
             elif(int(addr[1:0])) == 1:
                 data_to_send = LogicArray(0, 32)
                 data_ = LogicArray.from_unsigned(data_mem_dict[int(addr[31:2])], 32)
                 data_to_send[7:0] = data_[15:8]
+                if (int(data_[15]) == 1 and load == 0):
+                    data_to_send[31:8] =  0xFFFFFF
                 return data_to_send
             elif(int(addr[1:0])) == 2:
                 data_to_send = LogicArray(0, 32)
                 data_ = LogicArray.from_unsigned(data_mem_dict[int(addr[31:2])], 32)
                 data_to_send[7:0] = data_[23:16]
+                if (int(data_[23]) == 1 and load == 0):
+                    data_to_send[31:8] =  0xFFFFFF
                 return data_to_send
             else:
                 data_to_send = LogicArray(0, 32)
                 data_ = LogicArray.from_unsigned(data_mem_dict[int(addr[31:2])], 32)
                 data_to_send[7:0] = data_[31:24]
+                if (int(data_[31]) == 1 and load == 0):
+                    data_to_send[31:8] =  0xFFFFFF
                 return data_to_send
         # hex_byte
         elif transfer == 1:
@@ -64,11 +73,15 @@ def data_mem_model(data=0, addr=0, transfer=0, READ=False):
                 data_to_send = LogicArray(0, 32)
                 data_ = LogicArray.from_unsigned(data_mem_dict[int(addr[31:2])], 32)
                 data_to_send[15:0] = data_[15:0]
+                if (int(data_[15]) == 1 and load == 0):
+                    data_to_send[31:16] =  0xFFFF
                 return data_to_send
             elif (int(addr[1:0])) == 2:
                 data_to_send = LogicArray(0, 32)
                 data_ = LogicArray.from_unsigned(data_mem_dict[int(addr[31:2])], 32)
                 data_to_send[15:0] = data_[31:16]
+                if (int(data_[31]) == 1 and load == 0):
+                    data_to_send[31:16] =  0xFFFF
                 return data_to_send
             else: 
                 raise AssertionError(f"Misaligned read for HEX_WORD --> byte lane : {addr[1:0]}, addr : {int(addr[31:2])}")
@@ -167,6 +180,7 @@ async def smoke_test(dut):
     for _ in range(int(N_TESTS/2)):
         
         addr = random.randint(0, MAX_ADDR_RANGE-1)  
+        load_type = random.randint(0,1)
         logic_addr = LogicArray.from_unsigned(addr, 32)
         
         if (logic_addr[1:0] == 0):
@@ -180,19 +194,20 @@ async def smoke_test(dut):
         dut.rw_i.value = 1 
         dut.addr_i.value = addr
         dut.transfer_type_i.value = transfer
+        dut.load_type_i.value = load_type
         
         await RisingEdge(dut.clk_i)
 
         dut.en_i.value = 0
         await NextClockCycle(dut)
         
-        expected_value = data_mem_model(transfer=transfer, addr=logic_addr, READ=True)
+        expected_value = data_mem_model(transfer=transfer, addr=logic_addr, load=load_type, READ=True)
         try: 
             assert expected_value == dut.data_o.value
         except:
-            cocotb.log.info(f"Address : {addr}, actual address : {(addr >> 2) - (addr >> 2)%4}, transfer : {transfer},  addr >> 2%4 : {(addr >> 2)%4}, addr >> 2 %2 : {(addr >> 2) %2}")
-            cocotb.log.info(f"Expected data mem : {LogicArray.from_unsigned(data_mem_dict[(addr >> 2) - (addr >> 2)%4], 32)}")
-            cocotb.log.info(f"Hardware data mem : {dut.dmem[(addr >> 2) - (addr >> 2)%4].value}")
+            cocotb.log.info(f"Address : {addr}, actual address : {addr>>2}, transfer : {transfer},  addr[1:0] : {addr%4}, load : {load_type}")
+            cocotb.log.info(f"Expected data mem : {LogicArray.from_unsigned(data_mem_dict[addr>>2], 32)}")
+            cocotb.log.info(f"Hardware data mem : {dut.dmem[addr>>2].value}")
             raise AssertionError(f"Invalid read --> ADDR {addr} expected : {expected_value}, got : {dut.data_o.value}")
 
 def test_runner_data_mem():

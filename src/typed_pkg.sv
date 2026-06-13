@@ -68,4 +68,8 @@ typedef enum bit[1:0] { transfer_byte, transfer_hex_byte, transfer_word } transf
 
 typedef enum bit[1:0] { write_complete, write_set, write_clear } write_t;
 
+// Load - signed, un-signed
+
+typedef enum bit[1:0] { load_signed, load_unsigned } load_t;
+
 endpackage
