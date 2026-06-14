@@ -5,14 +5,13 @@ module reg_file(
     input clk_i,
     input rst_i,
     input en_i, 
-    input rw_i,
+    input typed_pkg::rw_t rw_i,
     input logic [4:0] addr_i,
     input logic [31:0] data_i,
     output logic [31:0] data_o
 );
 
-import Opcodes_pkg::read;
-import Opcodes_pkg::write;
+import typed_pkg::*;
 
 logic [31:0] [31:0] int_regs;
 

@@ -7,19 +7,20 @@ import cocotb
 from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb_tools.runner import get_runner
 
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/sim/")
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from simulation import clk_, ResetTrigger, NextClockCycle
+from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
-MAX_CLKS = 2000
-N_TESTS = 1000
+MAX_CLKS = 4000
+N_TESTS = 2000
 
 # Init-inputs
 
 async def init_inputs(dut):
     dut.en_i.value = 0
+    dut.write_type_i.value = 0
     dut.rw_i.value = 0
     dut.ext_interrupt_i.value = 0
     dut.csr_addr_i.value = 0
@@ -38,9 +39,11 @@ async def smoke_test(dut):
     await ClockCycles(dut.clk_i, 5)
 
     # Test
-    addr_read_csrs = {"mstatus" : 0, "mepc": 1, "mcause": 2, "misa": 3, "mtvec":4}
-    addr_write_csrs = {"mepc": 1, "mcause": 2}
-    data_csrs = {"mstatus" : 6144, "mepc": 0, "mcause": 0, "misa": 1073744000, "mtvec": 0}
+    addr_write_csrs = {"mhartid": 0xF14, "mstatus" : 0x300, "mepc": 0x341, "mcause": 0x342, "mtvec":0x305}
+    addr_read_csrs = {"stvec": 0x105, "satp": 0x180, "mhartid": 0xF14, "mstatus" : 0x300, "medeleg":0x302, "mideleg":0x303,
+                       "mie":0x304,  "mepc": 0x341, "mcause": 0x342, "mtvec":0x305, "mnstatus":0x744, "pmpcfg0":0x3A0, "pmpaddr0":0x3B0}
+    data_csrs = {"stvec": 0, "satp": 0, "mhartid": 0, "mstatus" : 0, "medeleg":0, "mideleg":0,
+                    "mie":0,  "mepc": 0, "mcause": 0, "mtvec":0, "mnstatus":0, "pmpcfg0":0, "pmpaddr0":0}
 
     for _ in range(N_TESTS):
         rw = random.randint(0,1)
@@ -74,10 +77,7 @@ async def smoke_test(dut):
 
             await RisingEdge(dut.clk_i)
             dut.en_i.value = 0
-            if choice == "mepc":
-                data_csrs[choice] = 4*data
-            else:
-                data_csrs[choice] = data
+            data_csrs[choice] = data
 
     await ClockCycles(dut.clk_i, 5)
     
@@ -98,7 +98,7 @@ def test_runner_csr():
     sim = os.getenv("SIM", "verilator")            
     waves = os.getenv("WAVES", True)            
 
-    sources = ["../../src/Opcodes_pkg.sv", "../../src/csr.sv"]
+    sources = ["../../src/typed_pkg.sv", "../../src/csr.sv"]
 
     runner = get_runner(sim)
 
@@ -107,12 +107,14 @@ def test_runner_csr():
         hdl_toplevel="csr",
         waves=waves, 
         clean=True,
-        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
+        parameters={"B_TEST": 1},
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs", "--timing"]
     )
 
     runner.test(
         hdl_toplevel="csr",
         test_module="tests_csr",
+        parameters={"B_TEST": 1},
         waves=waves
     )
 

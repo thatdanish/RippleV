@@ -1,40 +1,68 @@
 import os
+import pytest
 from cocotb_tools.runner import get_runner
 
-def test_runner_RippleV_Mc():
-    sim = os.getenv("SIM", "verilator")
-    waves = os.getenv("WAVES", 1)
+# Parameters
 
-    sources = [
-        "../../src/csr.sv", 
-        "../../src/ctrl_unit.sv", 
-        "../../src/data_mem.sv", 
-        "../../src/decoder.sv", 
-        "../../src/housekeeper.sv", 
-        "../../src/inst_mem.sv", 
-        "../../src/MUXs.sv", 
-        "../../src/Opcodes_pkg.sv", 
-        "../../src/program_counter.sv", 
-        "../../src/reg_file.sv",
-        "../../src/RippleV_Mc.sv", 
-        "../../src/sel_pkg.sv", 
-        "../../src/temp_alu.sv", 
-        ]
-    
-    runner = get_runner(sim)
+def get_test_cases():
+    TC_DIR = "../../data/"
+    tests = []
+    for dname in sorted(os.listdir(TC_DIR)):
+        if dname.startswith("tc_"):
+            test_case = os.path.join(f"{dname}")
+            tests.append(pytest.param(test_case, id=dname))
+
+    return tests
+
+@pytest.mark.parametrize("test_case", get_test_cases())
+def test_runner_RippleV_Mc(test_case):
+
+    SIM = os.getenv("SIM", "verilator")
+    WAVES = os.getenv("WAVES", 1)
+   
+    DMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}-dmem.hex"
+    if os.path.exists(DMEM_HEX_FILE_PATH[3:]):
+        IMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}-imem.hex"
+        LOAD_FROM_DMEM_HEX = 1
+    else:
+        IMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}.hex"
+        LOAD_FROM_DMEM_HEX = 0
+
+    SOURCES = [
+    "../../src/Opcodes_pkg.sv",
+    "../../src/typed_pkg.sv",
+    "../../src/csr.sv",
+    "../../src/ctrl_unit.sv",
+    "../../src/data_mem.sv",
+    "../../src/decoder.sv",
+    "../../src/inst_mem.sv",
+    "../../src/MUXs.sv",
+    "../../src/program_counter.sv",
+    "../../src/reg_file.sv",
+    "../../src/RippleV_Mc.sv",
+    "../../src/temp_alu.sv"
+    ]
+
+    runner = get_runner(SIM)
 
     runner.build(
-        sources=sources,
+        sources=SOURCES,
         hdl_toplevel="RippleV_Mc",
-        waves=waves,
-        clean=True,
+        waves=WAVES,
+        clean=False,
+        parameters={"IMEM_FILE":f'"{IMEM_HEX_FILE_PATH}"', "DMEM_FILE":f'"{DMEM_HEX_FILE_PATH}"',
+                    "LOAD_FROM_DMEM_HEX": LOAD_FROM_DMEM_HEX},     
+        timescale=("1ns", "1ns"), 
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
         hdl_toplevel="RippleV_Mc",
-        test_module="tests_RippleV_Mc",
-        waves=waves
+        test_module="tests_RippleV_Mc", 
+        parameters={"IMEM_FILE":f'"{IMEM_HEX_FILE_PATH}"', "DMEM_FILE":f'"{DMEM_HEX_FILE_PATH}"',
+                    "LOAD_FROM_DMEM_HEX": LOAD_FROM_DMEM_HEX},    
+        timescale=("1ns", "1ns"), 
+        waves=WAVES
     )
 
 if __name__ == "__main__":

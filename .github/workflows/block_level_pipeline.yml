@@ -2,7 +2,7 @@ name: Block-Level-Tests
 
 on:
   push:
-    branches: [main, ctrl_unit]
+    branches: [main, rippleV_mc]
   pull_request:
 
 jobs:
@@ -59,11 +59,6 @@ jobs:
       - name: Add Verilator to PATH
         run: echo "$HOME/verilator/bin" >> $GITHUB_PATH
     
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y iverilog gtkwave
-
       - name: Run Decoder tests
         run: |
           cd test/decoder && WAVES=0 pytest test_runner_decoder.py

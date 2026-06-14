@@ -5,14 +5,14 @@ module temp_alu (
     input clk_i,
     input rst_i,
     input en_i,
-    input logic [4:0] opr_i,
+    input typed_pkg::alu_opr_t opr_i,
     input logic [31:0] a_i, 
     input logic [31:0] b_i,
     output logic [31:0] out_o,
     output logic take_branch_o
 );
 
-import Opcodes_pkg::*;
+import typed_pkg::*;
 
 logic [31:0] int_out;
 logic int_take_branch;
@@ -37,16 +37,16 @@ always_comb begin
     int_out = 'd0;
     int_take_branch = 1'b0;
     case (opr_i)
-        ALU_ADD : int_out = a_i + b_i; 
-        ALU_SUB : int_out = a_i - b_i;
+        ALU_ADD : int_out = signed'(a_i) + (b_i); 
+        ALU_SUB : int_out = b_i - a_i;
         ALU_MUL : int_out = func_mul(a_i, b_i);
         ALU_MULH : int_out = func_mulh(a_i, b_i);
         ALU_MULHU : int_out = func_mulhu(a_i, b_i);
         ALU_MULHSU : int_out = func_mulhsu(a_i, b_i);
-        ALU_DIV : int_out = signed'(b_i)/signed'(a_i);
-        ALU_DIVU : int_out = unsigned'(b_i)/unsigned'(a_i);
+        ALU_DIV : int_out = func_div(a_i,b_i);
+        ALU_DIVU : int_out = func_divu(a_i, b_i);
         ALU_REM : int_out = func_rem(a_i, b_i);
-        ALU_REMU : int_out = unsigned'(b_i)%unsigned'(a_i);
+        ALU_REMU : int_out = func_remu(a_i, b_i);
         ALU_SLT : int_out = 32'(signed'(b_i)<signed'(a_i));
         ALU_SLTU : int_out = 32'(unsigned'(b_i)<unsigned'(a_i));
         ALU_AND : int_out = b_i & a_i;
@@ -54,7 +54,7 @@ always_comb begin
         ALU_XOR : int_out = b_i ^ a_i;
         ALU_SLL : int_out = (b_i == 32'b0) ? 32'b0 : b_i << a_i[4:0];
         ALU_SRL : int_out = (b_i == 32'b0) ? 32'b0 : b_i >> a_i[4:0];
-        ALU_SRA : int_out = (b_i == 32'b0) ? 32'b0 : b_i >>> a_i[4:0];
+        ALU_SRA : int_out = (b_i == 32'b0) ? 32'b0 : unsigned'(signed'(b_i) >>> a_i[4:0]);
         ALU_JAL : int_out = func_jal(a_i,b_i);
         ALU_JALR : int_out = func_jalr(a_i,b_i);
         ALU_BEQ : int_take_branch = (a_i == b_i);
@@ -72,6 +72,22 @@ always_comb begin
 end
 
 // Functions
+
+function logic [31:0] func_div (logic [31:0] a, b);
+    if (b == 32'h80000000 && a == 32'hFFFFFFFF) 
+        return b;
+    else if (a == 32'd0)
+        return 32'hFFFFFFFF;
+    else
+        return signed'(b_i)/signed'(a_i);
+endfunction
+
+function logic [31:0] func_divu (logic [31:0] a, b);
+    if (a == 32'd0)
+        return 32'hFFFFFFFF;
+    else
+        return unsigned'(b_i)/unsigned'(a_i);
+endfunction
 
 function logic [31:0] func_mul (logic [31:0] a, b);
     bit [63:0] int_result;
@@ -99,9 +115,22 @@ endfunction
 
 function logic [31:0] func_rem (logic [31:0] a, b);
     bit [31:0] int_result;
-    int_result = signed'(b) % signed'(a);
-    int_result[31] = b[31];
-    return int_result;
+    if (a == 32'd0) 
+        return b;
+    else begin
+        int_result = signed'(b) % signed'(a);
+        return int_result;
+    end
+endfunction
+
+function logic [31:0] func_remu (logic [31:0] a, b);
+    bit [31:0] int_result;
+    if (a == 32'd0) 
+        return b;
+    else begin
+        int_result = unsigned'(b) % unsigned'(a);
+        return int_result;
+    end
 endfunction
 
 function logic [31:0] func_jal (logic [31:0] a, b);

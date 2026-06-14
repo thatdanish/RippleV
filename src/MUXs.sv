@@ -2,13 +2,13 @@
 `default_nettype none
 
 module mux_reg_file_addr(
-    input logic [1:0] sel_i, 
+    input typed_pkg::sel_reg_file_addr_t sel_i, 
     input logic [4:0] rs1_i, 
     input logic [4:0] rs2_i, 
     input logic [4:0] rd_i, 
     output logic [4:0] addr_reg_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     always_comb begin 
         case (sel_i)
@@ -21,14 +21,15 @@ module mux_reg_file_addr(
 endmodule
 
 module mux_reg_file_data(
-    input logic [1:0] sel_i, 
+    input typed_pkg::sel_reg_file_data_t sel_i, 
     input logic [31:0] from_data_mem_i, 
     input logic [31:0] from_ALU_i, 
     input logic [31:0] from_decoder_i, 
     input logic [31:0] from_pc_i, 
+    input logic [31:0] from_csr_i, 
     output logic [31:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     always_comb begin 
         case (sel_i)
@@ -36,6 +37,7 @@ module mux_reg_file_data(
             sel_reg_file_alu : data_o = from_ALU_i;
             sel_reg_file_decoder : data_o = from_decoder_i;
             sel_reg_file_pc : data_o = from_pc_i;
+            sel_reg_file_csr : data_o = from_csr_i;
             default: data_o = 'd0;
         endcase
     end
@@ -43,14 +45,14 @@ endmodule
 
 module mux_alu_a(
     input clk_i,
-    input logic [2:0] sel_i, 
+    input typed_pkg::sel_alu_a_t sel_i, 
     input logic [31:0] const_4_i, 
     input logic [31:0] sign_ext_offset_i, 
     input logic [31:0] lui_i, 
     input logic [31:0] rs2_i, 
     output logic [31:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     logic [31:0] rs2_delayed;
 
@@ -70,12 +72,12 @@ module mux_alu_a(
 endmodule
 
 module mux_alu_b(
-    input logic [2:0] sel_i, 
+    input typed_pkg::sel_alu_b_t sel_i, 
     input logic [31:0] pc_i, 
     input logic [31:0] rs1_i,  
     output logic [31:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
 
     always_comb begin 
         case (sel_i)
@@ -87,22 +89,66 @@ module mux_alu_b(
 endmodule
 
 module mux_pc #( 
-    parameter ADDR_WIDTH = 5
+    parameter ADDR_WIDTH = 32,
+    parameter INT_HND = 32'd8
 ) (
-    input logic [1:0] sel_i, 
+    input clk_i,
+    input typed_pkg::sel_pc_t sel_i, 
     input logic [ADDR_WIDTH-1:0] pc_update_i, 
-    input logic [ADDR_WIDTH-1:0] mret_i,  
-    input logic [ADDR_WIDTH-1:0] handler_addr_i,  
+    input logic [ADDR_WIDTH-1:0] jump_vec_i,    
     output logic [ADDR_WIDTH-1:0] data_o
 );
-    import sel_pkg::*;
+    import typed_pkg::*;
+    logic [ADDR_WIDTH-1:0] int_hnd;
+    
+    always_ff @( posedge clk_i ) begin 
+        int_hnd <= INT_HND;
+    end
 
     always_comb begin 
         case (sel_i)
             sel_pc_update : data_o = pc_update_i;
-            sel_pc_mret : data_o = mret_i;
-            sel_pc_handler_addr : data_o = handler_addr_i;
+            sel_pc_jump_vec : data_o = jump_vec_i;
+            sel_pc_int_hnd : data_o = int_hnd;
             default: data_o = 'd0;
+        endcase
+    end
+endmodule
+
+module mux_csr_data (
+    input typed_pkg::sel_csr_data_t sel_i,
+    input logic [31:0] pc_i,
+    input logic [31:0] uimm_i,
+    input logic [31:0] rs1_i,
+    input logic [31:0] from_ctrl_unit_i,
+    output logic [31:0] data_o
+);
+    import typed_pkg::*;
+
+    always_comb begin 
+        case (sel_i)
+            sel_csr_data_pc : data_o = pc_i;
+            sel_csr_data_uimm : data_o = uimm_i;
+            sel_csr_data_rs1 : data_o = rs1_i;
+            sel_csr_data_ctrl_unit : data_o = from_ctrl_unit_i;
+            default: data_o = 'd0;
+        endcase
+    end
+endmodule
+
+module mux_csr_addr (
+    input typed_pkg::sel_csr_addr_t sel_i,
+    input logic [11:0] from_ctrl_unit_i,
+    input logic [11:0] from_decoder_i,
+    output logic [11:0] addr_o
+);
+    import typed_pkg::*;
+
+    always_comb begin 
+        case (sel_i)
+            sel_csr_addr_decoder : addr_o = from_decoder_i;
+            sel_csr_addr_ctrl_unit : addr_o = from_ctrl_unit_i;
+            default: addr_o = 'd0;
         endcase
     end
 endmodule

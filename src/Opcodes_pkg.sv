@@ -12,6 +12,7 @@ localparam CJ = 7'b1100011;
     localparam BEQ = 3'b000;
     localparam BNE = 3'b001;
     localparam BGE = 3'b101;
+    localparam BLT = 3'b100;
     localparam BLTU = 3'b110;
     localparam BGEU = 3'b111;
 localparam LOAD = 7'b0000011;
@@ -63,96 +64,17 @@ localparam REG_T = 7'b0110011;
     localparam AND_REMU = 3'b111;
         localparam AND_F7 = 7'b0000000;
         localparam REMU_F7 = 7'b0000001;
+localparam MRET =  32'b00110000001000000000000001110011;
+localparam WFI =  32'b00010000010100000000000001110011;
+localparam ZICSR = 7'b1110011;
+    localparam CSRRW = 3'b001;
+    localparam CSRRS = 3'b010;
+    localparam CSRRC = 3'b011;
+    localparam CSRRWI = 3'b101;
+    localparam CSRRSI = 3'b110;
+    localparam CSRRCI = 3'b111;
+localparam FENCE = 7'b0001111;
+localparam ECALL =  32'b00000000000000000000000001110011;
+localparam EBREAK =  32'b00000000000100000000000001110011;
 
-// Instructions to CTRL-Unit
-
-localparam CTRL_ADDI = 6'd0;
-localparam CTRL_SLTI = 6'd1;
-localparam CTRL_SLTIU = 6'd2;
-localparam CTRL_ANDI = 6'd3;
-localparam CTRL_ORI = 6'd4;
-localparam CTRL_XORI = 6'd5;
-localparam CTRL_SLLI = 6'd6;
-localparam CTRL_SRLI = 6'd7;
-localparam CTRL_SRAI = 6'd8;
-localparam CTRL_LUI = 6'd9;
-localparam CTRL_AUIPC = 6'd10;
-localparam CTRL_ADD = 6'd11;
-localparam CTRL_SUB = 6'd12;
-localparam CTRL_SLTU = 6'd13;
-localparam CTRL_SLT = 6'd14;
-localparam CTRL_AND = 6'd15;
-localparam CTRL_OR = 6'd16;
-localparam CTRL_XOR = 6'd17;
-localparam CTRL_SLL = 6'd18;
-localparam CTRL_SRL = 6'd19;
-localparam CTRL_SRA = 6'd46;
-localparam CTRL_JAL = 6'd20;
-localparam CTRL_JALR = 6'd21;
-localparam CTRL_BEQ = 6'd22;
-localparam CTRL_BNE = 6'd23;
-localparam CTRL_BGE = 6'd44;
-localparam CTRL_BLT = 6'd24;
-localparam CTRL_BLTU = 6'd25;
-localparam CTRL_BGEU = 6'd45;
-localparam CTRL_LW = 6'd26;
-localparam CTRL_LH = 6'd27;
-localparam CTRL_LHU = 6'd28;
-localparam CTRL_LB = 6'd29;
-localparam CTRL_LBU = 6'd30;
-localparam CTRL_SW = 6'd31;
-localparam CTRL_SH = 6'd32;
-localparam CTRL_SB = 6'd33;
-localparam CTRL_MUL = 6'd34;
-localparam CTRL_MULH = 6'd35;
-localparam CTRL_MULHU = 6'd36;
-localparam CTRL_MULHSU = 6'd37;
-localparam CTRL_DIV = 6'd38;
-localparam CTRL_DIVU = 6'd39;
-localparam CTRL_REM = 6'd40;
-localparam CTRL_REMU = 6'd41;
-localparam CTRL_MRET = 6'd42;
-localparam CTRL_WFI = 6'd43;
-
-// Instructions to ALU
-
-localparam ALU_ADD = 5'd0;
-localparam ALU_SUB = 5'd1;
-localparam ALU_MUL = 5'd2;
-localparam ALU_MULH = 5'd3;
-localparam ALU_MULHU = 5'd4;
-localparam ALU_MULHSU = 5'd5;
-localparam ALU_DIV = 5'd6;
-localparam ALU_DIVU = 5'd7;
-localparam ALU_REM = 5'd8;
-localparam ALU_REMU = 5'd9;
-localparam ALU_SLT = 5'd10;
-localparam ALU_SLTU = 5'd11;
-localparam ALU_AND = 5'd13;
-localparam ALU_OR = 5'd14;
-localparam ALU_XOR = 5'd15;
-localparam ALU_SLL = 5'd16;
-localparam ALU_SRL = 5'd17;
-localparam ALU_SRA = 5'd18;
-localparam ALU_BEQ = 5'd19;
-localparam ALU_BNE = 5'd20;
-localparam ALU_BLT = 5'd21;
-localparam ALU_BLTU = 5'd22;
-localparam ALU_BGE = 5'd23;
-localparam ALU_BGEU = 5'd12;
-localparam ALU_JAL = 5'd24;
-localparam ALU_JALR = 5'd25;
-
-// Address to CSR
-
-localparam CSR_mstatus = 3'd0;
-localparam CSR_mepc = 3'd1;
-localparam CSR_mcause = 3'd2;
-localparam CSR_misa = 3'd3;
-localparam CSR_mtvec = 3'd4;
-
-// Read & write
-
-localparam read = 1'b1;
-localparam write = 1'b0;
 endpackage

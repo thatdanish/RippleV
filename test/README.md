@@ -41,17 +41,17 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
-| Line        |   8/9       |     88.9 %    |
-| Toggle      |   73/412    |     17.7 %    |
-| Branch      |   8/8       |     100 %     |
-| Expression  |   2/2       |     100 %     |
+| Line        |   24/81     |     29.6 %    |
+| Toggle      |   101/1000  |     10.1 %    |
+| Branch      |   8/60      |     13.3 %    |
+| Expression  |   54/54     |     100 %     |
 
 ### Instruction Memory
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
 | Line        |   2/2       |     100 %     |
-| Toggle      |   73/80     |     91.2 %    |
+| Toggle      |   91/134    |     67.9 %    |
 | Branch      |   4/4       |     100 %     |
 | Expression  |   2/2       |     100 %     |
 
@@ -59,8 +59,8 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 
 | Type        | Coverage    | Percentage    |
 |  :----:     |  :----:     |    :----:     |
-| Line        |   1/1       |     100 %     |
-| Toggle      |   144/146   |     91.2 %    |
+| Line        |   19/19     |     100 %     |
+| Toggle      |   168/204   |     82.4 %    |
 | Branch      |   6/6       |     100 %     |
 | Expression  |   2/2       |     100 %     |
 
@@ -72,3 +72,15 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 | Toggle      |   274/276   |     99.3 %    |
 | Branch      |   7/10      |     70 %      |
 | Expression  |   8/8       |     100 %     |
+
+## Top Level
+
+### Software Tests + riscv-tests
+
+| Type                  | Coverage    | Percentage    |
+|  :----:               |  :----:     |    :----:     |
+| Line                  |   397/503   |     78.9 %    |
+| Toggle                |   3680/5470 |     67.3 %    |
+| Branch                |   154/236   |     65.3 %    |
+| Expression            |   206/231   |     89.2 %    |
+| USER (Instructions)   |   51/56     |     91.1 %    |

@@ -1,0 +1,64 @@
+name: Top-Level-Tests
+
+on:
+  push:
+    branches: [main, rippleV_mc]
+  pull_request:
+
+jobs:
+  Software-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: 'pip'
+      
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+      
+      - name: Cache apt packages
+        id: cache-apt
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-verilator-${{ runner.os }}-${{ hashFiles('.github/workflows/*.yml') }}
+          restore-keys: |
+            apt-verilator-${{ runner.os }}-
+
+      - name: Install Verilator build dependencies
+        if: steps.cache-verilator.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            git help2man perl make autoconf \
+            g++ flex bison libfl2 libfl-dev zlib1g zlib1g-dev
+
+      - name: Cache Verilator build
+        id: cache-verilator
+        uses: actions/cache@v4
+        with:
+          path: ~/verilator
+          key: verilator-${{ runner.os }}-v5.048
+
+      - name: Build Verilator from source
+        if: steps.cache-verilator.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/verilator/verilator.git
+          cd verilator
+          git checkout v5.048
+          autoconf
+          ./configure --prefix=$HOME/verilator
+          make -j$(nproc)
+          make install
+
+      - name: Add Verilator to PATH
+        run: echo "$HOME/verilator/bin" >> $GITHUB_PATH
+      
+      - name: Run Tests
+        run: cd test/RippleV_Mc && pytest test_runner_RippleV_Mc.py -vvvk "tc_" -x -ra
+  

@@ -8,9 +8,9 @@ import cocotb
 from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb_tools.runner import get_runner
 
-sys.path.insert(0, str(Path(__file__).parent.parent)+"/sim/")
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from simulation import *
+from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 # Parameters
 
@@ -89,7 +89,7 @@ def test_runner_reg_file():
     sim = os.getenv("SIM", "verilator")    
     waves = os.getenv("WAVES", 1)
 
-    sources = ["../../src/Opcodes_pkg.sv", "../../src/reg_file.sv"]
+    sources = ["../../src/typed_pkg.sv", "../../src/reg_file.sv"]
     
     runner = get_runner(sim)
 
