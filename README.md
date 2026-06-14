@@ -96,10 +96,42 @@ see [here](test/README.md)
 
 ## Supported/Recommended Tools
 - CocoTB (for verification)
-- Verilator v5.048 (simulation/compilation) -- *Recommended*
+- [Verilator](https://github.com/verilator/verilator) v5.048 (simulation/compilation) -- *Recommended*
 - Icarus (for simulation/compilation) -- *Support deprecated since [v0.0.1](https://github.com/thatdanish/RippleV/releases)*
-- Surfer ( for waveforms) -- *Recommended*
+- [Surfer](https://gitlab.com/surfer-project/surfer) ( for waveforms) -- *Recommended*
 - GTKwave (for waveforms)
+  
+### Setup
+
+Setup hints for dependencies needed for this repo is given below, run below command and hope nothing breaks :)
+
+```bash
+sudo apt-get update
+
+# Install python packages
+pip install -r requirements.txt
+
+# Install Verilator dependencies
+ sudo apt-get install -y --no-install-recommends \
+            git help2man perl make autoconf \
+            g++ flex bison libfl2 libfl-dev zlib1g zlib1g-dev
+
+# Install Verilator - build from source and add it to path
+
+# [OPTIONAL] Install Icarus - build from source and add it to path
+
+# Install surfer from source 
+
+# [OPTIONAL] Install GTKwave
+sudo apt-get install gtkwave
+
+# Install riscv-gnu-toolchain dependencies (Ubuntu/Wsl)
+sudo apt-get install autoconf automake autotools-dev curl python3 python3-pip python3-tomli libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev ninja-build git cmake libglib2.0-dev libslirp-dev libncurses-dev
+
+# Install riscv-gnu-toolchain from source 
+
+# Install riscv-tests from source
+```
 
 ## Source
 

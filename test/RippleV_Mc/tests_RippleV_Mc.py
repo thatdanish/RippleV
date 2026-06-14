@@ -60,4 +60,5 @@ async def run_test(dut):
     
     # If not passed, then fail
     raise AssertionError(f"Incorrect TO_HOST ({hex(TO_HOST)}) read --> exp : {hex(SUCCESS)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST].value)}, OR\n"
-                         f"Incorrect TO_HOST_RVT ({hex(TO_HOST_RVT)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST_RVT].value)}")
+                         f"Incorrect TO_HOST_RVT ({hex(TO_HOST_RVT)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST_RVT].value)}, OR \n"
+                         f"Incorrect TO_HOST_RVT_2 ({hex(TO_HOST_RVT_2)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST_RVT_2].value)}")
