@@ -1,14 +1,14 @@
 <center>
 
-# RippleV : A Pipelined RISC-V (RV32IMZicsr) Core
+# RippleV : Multi-cycle RISC-V (RV32IMZicsr) Core
 
 </center>
 
-RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions. 
+RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions, based on *Harvard* architecture.
 
 ## Design
 
-### Supportted Instruction
+### Supported Instruction
 
 | Type                  | Instructions                                                      |
 |  :----:               |  :----:                                                           |
@@ -70,15 +70,15 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions.
 - DON'T OMIT **tc_** prefix in the file name.  Include *handler.c* file as header, generic template for C-program is given in [*sw/sw_tc/tc_first.c*](sw/sw_tc/tc_first.c) .
 - Run the below command from home directory:        
  ```bash
-# Omit tc_ and .c
-make tc_gen TC=<test_name> 
+# Omit "tc_" and ".c" here
+make tc_gen TC="<test_name>" 
 ```
 - A new directory would be created at *data/tc_<test_name>*, containing *.elf*, *.hex* and *.dump* files.
 - Execute the generated *.hex* file with :
 ```bash
-# Omit tc_ and .c
+# Omit "tc_" and ".c" here
 # RVMC_PYTEST_FLAG can be used to pass legal pytest flags
-make rvmc TC=<test_name> RVMC_PYTEST_FLAG=
+make rvmc TC="<test_name>" RVMC_PYTEST_FLAG=
 ```
 
 #### NOTE
