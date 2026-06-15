@@ -2,7 +2,7 @@
 
 WAVE ?= surfer # wave views
 TC ?=		# test case
-RVMC_PYTEST_FLAG ?=	# top test
+TOP_PYTEST_FLAG ?=	# top test
 B_PYTEST_FLAG ?= -s	# block test
 
 # All
@@ -35,6 +35,17 @@ wave_reg_file:
 
 coverage_reg_file:
 	cd test/reg_file/sim_build && verilator_coverage --annotate . coverage.dat
+
+# Reg-file-V2
+
+reg_file_v2:
+	cd test/reg_file_v2 && pytest tests_reg_file_v2.py $(B_PYTEST_FLAG)
+
+wave_reg_file_v2:
+	cd test/reg_file_v2/sim_build && $(WAVE) dump.fst
+
+coverage_reg_file_v2:
+	cd test/reg_file_v2/sim_build && verilator_coverage --annotate . coverage.dat
 
 # Program-counter
 
@@ -93,7 +104,34 @@ coverage_alu:
 
 # --------------------------------------------------------------------------------------- #
 
+# RippleV - Multi-cycle
+
+# run simulations with $(TC) hex
+rvmc:
+	cd test/RippleV_Mc && rm -rf coverage_per_test && pytest test_runner_RippleV_Mc.py -vvvk "tc_$(TC)" $(TOP_PYTEST_FLAG) -x -ra
+
+wave_rvmc:
+	cd test/RippleV_Mc/sim_build && $(WAVE) dump.fst
+
+coverage_rvmc:
+	cd test/RippleV_Mc/coverage_per_test && verilator_coverage --annotate . merged.dat
+
+# --------------------------------------------------------------------------------------- #
+
 # RippleV
+
+rv:
+	cd test/RippleV && rm -rf coverage_per_test && pytest test_runner_RippleV.py -vvvk "tc_$(TC)" $(TOP_PYTEST_FLAG) -x -ra
+
+wave_rv:
+	cd test/RippleV/sim_build && $(WAVE) dump.fst
+
+coverage_rv: 
+	cd test/RippleV/coverage_per_test && verilator_coverage --annotate . merged.dat
+
+# --------------------------------------------------------------------------------------- #
+
+# C
 
 # generate .hex, .efl, .dump from .c & copy into a  new $(TC) directory
 tc_gen:
@@ -103,18 +141,6 @@ tc_gen:
 tc_clean:
 	cd data && rm -rf tc_$(TC)
 
-# run simulations with $(TC) hex
-rvmc:
-	cd test/RippleV_Mc && rm -rf coverage_per_test && pytest test_runner_RippleV_Mc.py -vvvk "tc_$(TC)" $(RVMC_PYTEST_FLAG) -x -ra
-
-wave_rvmc:
-	cd test/RippleV_Mc/sim_build && $(WAVE) dump.fst
-
-coverage_rvmc:
-	cd test/RippleV_Mc/coverage_per_test && verilator_coverage --annotate . merged.dat
-
-# C
-
 # compile $(TC), a C code 
 gcc: 
 	cd sw/sw_tc && gcc tc_$(TC).c -o tc_$(TC) && ./tc_$(TC)
@@ -123,6 +149,9 @@ gcc:
 gcc_clean: 
 	cd sw/sw_tc && rm -rf tc_$(TC)
 
+# --------------------------------------------------------------------------------------- #
+
+# RISCV-Tests
 
 # Generate .elf, .hex, .dump in $(TC) directories for riscv-tests - ONLY NEED TO RUN ONCE
 

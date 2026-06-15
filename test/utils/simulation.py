@@ -1,11 +1,13 @@
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer, ClockCycles, ReadOnly
+from cocotb.triggers import RisingEdge, Timer, ClockCycles
 
 # Parameters
 
 CLOCKPERIOD = 10
 N_CLKS = 5
 MAX_CLKS = 150
+write = 0
+read = 1
 
 # Clock generate
 

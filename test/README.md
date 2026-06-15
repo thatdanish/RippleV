@@ -5,8 +5,18 @@
 </center>
 
 Coverage data is generated using Verilator. To reproduce the data, run the command mentioned below, from the project root directory :
-    
-    make cover_<block name>
+```bash    
+# Block-verification coverage
+make cover_<block name>
+```
+
+Or, 
+
+```bash    
+# RippleV_Mc-verification coverage
+make cover_rvmc
+```
+
 
 ## Block Level
 
@@ -25,6 +35,15 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 |  :----:     |  :----:     |    :----:     |
 | Line        |   1/1       |     100 %     |
 | Toggle      |   145/146   |     99.3 %    |
+| Branch      |   8/8       |     100 %     |
+| Expression  |   2/2       |     100 %     |
+
+### Reg File-V2
+
+| Type        | Coverage    | Percentage    |
+|  :----:     |  :----:     |    :----:     |
+| Line        |   1/1       |     100 %     |
+| Toggle      |   296/230   |     99.6 %    |
 | Branch      |   8/8       |     100 %     |
 | Expression  |   2/2       |     100 %     |
 
@@ -75,7 +94,7 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 
 ## Top Level
 
-### Software Tests + riscv-tests
+### Multi-cycle (software Tests + riscv-tests)
 
 | Type                  | Coverage    | Percentage    |
 |  :----:               |  :----:     |    :----:     |
@@ -84,3 +103,13 @@ Coverage data is generated using Verilator. To reproduce the data, run the comma
 | Branch                |   154/236   |     65.3 %    |
 | Expression            |   206/231   |     89.2 %    |
 | USER (Instructions)   |   51/56     |     91.1 %    |
+
+### Pipeline (software Tests + riscv-tests)
+
+| Type                  | Coverage    | Percentage    |
+|  :----:               |  :----:     |    :----:     |
+| Line                  |   xxx/xxx   |     xx.x %    |
+| Toggle                |   xxxx/xxxx |     xx.x %    |
+| Branch                |   xxx/xxx   |     xx.x %    |
+| Expression            |   xxx/xxx   |     xx.x %    |
+| USER (Instructions)   |   xx/xx     |     xx.x %    |

@@ -86,3 +86,7 @@ jobs:
       - name: Run ALU tests
         run: |
           cd test/ALU && WAVES=0 pytest tests_alu.py
+      
+      - name: Run Reg-file-V2 tests
+        run: |
+          cd test/reg_file_v2 && pytest tests_reg_file_v2.py

@@ -29,6 +29,7 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions, base
         9) mepc         10) mcause     11) mnstatus     12) pmpcfg0     13) pmpaddr0
 
 ### Default Handler Addresses
+
 | Type          | Address       |
 |  :----:       |  :----:       |
 | Reset         |  0x0          |
@@ -53,6 +54,21 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions, base
 - Yellow = Temporary design and/or verification
 
 **Note**: Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagram as closely as possible. Hence, both the diagram and implementation might be updated from time to time. 
+
+## Result
+
+### Clock-latency Comparison
+
+| Tests                 | Multi-cycle   | Pipeline      |
+|  :----:               |  :----:       | :----:        | 
+| riscv-tests: ADDI     |    1759       |    xxxx       |
+| riscv-tests: ADD      |    3182       |    xxxx       |       
+| riscv-tests: JAL      |    0618       |    xxxx       |
+| riscv-tests: JALR     |    0981       |    xxxx       |
+| riscv-tests: BEQ      |    2156       |    xxxx       |
+| riscv-tests: LW       |    1853       |    xxxx       |
+| riscv-tests: SW       |    3133       |    xxxx       |
+| custom-SW: factorial  |    0625       |    xxxx       |
 
 
 ## Verification 
