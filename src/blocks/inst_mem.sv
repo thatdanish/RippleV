@@ -4,7 +4,7 @@
 module inst_mem #( 
     parameter string FILE = "../../../data/sample/sample_instructions.hex",
     parameter ADDR_WIDTH = 32,
-    parameter MEM_SIZE = 32
+    parameter WORD_SIZE = 32
 ) (
     input clk_i,
     input rst_i,
@@ -15,7 +15,7 @@ module inst_mem #(
 
 integer file;
 
-logic [MEM_SIZE-1:0] imem [4096];
+logic [WORD_SIZE-1:0] imem [4096];
 
 initial begin
     $readmemh(FILE, imem);

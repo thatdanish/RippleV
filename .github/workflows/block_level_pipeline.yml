@@ -2,7 +2,7 @@ name: Block-Level-Tests
 
 on:
   push:
-    branches: [main, rippleV_mc]
+    branches: [main, pipelineV]
   pull_request:
 
 jobs:

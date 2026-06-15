@@ -1,6 +1,6 @@
 <center>
 
-# RippleV : Multi-cycle RISC-V (RV32IMZicsr) Core
+# RippleV : Pipelined RISC-V (RV32IMZicsr) Core
 
 </center>
 

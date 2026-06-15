@@ -62,7 +62,7 @@ async def smoke_test(dut):
 def test_runner_inst_mem():
     sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
-    sources = ["../../src/inst_mem.sv"]
+    sources = ["../../src/blocks/inst_mem.sv"]
 
     runner = get_runner(sim)
 

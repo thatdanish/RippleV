@@ -7,7 +7,7 @@
 
 module RippleV_Mc #( 
     parameter ADDR_WIDTH = 32,
-    parameter MEM_SIZE = 32,
+    parameter WORD_SIZE = 32,
     parameter string IMEM_FILE = "../../../data/sample/sample_instructions.hex",
     parameter string DMEM_FILE = "../../../data/sample/sample_instructions.hex",
     parameter LOAD_FROM_DMEM_HEX = 0,
@@ -78,7 +78,7 @@ module RippleV_Mc #(
     inst_mem #(
         .FILE(IMEM_FILE),
         .ADDR_WIDTH(ADDR_WIDTH),
-        .MEM_SIZE(MEM_SIZE)
+        .WORD_SIZE(WORD_SIZE)
     ) inst_mem_inst (
         .clk_i,
         .rst_i,

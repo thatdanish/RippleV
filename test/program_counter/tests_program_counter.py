@@ -56,7 +56,7 @@ def test_runner_program_counter():
     sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
 
-    sources = ["../../src/program_counter.sv"]
+    sources = ["../../src/blocks/program_counter.sv"]
     
     runner = get_runner(sim)
 

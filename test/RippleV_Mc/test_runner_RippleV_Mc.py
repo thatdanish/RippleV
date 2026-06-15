@@ -31,16 +31,16 @@ def test_runner_RippleV_Mc(test_case):
     SOURCES = [
     "../../src/Opcodes_pkg.sv",
     "../../src/typed_pkg.sv",
-    "../../src/csr.sv",
-    "../../src/ctrl_unit.sv",
-    "../../src/data_mem.sv",
-    "../../src/decoder.sv",
-    "../../src/inst_mem.sv",
-    "../../src/MUXs.sv",
-    "../../src/program_counter.sv",
-    "../../src/reg_file.sv",
     "../../src/RippleV_Mc.sv",
-    "../../src/temp_alu.sv"
+    "../../src/blocks/csr.sv",
+    "../../src/blocks/ctrl_unit.sv",
+    "../../src/blocks/data_mem.sv",
+    "../../src/blocks/decoder.sv",
+    "../../src/blocks/inst_mem.sv",
+    "../../src/blocks/MUXs.sv",
+    "../../src/blocks/program_counter.sv",
+    "../../src/blocks/reg_file.sv",
+    "../../src/blocks/temp_alu.sv"
     ]
 
     runner = get_runner(SIM)
@@ -49,7 +49,7 @@ def test_runner_RippleV_Mc(test_case):
         sources=SOURCES,
         hdl_toplevel="RippleV_Mc",
         waves=WAVES,
-        clean=False,
+        clean=True,
         parameters={"IMEM_FILE":f'"{IMEM_HEX_FILE_PATH}"', "DMEM_FILE":f'"{DMEM_HEX_FILE_PATH}"',
                     "LOAD_FROM_DMEM_HEX": LOAD_FROM_DMEM_HEX},     
         timescale=("1ns", "1ns"), 

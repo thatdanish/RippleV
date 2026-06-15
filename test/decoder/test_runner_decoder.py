@@ -10,7 +10,7 @@ def test_runner_decoder():
     sim = os.getenv("SIM", "verilator")    
     waves = os.getenv("WAVES", 1)
 
-    sources = ["../../src/Opcodes_pkg.sv", "../../src/typed_pkg.sv","../../src/decoder.sv"]
+    sources = ["../../src/Opcodes_pkg.sv", "../../src/typed_pkg.sv","../../src/blocks/decoder.sv"]
     
     runner = get_runner(sim)
 

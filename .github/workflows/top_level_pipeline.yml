@@ -2,7 +2,7 @@ name: Top-Level-Tests
 
 on:
   push:
-    branches: [main, rippleV_mc]
+    branches: [main]
   pull_request:
 
 jobs:
