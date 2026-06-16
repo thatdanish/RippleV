@@ -28,7 +28,7 @@ async def init_inputs(dut):
 
 # ALU model
 
-def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
+def model_ALU(a:LogicArray,b:LogicArray,opr:str) -> LogicArray | Logic :
     if opr == "ALU_ADD":
         #  ADD
         a = a.to_unsigned()
@@ -177,7 +177,7 @@ def model_ALU(a:LogicArray,b:LogicArray,opr:int) -> LogicArray | Logic :
         b = b.to_unsigned()
         return Logic(b >= a)
     elif opr == "ALU_JAL":
-        # JALR
+        # JAL
         a = a.to_unsigned()
         b = b.to_unsigned()
         z = LogicArray(a + b - 4, 33)
@@ -204,14 +204,14 @@ async def compute_test(dut):
 
     await ClockCycles(dut.clk_i, 10)
     
-    ALU_oprtions = [ "ALU_ADD", "ALU_SUB", "ALU_MUL", "ALU_MULH", "ALU_MULHU", "ALU_MULHSU", "ALU_DIV", "ALU_DIVU", "ALU_REM",
+    ALU_operations = [ "ALU_ADD", "ALU_SUB", "ALU_MUL", "ALU_MULH", "ALU_MULHU", "ALU_MULHSU", "ALU_DIV", "ALU_DIVU", "ALU_REM",
                     "ALU_REMU", "ALU_SLT", "ALU_SLTU", "ALU_AND", "ALU_OR", "ALU_XOR", "ALU_SLL", "ALU_SRL", "ALU_SRA", "ALU_BEQ", "ALU_BNE", "ALU_BLT",
                     "ALU_BLTU", "ALU_BGE", "ALU_BGEU", "ALU_JAL", "ALU_JALR" ]
     
     cond_branch = ["ALU_BEQ", "ALU_BNE", "ALU_BLT", "ALU_BLTU", "ALU_BGE", "ALU_BGEU"]
 
     for _ in range(N_TESTS):
-        opr = random.choice(ALU_oprtions)
+        opr = random.choice(ALU_operations)
              
         a = LogicArray(random.getrandbits(32), 32)
         b = LogicArray(random.getrandbits(32), 32)
@@ -219,7 +219,7 @@ async def compute_test(dut):
         dut.en_i.value = 1
         dut.a_i.value = a
         dut.b_i.value = b
-        dut.opr_i.value = ALU_oprtions.index(opr)
+        dut.opr_i.value = ALU_operations.index(opr)
 
         await NextClockCycle(dut)
         

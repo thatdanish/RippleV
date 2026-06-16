@@ -45,15 +45,23 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions, base
 
 ![image](img/Overview.svg ) 
         
-        Fig 1 : RippleV core diagram.
+        Fig 1 : Multi-cycle RippleV Core.
+</center>
+
+<center> 
+
+![image](img/Overview2.svg ) 
+        
+        Fig 2 : Pipelined RippleV Core.
 </center>
 
 **Legend**:
-- Blue = Designed & Verified   
-- White = Incomplete design and/or verification
-- Yellow = Temporary design and/or verification
+- Yellow = Temporary design.
+- Blue (for pipelined) = Same design for multi-cycle and pipelined.
+- Red (for pipelined) = Pipeline register
+- Green (for pipelined) = New Design
 
-**Note**: Diagram shown above is not final, does not include control path and is only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagram as closely as possible. Hence, both the diagram and implementation might be updated from time to time. 
+**Note**: Diagrams shown above are not final, does not include control paths and are only for general understanding. Actual implementation might differ from  what is shown, however the aim would be to match the implementation to the diagrams as closely as possible. Hence, both the diagrams and implementation might be updated from time to time. 
 
 ## Result
 

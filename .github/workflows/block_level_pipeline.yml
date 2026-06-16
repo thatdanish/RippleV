@@ -86,6 +86,10 @@ jobs:
       - name: Run ALU tests
         run: |
           cd test/ALU && WAVES=0 pytest tests_alu.py
+
+      - name: Run Branch Logic tests
+        run: |
+          cd test/branch_logic && WAVES=0 pytest tests_branch_logic.py
       
       - name: Run Reg-file-V2 tests
         run: |

@@ -102,6 +102,17 @@ wave_alu:
 coverage_alu:
 	cd test/ALU/sim_build && verilator_coverage --annotate . coverage.dat
 
+# Branch Logic
+
+bl:
+	cd test/branch_logic && pytest tests_branch_logic.py $(B_PYTEST_FLAG)
+
+wave_bl:
+	cd test/branch_logic/sim_build && $(WAVE) dump.fst
+
+coverage_bl:
+	cd test/branch_logic/sim_build && verilator_coverage --annotate . coverage.dat
+
 # --------------------------------------------------------------------------------------- #
 
 # RippleV - Multi-cycle
