@@ -7,14 +7,13 @@ module ctrl_unit(
     input rst_i,
     input main_enable_i, 
     output logic interrupt_ack_o,
-    // CSR
-    input interrupt_i,
     // Decoder
     input typed_pkg::ctrl_inst_t instruction_i,
     // PC
     output typed_pkg::sel_pc_t pc_mux_sel_o, 
     output logic pc_en_o,
     // CSR
+    input interrupt_i,
     output typed_pkg::csr_addr_t csr_addr_from_ctrl_o, 
     output typed_pkg::sel_csr_addr_t csr_addr_mux_sel_o, 
     output typed_pkg::sel_csr_data_t csr_data_mux_sel_o, 

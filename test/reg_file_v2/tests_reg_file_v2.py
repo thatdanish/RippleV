@@ -23,7 +23,6 @@ MAX_TEST = 5000
 async def init_inputs(dut):
     dut.write_en_i.value = 0
     dut.read_en_i.value = 0
-    dut.rw_i.value = 0
     dut.rs1_addr_i.value = 0
     dut.rs2_addr_i.value = 0
     dut.rd_data_i.value = 0
@@ -52,7 +51,6 @@ async def read_write_test(dut):
         rd_addr = LogicArray.from_unsigned(random.getrandbits(5), 5)
         rd_data = LogicArray.from_unsigned(random.getrandbits(32), 32)
 
-        dut.rw_i.value = rw
         if rw == read:
             dut.read_en_i.value = 1
             dut.write_en_i.value = 0
