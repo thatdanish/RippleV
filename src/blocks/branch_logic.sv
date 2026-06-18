@@ -6,8 +6,10 @@ module branch_logic (
     input rst_i,
     input en_i,
     input typed_pkg::alu_opr_t opr_i,
-    input logic [31:0] a_i,
-    input logic [31:0] b_i,
+    input logic [31:0] sign_ext_offset_i,
+    input logic [31:0] rs2_i,
+    input logic [31:0] rs1_i,
+    input logic [31:0] pc_i,
     output logic [31:0] pc_update_o,
     output logic take_branch_o    
 );
@@ -36,18 +38,41 @@ module branch_logic (
         int_pc_update = 'd0;
         int_take_branch = 'd0;
         case (opr_i)
-            ALU_ADD: int_pc_update = signed'(a_i) + signed'(b_i);
-            ALU_JAL: int_pc_update = func_jal(a_i, b_i);
-            ALU_JALR: int_pc_update = func_jalr(a_i, b_i);
-            ALU_BEQ: int_take_branch = (a_i == b_i);
-            ALU_BNE:  int_take_branch = (a_i != b_i);
-            ALU_BLT: int_take_branch = (signed'(b_i) < signed'(a_i));
-            ALU_BLTU: int_take_branch = (unsigned'(b_i) < unsigned'(a_i)); 
-            ALU_BGE: int_take_branch = (signed'(b_i) >= signed'(a_i));
-            ALU_BGEU:  int_take_branch = (unsigned'(b_i) >= unsigned'(a_i));
+            ALU_JAL: begin
+                int_take_branch = 1'b1;
+                int_pc_update = func_jal(pc_i, sign_ext_offset_i);
+            end
+            ALU_JALR: begin
+                int_take_branch = 1'b1;
+                int_pc_update = func_jalr(rs1_i, sign_ext_offset_i);
+            end
+            ALU_BEQ: begin
+               int_take_branch = (rs2_i == rs1_i);
+               int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
+            end
+            ALU_BNE: begin 
+                int_take_branch = (rs2_i != rs1_i);
+                int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
+            end
+            ALU_BLT: begin 
+                int_take_branch = (signed'(rs1_i) < signed'(rs2_i));
+                int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
+            end
+            ALU_BLTU:begin 
+                int_take_branch = (unsigned'(rs1_i) < unsigned'(rs2_i)); 
+                int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
+            end
+            ALU_BGE: begin 
+                int_take_branch = (signed'(rs1_i) >= signed'(rs2_i));
+                int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
+            end
+            ALU_BGEU:begin 
+                 int_take_branch = (unsigned'(rs1_i) >= unsigned'(rs2_i));
+                 int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
+                end
             default: begin
-                int_pc_update = 'd0;
                 int_take_branch = 'd0;
+                int_pc_update = signed'(pc_i) + signed'(32'd4);
             end
         endcase
     end

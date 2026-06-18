@@ -71,6 +71,27 @@ module mux_alu_a(
     end
 endmodule
 
+module mux_alu_a_v2(
+    input typed_pkg::sel_alu_a_t sel_i, 
+    input logic [31:0] const_4_i, 
+    input logic [31:0] sign_ext_offset_i, 
+    input logic [31:0] lui_i, 
+    input logic [31:0] rs2_i, 
+    output logic [31:0] data_o
+);
+    import typed_pkg::*;
+
+    always_comb begin 
+        case (sel_i)
+            sel_alu_const_4 : data_o = const_4_i;
+            sel_alu_sign_ext_offset : data_o = sign_ext_offset_i;
+            sel_alu_lui : data_o = lui_i;
+            sel_alu_rs2 : data_o = rs2_i;
+            default: data_o = 'd0;
+        endcase
+    end
+endmodule
+
 module mux_alu_b(
     input typed_pkg::sel_alu_b_t sel_i, 
     input logic [31:0] pc_i, 

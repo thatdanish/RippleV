@@ -12,7 +12,7 @@ all: all_blocks rvmc
 # All blocks
 
 all_blocks: B_PYTEST_FLAG=-ra 
-all_blocks: decoder reg_file program_counter csr inst_mem data_mem alu  
+all_blocks: decoder reg_file program_counter csr inst_mem data_mem alu reg_file_v2 bl
 
 # Decoder
 
