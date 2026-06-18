@@ -63,9 +63,10 @@ always_ff @( posedge clk_i ) begin
                     default: csr_data_o <= 'd0; 
                 endcase
             /* verilator lint_off CASEINCOMPLETE*/
-            end else begin 
+            end else begin  // write
                 unique case (csr_addr_i)
                     CSR_stvec: begin
+                        csr_data <= stvec;
                         case (write_type_i)
                             write_complete: stvec <= new_data_i;
                             write_set: stvec <= (new_data_i == 'd0) ? stvec : stvec^new_data_i;
@@ -74,6 +75,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_satp: begin
+                        csr_data <= satp;
                         case (write_type_i)
                             write_complete: satp <= new_data_i;
                             write_set: satp <= (new_data_i == 'd0) ? satp : satp^new_data_i;
@@ -82,6 +84,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_mhartid: begin
+                        csr_data <= mhartid;
                         case (write_type_i)
                             write_complete: mhartid <= new_data_i;
                             write_set: mhartid <= (new_data_i == 'd0) ? mhartid : mhartid^new_data_i;
@@ -90,6 +93,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_mstatus: begin
+                        csr_data <= mstatus;
                         case (write_type_i)
                             write_complete: mstatus <= new_data_i;
                             write_set: mstatus <= (new_data_i == 'd0) ? mstatus : mstatus^new_data_i;
@@ -98,6 +102,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_medeleg: begin
+                        csr_data <= medeleg;
                         case (write_type_i)
                             write_complete: medeleg <= new_data_i;
                             write_set: medeleg <= (new_data_i == 'd0) ? medeleg : medeleg^new_data_i;
@@ -106,6 +111,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_mideleg: begin
+                        csr_data <= mideleg;
                         case (write_type_i)
                             write_complete: mideleg <= new_data_i;
                             write_set: mideleg <= (new_data_i == 'd0) ? mideleg : mideleg^new_data_i;
@@ -114,6 +120,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_mie: begin
+                        csr_data <= mie;
                         case (write_type_i)
                             write_complete: mie <= new_data_i;
                             write_set: mie <= (new_data_i == 'd0) ? mie : mie^new_data_i;
@@ -122,6 +129,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_mtvec : begin
+                        csr_data <= mtvec;
                         case (write_type_i)
                             write_complete: mtvec <= new_data_i;
                             write_set: mtvec <= (new_data_i == 'd0) ? mtvec : mtvec^new_data_i;
@@ -130,6 +138,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_mepc : begin
+                        csr_data <= mepc;
                         case (write_type_i)
                             write_complete: mepc <= new_data_i;
                             write_set: mepc <= (new_data_i == 'd0) ? mepc : mepc^new_data_i;
@@ -138,6 +147,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_mcause : begin
+                        csr_data <= mcause;
                         case (write_type_i)
                             write_complete: mcause <= new_data_i;
                             write_set: mcause <= (new_data_i == 'd0) ? mcause : mcause^new_data_i;
@@ -146,6 +156,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_mnstatus: begin
+                        csr_data <= mnstatus;
                         case (write_type_i)
                             write_complete: mnstatus <= new_data_i;
                             write_set: mnstatus <= (new_data_i == 'd0) ? mnstatus : mnstatus^new_data_i;
@@ -154,6 +165,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_pmpcfg0: begin
+                        csr_data <= pmpcfg0;
                         case (write_type_i)
                             write_complete: pmpcfg0 <= new_data_i;
                             write_set: pmpcfg0 <= (new_data_i == 'd0) ? pmpcfg0 : pmpcfg0^new_data_i;
@@ -162,6 +174,7 @@ always_ff @( posedge clk_i ) begin
                         endcase
                     end
                     CSR_pmpaddr0: begin
+                        csr_data <= pmpaddr0;
                         case (write_type_i)
                             write_complete: pmpaddr0 <= new_data_i;
                             write_set: pmpaddr0 <= (new_data_i == 'd0) ? pmpaddr0 : pmpaddr0^new_data_i;

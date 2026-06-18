@@ -38,6 +38,7 @@ module ctrl_unit_v2 (
     output typed_pkg::load_t data_mem_load_type_o, 
     output logic data_mem_en_o,
     // HCU
+    input typed_pkg::hcu_handler_stages_t hcu_hnd_stage_i;
     output typed_pkg::instruction_type_t hcu_inst_type_o
 );
 
@@ -367,7 +368,38 @@ module ctrl_unit_v2 (
 
                 // Inform HCU
                 hcu_inst_type_o = HCU_CSR_type;
-
+                
+                // Read & write @ CSR
+                csr_en_o = 1'b1;
+                csr_rw_o = write;
+                sel_mux_csr_addr = sel_csr_addr_decoder;
+                case (current_instruction)
+                    CTRLCSRRW: begin 
+                        sel_mux_csr_data = sel_csr_data_rs1;
+                        csr_write_type_o = write_complete; 
+                    end
+                    CTRLCSRRS: begin 
+                        sel_mux_csr_data = sel_csr_data_rs1;
+                        csr_write_type_o = write_set; 
+                    end
+                    CTRLCSRRC: begin 
+                        sel_mux_csr_data = sel_csr_data_rs1;
+                        csr_write_type_o = write_clear; 
+                    end
+                    CTRLCSRRWI:begin 
+                        sel_mux_csr_data = sel_csr_data_uimm;
+                        csr_write_type_o = write_complete; 
+                    end
+                    CTRLCSRRSI:begin 
+                        sel_mux_csr_data = sel_csr_data_uimm;
+                        csr_write_type_o = write_set; 
+                    end
+                    CTRLCSRRCI:begin 
+                        sel_mux_csr_data = sel_csr_data_uimm;
+                        csr_write_type_o = write_clear; 
+                    end
+                    default: csr_write_type_o = write'('d0);
+                endcase
      
                 // Write RD
                 reg_file_write_en_o = 1'b1;  
@@ -376,16 +408,73 @@ module ctrl_unit_v2 (
                 branch_logic_en_o = 1'b1;
             end 
             OUTPUTS_ECALL: begin
+                // Inform HCU
+                hcu_inst_type_o = HCU_ecall;
                 
+                csr_en_o = 1'b1;
+                if (hcu_hnd_stage_i == first ) begin
+                    // Write PC to mepc @ CSR
+                    csr_rw_o = write;
+                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_from_ctrl_o = CSR_mepc;
+                    sel_mux_csr_data = sel_csr_data_pc;
+                end
+                else if (hcu_hnd_stage_i == second ) begin
+                    // Write mcause @ CSR
+                    csr_rw_o = write;
+                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_from_ctrl_o = CSR_mcause;
+                    sel_mux_csr_data = sel_csr_data_ctrl_unit;
+                    csr_data_from_ctrl_o = cause_ecall;
+                end else begin
+                    // Read mtvec @ CSR
+                    csr_rw_o = read;
+                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_from_ctrl_o = CSR_mtvec;
+                end
+                
+                // Jumping PC to mtvec : handled by HCU
             end 
             OUTPUTS_MRET: begin
-                
+                // Inform HCU
+                hcu_inst_type_o = HCU_mret;
+
+                // Read mepc @ CSR
+                csr_rw_o = read;
+                sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                csr_addr_from_ctrl_o = CSR_epc;
+
+                // Jumping PC to mepc : handled by HCU
             end 
             OUTPUTS_WFI: begin
-                
+                // Inform HCU
+                hcu_inst_type_o = HCU_wfi;
+
             end 
             OUTPUTS_INCORRECT_INST: begin
-                
+                // Inform HCU
+                hcu_inst_type_o = HCU_trap;
+
+                if (hcu_hnd_stage_i == first) begin
+                    // Write mepc @ CSR
+                    csr_rw_o = write;
+                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_from_ctrl_o = CSR_mepc;
+                    sel_mux_csr_data = sel_csr_data_pc;
+                end else if (hcu_hnd_stage_i == second) begin
+                    // Write mcause @ CSR
+                    csr_rw_o = write;
+                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_from_ctrl_o = CSR_mcause;
+                    sel_mux_csr_data = sel_csr_data_ctrl_unit;
+                    csr_data_from_ctrl_o = cause_illegal_instruction;
+                end else begin
+                    // Read mtvec @ CSR
+                    csr_rw_o = read;
+                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_from_ctrl_o = CSR_mtvec;
+                end
+                // Jumping PC to mtvec : handled by HCU
             end 
             default:
         endcase

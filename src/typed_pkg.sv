@@ -74,6 +74,11 @@ typedef enum bit[1:0] { load_signed, load_unsigned } load_t;
 
 // Instruction type
 
-typedef enum bit[2:0] { HCU_I_type, HCU_R_type, HCU_LS_type, HCU_CJ_type , HCU_UCJ_type, HCU_CSR_type} instruction_type_t;
+typedef enum bit[3:0] { HCU_I_type, HCU_R_type, HCU_LS_type, HCU_CJ_type , HCU_UCJ_type, HCU_CSR_type, 
+                        HCU_ecall, HCU_mret, HCU_wfi, HCU_trap} instruction_type_t;
+
+// HCU special stages
+
+typedef bit[1:0] {first, second, third, fourth} hcu_handler_stages_t;
 
 endpackage
