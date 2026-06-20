@@ -79,6 +79,6 @@ typedef enum bit[3:0] { HCU_I_type, HCU_R_type, HCU_LS_type, HCU_CJ_type , HCU_U
 
 // HCU special stages
 
-typedef bit[1:0] {first, second, third, fourth} hcu_handler_stages_t;
+typedef enum bit[1:0] {first, second, third, fourth} hcu_handler_stages_t;
 
 endpackage

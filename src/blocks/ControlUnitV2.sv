@@ -1,7 +1,7 @@
 `timescale 1ns/1ns
 `default_nettype none
 
-module ctrl_unit_v2 (
+module ControlUnitV2 (
     // External
     input clk_i,
     input rst_i,
@@ -24,10 +24,10 @@ module ctrl_unit_v2 (
     output logic reg_file_read_en_o,
     output logic reg_file_write_en_o,
     // ALU
+    input take_branch_i, 
     output typed_pkg::alu_opr_t alu_opr_o,
     output typed_pkg::sel_alu_a_t alu_a_mux_sel_o,
     output typed_pkg::sel_alu_b_t alu_b_mux_sel_o,
-    input take_branch_i, 
     output logic alu_en_o, 
     // Branch logic
     output typed_pkg::alu_opr_t bl_opr_o,
@@ -38,7 +38,7 @@ module ctrl_unit_v2 (
     output typed_pkg::load_t data_mem_load_type_o, 
     output logic data_mem_en_o,
     // HCU
-    input typed_pkg::hcu_handler_stages_t hcu_hnd_stage_i;
+    input typed_pkg::hcu_handler_stages_t hcu_hnd_stage_i,
     output typed_pkg::instruction_type_t hcu_inst_type_o
 );
 
