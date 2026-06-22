@@ -1,11 +1,12 @@
 `timescale 1ns/1ns
 `default_nettype none
 
-module reg_file_v2 (
+module RegFilev2 (
     input clk_i,
     input rst_i,
     input read_en_i,
     input write_en_i,
+    input stall_id_i, 
     input logic[4:0] rs1_addr_i,
     input logic[4:0] rs2_addr_i,
     input logic[4:0] rd_addr_i,
@@ -28,7 +29,7 @@ always_ff @( posedge clk_i ) begin
             if (rd_addr_i != 'd0) int_regs[rd_addr_i] <= rd_data_i;
             else int_regs <= int_regs;
         end 
-        if (read_en_i == 1'b1) begin // read
+        if (read_en_i == 1'b1 && stall_id_i == 1'b0) begin // read
             rs1_data_o <= int_regs[rs1_addr_i];
             rs2_data_o <= int_regs[rs2_addr_i];
         end

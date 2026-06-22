@@ -3,42 +3,159 @@
 module HazardControlUnit (
     input clk_i,
     input rst_i,
-    input typed_pkg::hcu_handler_stages_t hcu_hnd_stage_i,
+    input typed_pkg::instruction_type_t hcu_inst_type_i,
+    input bl_take_branch_i, 
     input logic [4:0] rs1_i, 
     input logic [4:0] rs2_i, 
     input logic [4:0] rd_i, 
-    output logic l1_stall_o,
-    output logic l1_clear_o,
-    output logic l2_stall_o,
-    output logic l2_clear_o,
-    output logic l3_stall_o,
-    output logic l3_clear_o,
-    output logic l4_stall_o,
-    output logic l4_clear_o,
-    output typed_pkg::instruction_type_t hcu_inst_type_o 
+    output logic stall_l1_o,
+    output logic clear_l1_o,
+    output logic stall_l2_o,
+    output logic clear_l2_o,
+    output logic stall_l3_o,
+    output logic clear_l3_o,
+    output logic stall_l4_o,
+    output logic clear_l4_o,
+    output logic stall_if_o,
+    output logic stall_id_o,
+    output logic stall_ex_o,
+    output logic stall_mem_o,
+    output logic stall_wb_o,
+    output typed_pkg::hcu_handler_stages_t hcu_hnd_stage_o 
 );
+localparam UCJ_STALL_MAX = 4 ;
+
+typedef enum bit[2:0] { stall_clear, stall_ID_IF , stall_IF, clear_L1_L2} outputs_type_t;
+outputs_type_t set_outputs;
+
+logic [4:0] rd_prev[4];
+logic [3:0] ucj_stall_counter;
 
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin
-        
+        rd_prev[0] <= 'd0;
+        rd_prev[1] <= 'd0;
+        rd_prev[2] <= 'd0;
+        rd_prev[3] <= 'd0;
+        ucj_stall_counter <= 'd0;
+        set_outputs <= outputs_type_t'('d0);
     end else begin
-        rd_prev2 <= rd_prev1;
-        rd_prev3 <= rd_prev2;
-        rd_prev4 <= rd_prev3;      
-        rd_stale <= rd_prev4;      
+        // shift rd reg
+        rd_prev[1] <= rd_prev[0];
+        rd_prev[2] <= rd_prev[1];
+        rd_prev[3] <= rd_prev[2];      
+        rd_stale <= rd_prev[3];      
 
-        case (hcu_hnd_stage_i)
-            HCU_I_type: begin
-                if (rs1_i inside {rd_prev1, rd_prev2, rd_prev3, rd_prev4} && rs1_i !=rd_stale && rs1_i != 5'd0) begin
-                    // something
-                end else begin
-                   // Store rd
-                    rd_prev1 <= rd_i;
+        if (bl_take_branch_i == 1'b1) 
+            set_outputs <= clear_L1_L2;
+        else begin
+            case (hcu_hnd_stage_i)
+                HCU_I_type: begin
+                    if (rs_hazard(rs1_i)) begin
+                        set_outputs <= stall_ID_IF; // stall ID & IF
+                    end else begin
+                        set_outputs <= stall_clear;
+                        rd_prev[0] <= rd_i;  // store rd
+                    end
                 end
-            end
-            default: 
-        endcase
+                HCU_R_type: begin
+                    if (rs_hazard(rs1_i) || rs_hazard(rs2_i)) begin
+                        set_outputs <= stall_ID_IF; // stall ID & IF
+                    end else begin
+                        set_outputs <= stall_clear;
+                        rd_prev[0] <= rd_i; // store rd
+                    end
+                end
+                HCU_UCJ_type: begin
+                    // Increment counter
+                    ucj_stall_counter <= ( ucj_stall_counter == UCJ_STALL_MAX ) ? 'd0 : ucj_stall_counter + 'd1;
+                    
+                    if ( ucj_stall_counter == UCJ_STALL_MAX )
+                        set_outputs <= stall_clear; // clear stall after delay
+                    else
+                        set_outputs <= stall_IF; // stall IF
+                end
+                HCU_CJ_type: begin
+                    set_outputs <= stall_clear; // only take action if take_branch_i is asserted
+                end
+                HCU_CSR_type: begin
+                    if (csr_hazard(rs1_i)) begin
+                        set_outputs <= stall_ID_IF; // stall ID & IF
+                    end else begin
+                        set_outputs <= stall_clear;
+                        rd_prev[0] <= rd_i;  // store rd
+                    end
+                end
+                HCU_ecall: begin
+                    // Todo: do nothing
+                end
+                HCU_mret: begin
+                    // Todo: do nothing
+                end
+                HCU_wfi: begin
+                    // Todo: do nothing
+                end
+                HCU_trap: begin
+                    // Todo: do nothing
+                end
+                default: 
+            endcase
+        end
     end
 end
+
+always_comb begin 
+    stall_l1_o = 1'b0;
+    clear_l1_o = 1'b0;
+    stall_l2_o = 1'b0;
+    clear_l2_o = 1'b0;
+    stall_l3_o = 1'b0;
+    clear_l3_o = 1'b0;
+    stall_l4_o = 1'b0;
+    clear_l4_o = 1'b0;
+    stall_if_o = 1'b0;
+    stall_id_o = 1'b0;
+    stall_ex_o = 1'b0;
+    stall_mem_o = 1'b0;
+    stall_wb_o = 1'b0;
+
+    hcu_hnd_stage_o = hcu_handler_stages_t'('d0);
+    
+    case (set_outputs)
+        stall_clear: begin
+            // Todo : empty condition
+        end
+        stall_ID_IF: begin
+            // I & R types
+            stall_id_o = 1'b1;
+            stall_l1_o = 1'b1;
+            stall_if_o = 1'b1;
+        end
+        stall_IF: begin
+            // UCJ type
+            stall_l1_o = 1'b1;
+            stall_if_o = 1'b1;
+        end
+        clear_L1_L2: begin
+            // CJ type
+            clear_l1_o = 1'b1;
+            clear_l2_o = 1'b1;
+        end
+        default:
+   endcase
+end
+
+// Functions
+
+function logic rs_hazard(input logic[4:0] rs_reg);
+    return ((rs_reg inside {rd_prev[0], rd_prev[1], rd_prev[2], rd_prev[3]}) 
+            && (rs1_i !=rd_stale) && (rs1_i != 5'd0));
+endfunction
+
+function logic csr_hazard(input logic[4:0] rs_reg);
+    return (((rs_reg inside {rd_prev[0], rd_prev[1], rd_prev[2], rd_prev[3]}) 
+            && (rs1_i !=rd_stale) && (rs1_i != 5'd0)) 
+            || (rs1_i == rd_i));
+endfunction
 
 endmodule
