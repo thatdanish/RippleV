@@ -328,7 +328,7 @@ module ControlUnitV2 (
                 end
                 
                 // Write (PC+4) to RD 
-                // Todo : check if pc + 4 is automatically available
+                // TODO : check if pc + 4 is automatically available
                 reg_file_write_en_o = 1'b1; 
             end 
             OUTPUTS_CJ_TYPE: begin
@@ -442,14 +442,13 @@ module ControlUnitV2 (
                 // Read mepc @ CSR
                 csr_rw_o = read;
                 sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
-                csr_addr_from_ctrl_o = CSR_epc;
+                csr_addr_from_ctrl_o = CSR_mepc;
 
                 // Jumping PC to mepc : handled by HCU
             end 
             OUTPUTS_WFI: begin
                 // Inform HCU
                 hcu_inst_type_o = HCU_wfi;
-
             end 
             OUTPUTS_INCORRECT_INST: begin
                 // Inform HCU

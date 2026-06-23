@@ -22,14 +22,24 @@ module HazardControlUnit (
     output logic stall_mem_o,
     output logic stall_wb_o,
     output typed_pkg::hcu_handler_stages_t hcu_hnd_stage_o 
+    // TODO : sel net for PC mux
 );
-localparam UCJ_STALL_MAX = 4 ;
+import typed_pkg::*;
 
-typedef enum bit[2:0] { stall_clear, stall_ID_IF , stall_IF, clear_L1_L2} outputs_type_t;
+localparam UCJ_STALL_MAX = 4;
+localparam TRAP_STALL_MAX = 12;
+localparam TRAP_STAGE_TWO = 4;
+localparam TRAP_STAGE_THREE = 8;
+localparam MRET_STALL_MAX = 4;
+localparam WFI_STALL_WAIT = 4;
+
+
+typedef enum bit[2:0] { stall_clear, stall_ID_IF , stall_IF, clear_L1_L2, handle_trap
+                        stall_all} outputs_type_t;
 outputs_type_t set_outputs;
 
 logic [4:0] rd_prev[4];
-logic [3:0] ucj_stall_counter;
+logic [3:0] ucj_stall_counter, trap_stall_counter, mret_stall_counter, wfi_stall_counter;
 
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin
@@ -87,16 +97,31 @@ always_ff @( posedge clk_i ) begin
                     end
                 end
                 HCU_ecall: begin
-                    // Todo: do nothing
+                    // Increment counter
+                    trap_stall_counter <= ( trap_stall_counter == TRAP_STALL_MAX ) ? 'd0 : trap_stall_counter + 'd1;
+                    
+                    set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_clear : handle_trap;
                 end
                 HCU_mret: begin
-                    // Todo: do nothing
+                    // Increment counter
+                    mret_stall_counter <= ( mret_stall_counter == MRET_STALL_MAX ) ? 'd0 : mret_stall_counter + 'd1;
+                    
+                    if ( mret_stall_counter == MRET_STALL_MAX )
+                        set_outputs <= stall_clear; // clear stall after delay
+                    else
+                        set_outputs <= stall_IF; // stall IF
                 end
                 HCU_wfi: begin
-                    // Todo: do nothing
+                    // Increment counter
+                    wfi_stall_counter <= ( wfi_stall_counter == WFI_STALL_WAIT ) ? wfi_stall_counter : wfi_stall_counter + 'd1;
+
+                    set_outputs <= stall_all; // stall complete core
                 end
                 HCU_trap: begin
-                    // Todo: do nothing
+                    // Increment counter
+                    trap_stall_counter <= ( trap_stall_counter == TRAP_STALL_MAX ) ? 'd0 : trap_stall_counter + 'd1;
+                    
+                    set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_clear : handle_trap;
                 end
                 default: 
             endcase
@@ -123,7 +148,7 @@ always_comb begin
     
     case (set_outputs)
         stall_clear: begin
-            // Todo : empty condition
+            // UGLY : empty condition
         end
         stall_ID_IF: begin
             // I & R types
@@ -141,6 +166,33 @@ always_comb begin
             clear_l1_o = 1'b1;
             clear_l2_o = 1'b1;
         end
+        handle_trap: begin
+            // ECALL & Illegal instruction
+            stall_if_o = 1'b1;
+            stall_l1_o = 1'b1;
+            stall_id_o = 1'b1;
+
+            if ( trap_stall_counter >= TRAP_STAGE_TWO )
+                hcu_hnd_stage_o = second;
+            else if ( trap_stall_counter >= TRAP_STAGE_THREE )
+                hcu_hnd_stage_o =  third;
+            else
+                hcu_hnd_stage_o = one;
+        end
+        stall_all: begin
+            stall_if_o = 1'b1;
+            stall_l1_o = 1'b1;
+            stall_id_o = 1'b1;
+            
+            if (wfi_stall_counter == WFI_STALL_WAIT) begin
+                stall_l2_o = 1'b1;
+                stall_ex_o = 1'b1;
+                stall_l3_o = 1'b1;
+                stall_mem_o = 1'b1;
+                stall_l4_o = 1'b1;
+                stall_wb_o = 1'b1;
+            end
+        end     
         default:
    endcase
 end
