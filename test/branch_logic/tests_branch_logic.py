@@ -131,20 +131,20 @@ async def test(dut):
 def test_runner_bl():
     sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
-    sources = ["../../src/typed_pkg.sv", "../../src/blocks/branch_logic.sv"]
+    sources = ["../../src/typed_pkg.sv", "../../src/blocks/BranchLogic.sv"]
 
     runner = get_runner(sim)
 
     runner.build(
         sources=sources,
-        hdl_toplevel="branch_logic",
+        hdl_toplevel="BranchLogic",
         waves=waves,
         clean=True,
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
-        hdl_toplevel="branch_logic",
+        hdl_toplevel="BranchLogic",
         test_module="tests_branch_logic",
         waves=waves
     )

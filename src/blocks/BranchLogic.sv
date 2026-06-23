@@ -1,7 +1,7 @@
 `timescale 1ns/1ns
 `default_nettype none
 
-module branch_logic (
+module BranchLogic (
     input clk_i,
     input rst_i,
     input en_i,
