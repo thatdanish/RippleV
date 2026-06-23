@@ -102,20 +102,20 @@ def test_runner_reg_file_v2():
     sim = os.getenv("SIM", "verilator")    
     waves = os.getenv("WAVES", 1)
 
-    sources = ["../../src/typed_pkg.sv", "../../src/blocks/reg_file_v2.sv"]
+    sources = ["../../src/typed_pkg.sv", "../../src/blocks/RegFilev2.sv"]
     
     runner = get_runner(sim)
 
     runner.build(
         sources=sources,
-        hdl_toplevel="reg_file_v2",
+        hdl_toplevel="RegFilev2",
         waves=waves,
         clean=True,
         build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
     )
 
     runner.test(
-        hdl_toplevel="reg_file_v2",
+        hdl_toplevel="RegFilev2",
         test_module="tests_reg_file_v2",
         waves=waves
     )
