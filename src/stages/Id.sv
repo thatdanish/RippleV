@@ -32,11 +32,7 @@ module id_stage (
     output rs2_o,
     output typed_pkg::csr_addr_t csr_addr_o,
     output imm_offset_o,
-    output lui_o,
-    // Reg-file
-    input reg_file_addr_i,
-    input reg_file_data_i,
-    output reg_file_data_o
+    output lui_o
 );
     import typed_pkg::*;
 

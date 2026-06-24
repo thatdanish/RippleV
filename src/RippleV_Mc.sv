@@ -1,5 +1,5 @@
 // 
-//  Multi-Cycle RippleV Core. NOT PIPELINED.
+//  Multi-Cycle RippleV Core.
 // 
 
 `timescale 1ns/1ns

@@ -8,6 +8,7 @@ module if_stage #(
 ) (
     input clk_i,
     input rst_i,
+    input stall_if_i,
     // Instruction memory
     input inst_mem_en_i, 
     output inst_mem_data_o,
@@ -29,11 +30,12 @@ module if_stage #(
         .data_o(inst_mem_data_o)
     );
 
-    program_counter #( 
+    ProgramCounterV2 #( 
         .ADDR_WIDTH(ADDR_WIDTH)
-    ) program_counter_inst (
+    ) program_counter_v2_inst (
         .clk_i,
         .rst_i,
+        .stall_if_i,
         .en_i(pc_en_i),
         .pc_update_i(pc_update_i),
         .pc_o(pc_out_address)

@@ -8,6 +8,7 @@ module mem_stage #(
 ) (
     input clk_i,
     input rst_i,
+    input stall_mem_i,
     // Data mem
     input typed_pkg::rw_t data_mem_rw_i,
     input typed_pkg::transfer_t data_mem_transfer_type_i,

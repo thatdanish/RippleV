@@ -3,6 +3,7 @@
 module ex_stage (
     input clk_i,
     input rst_i,
+    input stall_ex_i,
     // MUX-ALU
     input typed_pkg::sel_alu_a_t sel_mux_alu_a,
     input typed_pkg::sel_alu_b_t sel_mux_alu_b,
