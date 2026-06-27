@@ -12,9 +12,6 @@ module ex_stage (
     input logic [31:0] alu_mux_a_rs2_i,
     input logic [31:0] alu_mux_b_pc_i
     input logic [31:0] alu_mux_b_rs1_i,
-    // MUX-BL
-    input typed_pkg::sel_alu_a_t sel_mux_bl_a,
-    input typed_pkg::sel_alu_b_t sel_mux_bl_b,
     // ALU
     input alu_en_i,
     input typed_pkg::alu_opr_t alu_opr_i,

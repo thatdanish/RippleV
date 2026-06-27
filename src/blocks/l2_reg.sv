@@ -6,6 +6,9 @@ module l2_reg (
     input rst_i,
     input clear_l2_i, 
     input stall_l2_i, 
+    // PC 
+    input logic [31:0] pc_i,
+    input logic [31:0] l2_pc_out_o, 
     // Decoder v2
     input logic [4:0] rs1_i, 
     input logic [4:0] rs2_i, 
@@ -27,7 +30,6 @@ module l2_reg (
     input typed_pkg::rw_t csr_rw_i, 
     input logic csr_en_i, 
     input logic [31:0] csr_data_from_ctrl_i, 
-    input typed_pkg::sel_reg_file_addr_t reg_file_addr_mux_sel_i,
     input typed_pkg::sel_reg_file_data_t reg_file_data_mux_sel_i,
     input logic reg_file_read_en_i,
     input logic reg_file_write_en_i,
@@ -48,10 +50,7 @@ module l2_reg (
     output typed_pkg::rw_t l2_csr_rw_o, 
     output logic l2_csr_en_o, 
     output logic [31:0] l2_csr_data_from_ctrl_o, 
-    output typed_pkg::sel_reg_file_addr_t l2_reg_file_addr_mux_sel_o,
     output typed_pkg::sel_reg_file_data_t l2_reg_file_data_mux_sel_o,
-    output logic l2_reg_file_read_en_o,
-    output logic l2_reg_file_write_en_o,
     output typed_pkg::alu_opr_t l2_alu_opr_o,
     output typed_pkg::sel_alu_a_t l2_alu_a_mux_sel_o,
     output typed_pkg::sel_alu_b_t l2_alu_b_mux_sel_o,
@@ -63,16 +62,35 @@ module l2_reg (
     output typed_pkg::load_t l2_data_mem_load_type_o, 
     output logic l2_data_mem_en_o,
     // Reg file v2
+    input reg_file_read_en_i,
+    input reg_file_write_en_i,
     input logic[31:0] rs1_data_i,
     input logic[31:0] rs2_data_i,
     output logic[31:0] l2_rs1_data_o,
     output logic[31:0] l2_rs2_data_o 
+    output l2_reg_file_write_en_o
 );
 
     import typed_pkg::*;
 
+    logic csr_en_1, reg_file_read_en_1, alu_en_1, branch_logic_en_1, data_mem_en_1;
+    logic [31:0] pc_1, imm_offset_1, lui_1, csr_data_from_ctrl_1, pc_2, imm_offset_2, lui_2;
+    logic [4:0] rs1_1, rs2_1, rd_1, rs1_2, rs2_2, rd_2;
+    csr_addr_t csr_addr_1, csr_addr_from_ctrl_1, csr_addr_2;
+    sel_csr_addr_t csr_addr_mux_sel_1;
+    sel_csr_data_t csr_data_mux_sel_1;
+    write_t csr_write_type_1;
+    rw_t csr_rw_1, data_mem_rw_1;
+    sel_reg_file_data_t reg_file_data_mux_sel_1;
+    alu_opr_t alu_opr_1, bl_opr_1;
+    sel_alu_a alu_a_mux_sel_1;
+    sel_alu_b alu_b_mux_sel_1;
+    transfer_t data_mem_transfer_type_1;
+    load_t data_mem_load_type_1;
+
     always_ff @( posedge clk_i ) begin 
         if (!rst_i) begin
+            l2_pc_out_o <= 'd0;
             l2_rs1_o <= 'd0; 
             l2_rs2_o <= 'd0; 
             l2_rd_o <= 'd0; 
@@ -88,7 +106,7 @@ module l2_reg (
             l2_csr_data_from_ctrl_o <= 'd0; 
             l2_reg_file_addr_mux_sel_o <= 'd0;
             l2_reg_file_data_mux_sel_o <= 'd0;
-            l2_reg_file_read_en_o <= 'd0;
+    
             l2_reg_file_write_en_o <= 'd0;
             l2_alu_opr_o <= 'd0;
             l2_alu_a_mux_sel_o <= 'd0;
@@ -104,7 +122,8 @@ module l2_reg (
             l2_rs2_data_o <= 'd0; 
         end else begin
             
-            // Delay 1 extra -  CU & Decoder
+            // Delay 1 extra -  CU, Decoder & PC
+            pc_1 <= pc_i;
             rs1_1 <= rs1_i;
             rs2_1 <= rs2_i;
             rd_1 <= rd_i;
@@ -118,7 +137,6 @@ module l2_reg (
             csr_rw_1 <= csr_rw_i;
             csr_en_1 <= csr_en_i;
             csr_data_from_ctrl_1 <= csr_data_from_ctrl_i;
-            reg_file_addr_mux_sel_1 <= reg_file_addr_mux_sel_i;
             reg_file_data_mux_sel_1 <= reg_file_data_mux_sel_i;
             reg_file_read_en_1 <= reg_file_read_en_i;
             reg_file_write_en_1 <= reg_file_write_en_i;
@@ -133,7 +151,8 @@ module l2_reg (
             data_mem_load_type_1 <= data_mem_load_type_i;
             data_mem_en_1 <= data_mem_en_i;
 
-            // Delay 2 extra - Decoder
+            // Delay 2 extra - Decoder & PC
+            pc_2 <= pc_1;
             rs1_2 <= rs1_1;
             rs2_2 <= rs2_1;
             rd_2 <= rd_1;
@@ -157,7 +176,7 @@ module l2_reg (
                 l2_csr_data_from_ctrl_o <= 'd0; 
                 l2_reg_file_addr_mux_sel_o <= 'd0;
                 l2_reg_file_data_mux_sel_o <= 'd0;
-                l2_reg_file_read_en_o <= 'd0;
+        
                 l2_reg_file_write_en_o <= 'd0;
                 l2_alu_opr_o <= 'd0;
                 l2_alu_a_mux_sel_o <= 'd0;
@@ -172,6 +191,7 @@ module l2_reg (
                 l2_rs1_data_o <= 'd0;
                 l2_rs2_data_o <= 'd0;                 
             end else begin
+                l2_pc_out_o <= ( stall_l2_i == 1'b1 ) ? l2_pc_out_o : pc_2;
                 l2_rs1_o <= ( stall_l2_i == 1'b1 ) ? l2_rs1_o : rs1_2;
                 l2_rs2_o <= ( stall_l2_i == 1'b1 ) ? l2_rs2_o : rs2_2;
                 l2_rd_o <= ( stall_l2_i == 1'b1 ) ? l2_rd_o : rd_2;
@@ -185,9 +205,8 @@ module l2_reg (
                 l2_csr_rw_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_rw_o : csr_rw_1; 
                 l2_csr_en_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_en_o : csr_en_1; 
                 l2_csr_data_from_ctrl_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_data_from_ctrl_o : csr_data_from_ctrl_1; 
-                l2_reg_file_addr_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_reg_file_addr_mux_sel_o  : reg_file_addr_mux_sel_1;
                 l2_reg_file_data_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_reg_file_data_mux_sel_o  : reg_file_data_mux_sel_1;
-                l2_reg_file_read_en_o <= ( stall_l2_i == 1'b1 ) ? l2_reg_file_read_en_o  : reg_file_read_en_1;
+        
                 l2_reg_file_write_en_o <= ( stall_l2_i == 1'b1 ) ? l2_reg_file_write_en_o  : reg_file_write_en_1;
                 l2_alu_opr_o <= ( stall_l2_i == 1'b1 ) ? l2_alu_opr_o  : alu_opr_1;
                 l2_alu_a_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_alu_a_mux_sel_o  : alu_a_mux_sel_1;

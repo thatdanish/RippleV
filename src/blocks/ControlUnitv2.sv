@@ -19,12 +19,10 @@ module ControlUnitV2 (
     // Instruction Memory
     output inst_mem_en_o,
     // Reg-file v2
-    output typed_pkg::sel_reg_file_addr_t reg_file_addr_mux_sel_o,
     output typed_pkg::sel_reg_file_data_t reg_file_data_mux_sel_o,
     output logic reg_file_read_en_o,
     output logic reg_file_write_en_o,
     // ALU
-    input take_branch_i, 
     output typed_pkg::alu_opr_t alu_opr_o,
     output typed_pkg::sel_alu_a_t alu_a_mux_sel_o,
     output typed_pkg::sel_alu_b_t alu_b_mux_sel_o,
@@ -144,7 +142,6 @@ module ControlUnitV2 (
         // Reg file V2
         reg_file_read_en_o = 1'b0;
         reg_file_write_en_o = 1'b0;
-        reg_file_addr_mux_sel_o = sel_reg_file_addr_t'('b0);
         reg_file_data_mux_sel_o = sel_reg_file_data_t'('b0);
         // ALU
         alu_a_mux_sel_o = sel_alu_a_t'('d0);
@@ -183,22 +180,22 @@ module ControlUnitV2 (
             CTRL_SLL: alu_opr_o = ALU_SLL;
             CTRL_SRL: alu_opr_o = ALU_SRL;
             CTRL_SRA: alu_opr_o = ALU_SRA;
-            CTRL_JAL: alu_opr_o = ALU_JAL; // FIXME : Assign correct alu_opr_o 
-            CTRL_JALR: alu_opr_o = ALU_JALR; // FIXME : Assign correct alu_opr_o 
-            CTRL_BEQ: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_BNE: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_BGE: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_BLT: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_BLTU: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_BGEU: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_LW: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_LH: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_LHU: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_LB: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_LBU: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_SW: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_SH: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
-            CTRL_SB: alu_opr_o = ALU_ADD; // FIXME : Assign correct alu_opr_o 
+            CTRL_JAL: alu_opr_o = ALU_JAL; 
+            CTRL_JALR: alu_opr_o = ALU_JALR;   
+            CTRL_BEQ: alu_opr_o = ALU_ADD;  // placeholders
+            CTRL_BNE: alu_opr_o = ALU_ADD;  // placeholders
+            CTRL_BGE: alu_opr_o = ALU_ADD;  // placeholders
+            CTRL_BLT: alu_opr_o = ALU_ADD;  // placeholders
+            CTRL_BLTU: alu_opr_o = ALU_ADD;     // placeholders
+            CTRL_BGEU: alu_opr_o = ALU_ADD;     // placeholders
+            CTRL_LW: alu_opr_o = ALU_ADD;   // placeholders
+            CTRL_LH: alu_opr_o = ALU_ADD;   // placeholders
+            CTRL_LHU: alu_opr_o = ALU_ADD;  // placeholders
+            CTRL_LB: alu_opr_o = ALU_ADD;   // placeholders
+            CTRL_LBU: alu_opr_o = ALU_ADD;  // placeholders
+            CTRL_SW: alu_opr_o = ALU_ADD;   // placeholders
+            CTRL_SH: alu_opr_o = ALU_ADD;   // placeholders
+            CTRL_SB: alu_opr_o = ALU_ADD;   // placeholders
             CTRL_MUL: alu_opr_o = ALU_MUL;
             CTRL_MULH: alu_opr_o = ALU_MULH;
             CTRL_MULHU: alu_opr_o = ALU_MULHU;
@@ -211,9 +208,13 @@ module ControlUnitV2 (
 
         case (current_asserted_outputs)
             OUTPUTS_OFF: begin
-                // UGLY : Empty condition
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
             end 
             OUTPUTS_I_TYPE: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+
                 // Read RS1
                 reg_file_read_en_o = 1'b1;
 
@@ -227,11 +228,16 @@ module ControlUnitV2 (
 
                 // Write RD
                 reg_file_write_en_o = 1'b1;  
+                if ( current_instruction == CTRL_LUI ) reg_file_data_mux_sel_o =  sel_reg_file_decoder;
+                else reg_file_data_mux_sel_o =  sel_reg_file_alu;
 
                 // Update PC -> PC+4    
                 branch_logic_en_o = 1'b1;
             end 
             OUTPUTS_R_TYPE: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+
                 // Read RS1
                 reg_file_read_en_o = 1'b1;
 
@@ -245,11 +251,15 @@ module ControlUnitV2 (
 
                 // Write RD
                 reg_file_write_en_o = 1'b1;  
+                reg_file_data_mux_sel_o =  sel_reg_file_alu;
 
                 // Update PC -> PC+4    
                 branch_logic_en_o = 1'b1;
             end 
             OUTPUTS_LS_TYPE: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+                
                 // Read RS1 (LOAD & STORE), RS2 (STORE)
                 reg_file_read_en_o = 1'b1;
 
@@ -267,30 +277,35 @@ module ControlUnitV2 (
                 case (current_instruction)
                     CTRL_LW: begin
                         reg_file_write_en_o = 1'b1;
+                        reg_file_data_mux_sel_o =  sel_reg_file_data_mem;
                         data_mem_rw_o = read;
                         data_mem_load_type_o = load_signed;
                         data_mem_transfer_type_o = transfer_word;
                     end
                     CTRL_LH: begin
                         reg_file_write_en_o = 1'b1;
+                        reg_file_data_mux_sel_o =  sel_reg_file_data_mem;
                         data_mem_rw_o = read;
                         data_mem_load_type_o = load_signed;
                         data_mem_transfer_type_o = transfer_hex_byte;
                     end
                     CTRL_LHU: begin
                         reg_file_write_en_o = 1'b1;
+                        reg_file_data_mux_sel_o =  sel_reg_file_data_mem;
                         data_mem_rw_o = read;
                         data_mem_load_type_o = load_unsigned;
                         data_mem_transfer_type_o = transfer_hex_byte;
                     end
                     CTRL_LB: begin
                         reg_file_write_en_o = 1'b1;
+                        reg_file_data_mux_sel_o =  sel_reg_file_data_mem;
                         data_mem_rw_o = read;
                         data_mem_load_type_o = load_signed;
                         data_mem_transfer_type_o = transfer_byte;
                     end
                     CTRL_LBU: begin
                         reg_file_write_en_o = 1'b1;
+                        reg_file_data_mux_sel_o =  sel_reg_file_data_mem;
                         data_mem_rw_o = read;
                         data_mem_load_type_o = load_unsigned;
                         data_mem_transfer_type_o = transfer_byte;
@@ -313,6 +328,9 @@ module ControlUnitV2 (
                 branch_logic_en_o = 1'b1;
             end  
             OUTPUTS_UCJ_TYPE: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+                
                 // Read RS1 (JALR)
                 reg_file_read_en_o = 1'b1;
 
@@ -330,8 +348,13 @@ module ControlUnitV2 (
                 // Write (PC+4) to RD 
                 // TODO : check if pc + 4 is automatically available
                 reg_file_write_en_o = 1'b1; 
+                reg_file_data_mux_sel_o =  sel_reg_file_pc;
+
             end 
             OUTPUTS_CJ_TYPE: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+                
                 // Read RS1, RS2
                 reg_file_read_en_o = 1'b1;
 
@@ -372,30 +395,30 @@ module ControlUnitV2 (
                 // Read & write @ CSR
                 csr_en_o = 1'b1;
                 csr_rw_o = write;
-                sel_mux_csr_addr = sel_csr_addr_decoder;
+                csr_addr_mux_sel_o = sel_csr_addr_decoder;
                 case (current_instruction)
                     CTRLCSRRW: begin 
-                        sel_mux_csr_data = sel_csr_data_rs1;
+                        csr_data_mux_sel_o = sel_csr_data_rs1;
                         csr_write_type_o = write_complete; 
                     end
                     CTRLCSRRS: begin 
-                        sel_mux_csr_data = sel_csr_data_rs1;
+                        csr_data_mux_sel_o = sel_csr_data_rs1;
                         csr_write_type_o = write_set; 
                     end
                     CTRLCSRRC: begin 
-                        sel_mux_csr_data = sel_csr_data_rs1;
+                        csr_data_mux_sel_o = sel_csr_data_rs1;
                         csr_write_type_o = write_clear; 
                     end
                     CTRLCSRRWI:begin 
-                        sel_mux_csr_data = sel_csr_data_uimm;
+                        csr_data_mux_sel_o = sel_csr_data_uimm;
                         csr_write_type_o = write_complete; 
                     end
                     CTRLCSRRSI:begin 
-                        sel_mux_csr_data = sel_csr_data_uimm;
+                        csr_data_mux_sel_o = sel_csr_data_uimm;
                         csr_write_type_o = write_set; 
                     end
                     CTRLCSRRCI:begin 
-                        sel_mux_csr_data = sel_csr_data_uimm;
+                        csr_data_mux_sel_o = sel_csr_data_uimm;
                         csr_write_type_o = write_clear; 
                     end
                     default: csr_write_type_o = write'('d0);
@@ -403,11 +426,15 @@ module ControlUnitV2 (
      
                 // Write RD
                 reg_file_write_en_o = 1'b1;  
+                reg_file_data_mux_sel_o =  sel_reg_file_csr;
 
                 // Update PC -> PC+4    
                 branch_logic_en_o = 1'b1;
             end 
             OUTPUTS_ECALL: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+                
                 // Inform HCU
                 hcu_inst_type_o = HCU_ecall;
                 
@@ -415,67 +442,76 @@ module ControlUnitV2 (
                 if (hcu_hnd_stage_i == first ) begin
                     // Write PC to mepc @ CSR
                     csr_rw_o = write;
-                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_mux_sel_o = sel_csr_addr_ctrl_unit;
                     csr_addr_from_ctrl_o = CSR_mepc;
-                    sel_mux_csr_data = sel_csr_data_pc;
+                    csr_data_mux_sel_o = sel_csr_data_pc;
                 end
                 else if (hcu_hnd_stage_i == second ) begin
                     // Write mcause @ CSR
                     csr_rw_o = write;
-                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_mux_sel_o = sel_csr_addr_ctrl_unit;
                     csr_addr_from_ctrl_o = CSR_mcause;
-                    sel_mux_csr_data = sel_csr_data_ctrl_unit;
+                    csr_data_mux_sel_o = sel_csr_data_ctrl_unit;
                     csr_data_from_ctrl_o = cause_ecall;
                 end else begin
                     // Read mtvec @ CSR
                     csr_rw_o = read;
-                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_mux_sel_o = sel_csr_addr_ctrl_unit;
                     csr_addr_from_ctrl_o = CSR_mtvec;
                 end
                 
                 // Jumping PC to mtvec : handled by HCU
             end 
             OUTPUTS_MRET: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+                
                 // Inform HCU
                 hcu_inst_type_o = HCU_mret;
 
                 // Read mepc @ CSR
                 csr_rw_o = read;
-                sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                csr_addr_mux_sel_o = sel_csr_addr_ctrl_unit;
                 csr_addr_from_ctrl_o = CSR_mepc;
 
                 // Jumping PC to mepc : handled by HCU
             end 
             OUTPUTS_WFI: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+                
                 // Inform HCU
                 hcu_inst_type_o = HCU_wfi;
             end 
             OUTPUTS_INCORRECT_INST: begin
+                // IMEM enable
+                inst_mem_en_i = 1'b1;
+                
                 // Inform HCU
                 hcu_inst_type_o = HCU_trap;
 
                 if (hcu_hnd_stage_i == first) begin
                     // Write mepc @ CSR
                     csr_rw_o = write;
-                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_mux_sel_o = sel_csr_addr_ctrl_unit;
                     csr_addr_from_ctrl_o = CSR_mepc;
-                    sel_mux_csr_data = sel_csr_data_pc;
+                    csr_data_mux_sel_o = sel_csr_data_pc;
                 end else if (hcu_hnd_stage_i == second) begin
                     // Write mcause @ CSR
                     csr_rw_o = write;
-                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_mux_sel_o = sel_csr_addr_ctrl_unit;
                     csr_addr_from_ctrl_o = CSR_mcause;
-                    sel_mux_csr_data = sel_csr_data_ctrl_unit;
+                    csr_data_mux_sel_o = sel_csr_data_ctrl_unit;
                     csr_data_from_ctrl_o = cause_illegal_instruction;
                 end else begin
                     // Read mtvec @ CSR
                     csr_rw_o = read;
-                    sel_mux_csr_addr = sel_csr_addr_ctrl_unit;
+                    csr_addr_mux_sel_o = sel_csr_addr_ctrl_unit;
                     csr_addr_from_ctrl_o = CSR_mtvec;
                 end
                 // Jumping PC to mtvec : handled by HCU
             end 
-            default:
+            default: inst_mem_en_i = 1'b0;  // stop
         endcase
     end
 endmodule

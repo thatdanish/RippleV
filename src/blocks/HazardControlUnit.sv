@@ -22,7 +22,8 @@ module HazardControlUnit (
     output logic stall_mem_o,
     output logic stall_wb_o,
     output typed_pkg::hcu_handler_stages_t hcu_hnd_stage_o 
-    // TODO : sel net for PC mux
+    output logic pc_en_o,
+    output typed_pkg::sel_pc_t pc_sel_o
 );
 import typed_pkg::*;
 
@@ -144,27 +145,40 @@ always_comb begin
     stall_mem_o = 1'b0;
     stall_wb_o = 1'b0;
 
+    pc_en_o = 1'b0;
+    pc_sel_o = sel_pc_t'('d0);
+
     hcu_hnd_stage_o = hcu_handler_stages_t'('d0);
     
     case (set_outputs)
         stall_clear: begin
-            // UGLY : empty condition
+            pc_en_o = 1'b1;
+            pc_sel_o = sel_pc_update;
         end
         stall_ID_IF: begin
             // I & R types
             stall_id_o = 1'b1;
             stall_l1_o = 1'b1;
             stall_if_o = 1'b1;
+
+            pc_en_o = 1'b1;
+            pc_sel_o = sel_pc_update;
         end
         stall_IF: begin
             // UCJ type
             stall_l1_o = 1'b1;
             stall_if_o = 1'b1;
+
+            pc_en_o = 1'b0;
+            pc_sel_o = sel_pc_update;
         end
         clear_L1_L2: begin
             // CJ type
             clear_l1_o = 1'b1;
             clear_l2_o = 1'b1;
+
+            pc_en_o = 1'b1;
+            pc_sel_o = sel_pc_update;
         end
         handle_trap: begin
             // ECALL & Illegal instruction
@@ -176,6 +190,8 @@ always_comb begin
                 hcu_hnd_stage_o = second;
             else if ( trap_stall_counter >= TRAP_STAGE_THREE )
                 hcu_hnd_stage_o =  third;
+                pc_en_o = 1'b1;
+                pc_sel_o = sel_pc_jump_vec;
             else
                 hcu_hnd_stage_o = one;
         end
@@ -183,6 +199,8 @@ always_comb begin
             stall_if_o = 1'b1;
             stall_l1_o = 1'b1;
             stall_id_o = 1'b1;
+            pc_en_o = 1'b0;
+            pc_sel_o = sel_pc_update;
             
             if (wfi_stall_counter == WFI_STALL_WAIT) begin
                 stall_l2_o = 1'b1;

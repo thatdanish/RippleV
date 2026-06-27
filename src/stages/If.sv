@@ -14,7 +14,8 @@ module if_stage #(
     output inst_mem_data_o,
     // PC
     input pc_en_i,
-    input pc_update_i,
+    input logic [31:0] pc_update_i,
+    output logic [31:0] pc_out_o
 );
     logic [ADDR_WIDTH-1:0] pc_out_address;
 

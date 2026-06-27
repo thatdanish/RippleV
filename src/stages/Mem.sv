@@ -18,14 +18,14 @@ module mem_stage #(
     input data_mem_data_i,
     input data_mem_data_o,
     // CSR mux
-    input typed_pkg::sel_csr_addr_t sel_mux_csr_addr,
-    input typed_pkg::sel_csr_data_t sel_mux_csr_data,
+    input typed_pkg::sel_csr_addr_t sel_mux_csr_addr_i,
+    input typed_pkg::sel_csr_data_t sel_mux_csr_data_i,
     input typed_pkg::csr_addr_t csr_addr_from_cu_i,
     input typed_pkg::csr_addr_t csr_addr_from_decoder_i,
     input logic [31:0] csr_pc_i,
     input logic [31:0] csr_uimm_i,
     input logic [31:0] csr_rs1_i,
-    input logic [31:0] csr_from_ctrl_unit_i,
+    input logic [31:0] csr_data_from_ctrl_unit_i,
     // CSR
     input typed_pkg::write_t csr_write_type_i,
     input typed_pkg::rw_t csr_rw_i,
@@ -53,18 +53,18 @@ module mem_stage #(
     );
 
     mux_csr_addr mux_csr_addr_inst (
-        .sel_i(sel_mux_csr_addr),
+        .sel_i(sel_mux_csr_addr_i),
         .from_ctrl_unit_i(csr_addr_from_cu_i),
         .from_decoder_i(csr_addr_from_decoder_i),
         .addr_o(csr_address_out)
     );
 
     mux_csr_data mux_csr_data_inst (
-        .sel_i(sel_mux_csr_data),
+        .sel_i(sel_mux_csr_data_i),
         .pc_i(csr_pc_i),
         .uimm_i(csr_uimm_i),
         .rs1_i(csr_rs1_i),
-        .from_ctrl_unit_i(csr_from_ctrl_unit_i),
+        .from_ctrl_unit_i(csr_data_from_ctrl_unit_i),
         .data_o(csr_data_out)
     );
 
