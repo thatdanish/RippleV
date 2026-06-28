@@ -21,7 +21,7 @@ module HazardControlUnit (
     output logic stall_ex_o,
     output logic stall_mem_o,
     output logic stall_wb_o,
-    output typed_pkg::hcu_handler_stages_t hcu_hnd_stage_o 
+    output typed_pkg::hcu_handler_stages_t hcu_hnd_stage_o,
     output logic pc_en_o,
     output typed_pkg::sel_pc_t pc_sel_o
 );
@@ -35,11 +35,10 @@ localparam MRET_STALL_MAX = 4;
 localparam WFI_STALL_WAIT = 4;
 
 
-typedef enum bit[2:0] { stall_clear, stall_ID_IF , stall_IF, clear_L1_L2, handle_trap
-                        stall_all} outputs_type_t;
+typedef enum bit[2:0] { stall_clear, stall_ID_IF , stall_IF, clear_L1_L2, handle_trap, stall_all} outputs_type_t;
 outputs_type_t set_outputs;
 
-logic [4:0] rd_prev[4];
+logic [4:0] rd_prev[4], rd_stale;
 logic [3:0] ucj_stall_counter, trap_stall_counter, mret_stall_counter, wfi_stall_counter;
 
 always_ff @( posedge clk_i ) begin
@@ -60,7 +59,7 @@ always_ff @( posedge clk_i ) begin
         if (bl_take_branch_i == 1'b1) 
             set_outputs <= clear_L1_L2;
         else begin
-            case (hcu_hnd_stage_i)
+            case (hcu_inst_type_i)
                 HCU_I_type: begin
                     if (rs_hazard(rs1_i)) begin
                         set_outputs <= stall_ID_IF; // stall ID & IF
@@ -124,7 +123,7 @@ always_ff @( posedge clk_i ) begin
                     
                     set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_clear : handle_trap;
                 end
-                default: 
+                default: set_outputs <= stall_all;
             endcase
         end
     end
@@ -188,12 +187,12 @@ always_comb begin
 
             if ( trap_stall_counter >= TRAP_STAGE_TWO )
                 hcu_hnd_stage_o = second;
-            else if ( trap_stall_counter >= TRAP_STAGE_THREE )
+            else if ( trap_stall_counter >= TRAP_STAGE_THREE ) begin
                 hcu_hnd_stage_o =  third;
                 pc_en_o = 1'b1;
                 pc_sel_o = sel_pc_jump_vec;
-            else
-                hcu_hnd_stage_o = one;
+            end else
+                hcu_hnd_stage_o = first;
         end
         stall_all: begin
             stall_if_o = 1'b1;
@@ -211,21 +210,26 @@ always_comb begin
                 stall_wb_o = 1'b1;
             end
         end     
-        default:
+        default: pc_en_o = 1'b0;
    endcase
 end
 
 // Functions
 
 function logic rs_hazard(input logic[4:0] rs_reg);
-    return ((rs_reg inside {rd_prev[0], rd_prev[1], rd_prev[2], rd_prev[3]}) 
-            && (rs1_i !=rd_stale) && (rs1_i != 5'd0));
+    if ( (rs_reg == rd_prev[0] || rs_reg == rd_prev[1] || rs_reg == rd_prev[2] || rs_reg == rd_prev[3]) 
+        && (rs1_i !=rd_stale) && (rs1_i != 5'd0) )
+        return 1'b1;
+    else 
+        return 1'b0;
 endfunction
 
 function logic csr_hazard(input logic[4:0] rs_reg);
-    return (((rs_reg inside {rd_prev[0], rd_prev[1], rd_prev[2], rd_prev[3]}) 
-            && (rs1_i !=rd_stale) && (rs1_i != 5'd0)) 
-            || (rs1_i == rd_i));
+    if ( ((rs_reg == rd_prev[0] || rs_reg == rd_prev[1] || rs_reg == rd_prev[2] || rs_reg == rd_prev[3]) 
+        && (rs1_i !=rd_stale) && (rs1_i != 5'd0)) || (rs1_i == rd_i) )
+        return 1'b1;
+    else 
+        return 1'b0;
 endfunction
 
 endmodule

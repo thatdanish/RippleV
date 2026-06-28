@@ -1,17 +1,16 @@
 // Instruction fetch stage
 
-module if_stage #(
+module If #(
     parameter string FILE  = "../../../data/sample/sample_instructions.hex",
-    parameter ADDR_WIDTH  = 32
+    parameter ADDR_WIDTH  = 32,
     parameter WORD_SIZE  = 32
-
 ) (
     input clk_i,
     input rst_i,
     input stall_if_i,
     // Instruction memory
     input inst_mem_en_i, 
-    output inst_mem_data_o,
+    output logic [31:0] inst_mem_data_o,
     // PC
     input pc_en_i,
     input logic [31:0] pc_update_i,
@@ -20,7 +19,7 @@ module if_stage #(
     logic [ADDR_WIDTH-1:0] pc_out_address;
 
     inst_mem #(
-        .FILE(IMEM_FILE),
+        .FILE(FILE),
         .ADDR_WIDTH(ADDR_WIDTH),
         .WORD_SIZE(WORD_SIZE)
     ) inst_mem_inst (
@@ -31,7 +30,7 @@ module if_stage #(
         .data_o(inst_mem_data_o)
     );
 
-    ProgramCounterV2 #( 
+    ProgramCounterv2 #( 
         .ADDR_WIDTH(ADDR_WIDTH)
     ) program_counter_v2_inst (
         .clk_i,

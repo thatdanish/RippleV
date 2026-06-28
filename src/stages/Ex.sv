@@ -1,6 +1,6 @@
 // Execution stage
 
-module ex_stage (
+module Ex (
     input clk_i,
     input rst_i,
     input stall_ex_i,
@@ -10,7 +10,7 @@ module ex_stage (
     input logic [31:0] alu_mux_a_sign_ext_i,
     input logic [31:0] alu_mux_a_lui_i,
     input logic [31:0] alu_mux_a_rs2_i,
-    input logic [31:0] alu_mux_b_pc_i
+    input logic [31:0] alu_mux_b_pc_i,
     input logic [31:0] alu_mux_b_rs1_i,
     // ALU
     input alu_en_i,
@@ -19,16 +19,15 @@ module ex_stage (
     // BL
     input bl_en_i,
     input typed_pkg::alu_opr_t bl_opr_i,
-    output bl_take_branch_o
+    output bl_take_branch_o,
     // Output
-    output pc_update_o
+    output logic [31:0] pc_update_o
 );  
-    logic [31:0] alu_out, bl_pc_update;
+    logic [31:0] alu_out, bl_pc_update, alu_a_out, alu_b_out;
 
     assign alu_out_o = alu_out;
 
     mux_alu_a_v2 mux_alu_a_v2_inst (
-        .clk_i,
         .sel_i(sel_mux_alu_a), 
         .const_4_i(32'd4), 
         .sign_ext_offset_i(alu_mux_a_sign_ext_i), 
@@ -51,10 +50,10 @@ module ex_stage (
         .opr_i(alu_opr_i),
         .a_i(alu_a_out), 
         .b_i(alu_b_out),
-        .out_o(alu_out),
+        .out_o(alu_out)
     );
 
-    branch_logic branch_logic_inst (
+    BranchLogic branch_logic_inst (
         .clk_i,
         .rst_i,
         .en_i(bl_en_i),
@@ -70,9 +69,8 @@ module ex_stage (
     // Mux
     always_comb begin
         case (bl_take_branch_o)
-            1'b0: pc_update_o = alu_out
-            1'b1: pc_update = bl_pc_update
-            default: 
+            1'b0: pc_update_o = alu_out;
+            1'b1: pc_update_o = bl_pc_update;
         endcase
     end
     

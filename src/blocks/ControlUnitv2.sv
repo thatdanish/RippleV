@@ -1,12 +1,14 @@
 `timescale 1ns/1ns
 `default_nettype none
 
-module ControlUnitV2 (
+module ControlUnitv2 (
     // External
     input clk_i,
     input rst_i,
     input main_enable_i,
     output logic interrupt_ack_o,
+    // Decoder 
+    input typed_pkg::ctrl_inst_t instruction_i,
     // CSR
     input interrupt_i,
     output typed_pkg::csr_addr_t csr_addr_from_ctrl_o, 
@@ -44,7 +46,7 @@ module ControlUnitV2 (
 
     typedef enum bit[3:0] { OUTPUTS_OFF, OUTPUTS_I_TYPE, OUTPUTS_R_TYPE, OUTPUTS_LS_TYPE, 
                         OUTPUTS_CJ_TYPE , OUTPUTS_UCJ_TYPE, OUTPUTS_CSR_TYPE, OUTPUTS_ECALL,
-                        OUTPUTS_MRET, OUTPUTS_WFI, OUTPUTS_INCORRECT_INST } asserted_output_t;
+                        OUTPUTS_MRET, OUTPUTS_WFI, OUTPUTS_INCORRECT_INST } asserted_outputs_t;
 
     asserted_outputs_t current_asserted_outputs;
     ctrl_inst_t current_instruction;  
@@ -110,8 +112,8 @@ module ControlUnitV2 (
                     CTRL_CSRRCI: current_asserted_outputs = OUTPUTS_CSR_TYPE;
                     CTRL_FENCE: current_asserted_outputs = OUTPUTS_OFF;
                     CTRL_ECALL: current_asserted_outputs = OUTPUTS_ECALL;
-                    CTRL_MRET: current_asserted_outputs  = OUTPUT_MRET;
-                    CTRL_WFI: current_asserted_outputs = OUTPUT_WFI;
+                    CTRL_MRET: current_asserted_outputs  = OUTPUTS_MRET;
+                    CTRL_WFI: current_asserted_outputs = OUTPUTS_WFI;
                     default: current_asserted_outputs = OUTPUTS_INCORRECT_INST;
                 endcase
             end else if (interrupt_i == 1'b1) 
@@ -134,9 +136,6 @@ module ControlUnitV2 (
         csr_write_type_o = write_t'('d0);
         csr_en_o = 1'b0; 
         csr_data_from_ctrl_o = 'd0; 
-        // PC
-        pc_mux_sel_o = sel_pc_t'('d0);
-        pc_en_o = 1'b0;
         // Inst-mem
         inst_mem_en_o = 1'b0;      
         // Reg file V2
@@ -204,16 +203,17 @@ module ControlUnitV2 (
             CTRL_DIVU: alu_opr_o = ALU_DIVU;
             CTRL_REM: alu_opr_o = ALU_REM;
             CTRL_REMU: alu_opr_o = ALU_REMU;
+            default: alu_opr_o = alu_opr_t'('d0);
         endcase
 
         case (current_asserted_outputs)
             OUTPUTS_OFF: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
             end 
             OUTPUTS_I_TYPE: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
 
                 // Read RS1
                 reg_file_read_en_o = 1'b1;
@@ -236,7 +236,7 @@ module ControlUnitV2 (
             end 
             OUTPUTS_R_TYPE: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
 
                 // Read RS1
                 reg_file_read_en_o = 1'b1;
@@ -258,7 +258,7 @@ module ControlUnitV2 (
             end 
             OUTPUTS_LS_TYPE: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
                 
                 // Read RS1 (LOAD & STORE), RS2 (STORE)
                 reg_file_read_en_o = 1'b1;
@@ -322,6 +322,10 @@ module ControlUnitV2 (
                         data_mem_rw_o = write;
                         data_mem_transfer_type_o = transfer_byte;
                     end
+                    default: begin
+                        data_mem_en_o = 1'b0;
+                        reg_file_write_en_o = 1'b0;
+                    end
                 endcase
 
                 // Update PC -> PC+4    
@@ -329,7 +333,7 @@ module ControlUnitV2 (
             end  
             OUTPUTS_UCJ_TYPE: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
                 
                 // Read RS1 (JALR)
                 reg_file_read_en_o = 1'b1;
@@ -353,7 +357,7 @@ module ControlUnitV2 (
             end 
             OUTPUTS_CJ_TYPE: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
                 
                 // Read RS1, RS2
                 reg_file_read_en_o = 1'b1;
@@ -378,11 +382,14 @@ module ControlUnitV2 (
                         bl_opr_o = ALU_BLTU;
                     end 
                     CTRL_BGE: begin
-                        bl_opr_o = ALU_BGE
+                        bl_opr_o = ALU_BGE;
                     end 
                     CTRL_BGEU: begin
-                        bl_opr_o = ALU_BGEU
+                        bl_opr_o = ALU_BGEU;
                     end 
+                    default: begin
+                        bl_opr_o = alu_opr_t'('d0);
+                    end
                 endcase
             end 
             OUTPUTS_CSR_TYPE: begin
@@ -397,31 +404,31 @@ module ControlUnitV2 (
                 csr_rw_o = write;
                 csr_addr_mux_sel_o = sel_csr_addr_decoder;
                 case (current_instruction)
-                    CTRLCSRRW: begin 
+                    CTRL_CSRRW: begin 
                         csr_data_mux_sel_o = sel_csr_data_rs1;
                         csr_write_type_o = write_complete; 
                     end
-                    CTRLCSRRS: begin 
+                    CTRL_CSRRS: begin 
                         csr_data_mux_sel_o = sel_csr_data_rs1;
                         csr_write_type_o = write_set; 
                     end
-                    CTRLCSRRC: begin 
+                    CTRL_CSRRC: begin 
                         csr_data_mux_sel_o = sel_csr_data_rs1;
                         csr_write_type_o = write_clear; 
                     end
-                    CTRLCSRRWI:begin 
+                    CTRL_CSRRWI:begin 
                         csr_data_mux_sel_o = sel_csr_data_uimm;
                         csr_write_type_o = write_complete; 
                     end
-                    CTRLCSRRSI:begin 
+                    CTRL_CSRRSI:begin 
                         csr_data_mux_sel_o = sel_csr_data_uimm;
                         csr_write_type_o = write_set; 
                     end
-                    CTRLCSRRCI:begin 
+                    CTRL_CSRRCI:begin 
                         csr_data_mux_sel_o = sel_csr_data_uimm;
                         csr_write_type_o = write_clear; 
                     end
-                    default: csr_write_type_o = write'('d0);
+                    default: csr_write_type_o = write_t'('d0);
                 endcase
      
                 // Write RD
@@ -433,7 +440,7 @@ module ControlUnitV2 (
             end 
             OUTPUTS_ECALL: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
                 
                 // Inform HCU
                 hcu_inst_type_o = HCU_ecall;
@@ -464,7 +471,7 @@ module ControlUnitV2 (
             end 
             OUTPUTS_MRET: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
                 
                 // Inform HCU
                 hcu_inst_type_o = HCU_mret;
@@ -478,14 +485,14 @@ module ControlUnitV2 (
             end 
             OUTPUTS_WFI: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
                 
                 // Inform HCU
                 hcu_inst_type_o = HCU_wfi;
             end 
             OUTPUTS_INCORRECT_INST: begin
                 // IMEM enable
-                inst_mem_en_i = 1'b1;
+                inst_mem_en_o = 1'b1;
                 
                 // Inform HCU
                 hcu_inst_type_o = HCU_trap;
@@ -511,7 +518,7 @@ module ControlUnitV2 (
                 end
                 // Jumping PC to mtvec : handled by HCU
             end 
-            default: inst_mem_en_i = 1'b0;  // stop
+            default: inst_mem_en_o = 1'b0;  // stop
         endcase
     end
 endmodule

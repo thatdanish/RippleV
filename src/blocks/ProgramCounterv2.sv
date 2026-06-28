@@ -1,7 +1,7 @@
 `timescale 1ns/1ns
 `default_nettype none
 
-module ProgramCounterV2 #(
+module ProgramCounterv2 #(
     parameter ADDR_WIDTH = 32,
     parameter logic [ADDR_WIDTH-1:0] RST_HND = 0
     ) (

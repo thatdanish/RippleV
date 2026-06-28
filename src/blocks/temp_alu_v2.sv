@@ -13,6 +13,8 @@ module temp_alu_v2 (
 
 import typed_pkg::*;
 
+logic [31:0] int_out;
+
 // rs2 -->a, rs1 -->b
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin

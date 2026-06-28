@@ -1,6 +1,6 @@
 // Memory stage
 
-module mem_stage #(
+module Mem #(
     parameter ADDR_WIDTH = 32,
     parameter LOAD_FROM_DMEM_HEX = 0,
     parameter TRAP_HND = 32'd4,
@@ -14,9 +14,9 @@ module mem_stage #(
     input typed_pkg::transfer_t data_mem_transfer_type_i,
     input typed_pkg::load_t data_mem_load_type_i,
     input data_mem_en_i,
-    input data_mem_addr_i,
-    input data_mem_data_i,
-    input data_mem_data_o,
+    input logic [31:0] data_mem_addr_i,
+    input logic [31:0] data_mem_data_i,
+    output logic [31:0] data_mem_data_o,
     // CSR mux
     input typed_pkg::sel_csr_addr_t sel_mux_csr_addr_i,
     input typed_pkg::sel_csr_data_t sel_mux_csr_data_i,
@@ -32,14 +32,18 @@ module mem_stage #(
     input ext_interrupt_i,
     input csr_en_i,
     output interrupt_status_o,
-    output csr_data_o
+    output logic [31:0] csr_data_o
 );
     import typed_pkg::*; 
     
+    csr_addr_t csr_address_out;
+    logic [31:0] csr_data_out;
+
+
     data_mem #( 
         .ADDR_WIDTH(ADDR_WIDTH),
         .LOAD_FROM_DMEM_HEX(LOAD_FROM_DMEM_HEX),
-        .FILE(DMEM_FILE)
+        .FILE(FILE)
     ) data_mem_inst (
         .clk_i,
         .rst_i,

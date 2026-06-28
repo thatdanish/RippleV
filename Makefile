@@ -131,6 +131,19 @@ coverage_rvmc:
 
 # RippleV
 
+rvp:
+	cd test/RippleV && rm -rf coverage_per_test && pytest test_runner_RippleV.py -vvvk "tc_$(TC)" $(TOP_PYTEST_FLAG) -x -ra
+
+wave_rvp:
+	cd test/RippleV/sim_build && $(WAVE) dump.fst
+
+coverage_rvp:
+	cd test/RippleV/coverage_per_test && verilator_coverage --annotate . merged.dat
+
+# --------------------------------------------------------------------------------------- #
+
+# RippleV
+
 rv:
 	cd test/RippleV && rm -rf coverage_per_test && pytest test_runner_RippleV.py -vvvk "tc_$(TC)" $(TOP_PYTEST_FLAG) -x -ra
 

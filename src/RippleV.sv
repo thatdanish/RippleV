@@ -28,9 +28,9 @@ module RippleV #(
     logic bl_take_branch, interrupt_status, pc_enable;
     
     logic [31:0] riscv_instruction, l1_riscv_instruction, csr_data_from_cu, l2_csr_data_from_cu, l3_csr_data_from_cu;
-    logic [31:0] rs1_data, l2_rs1_data, l3_rs1_data, rs2_data, l2_rs2_data, imm_offset, l2_imm_offset, lui, l2_lui, l3_lui, l4_lui;
+    logic [31:0] rs1_data, l2_rs1_data, l3_rs1_data, rs2_data, l2_rs2_data, imm_offset, l2_imm_offset, l3_imm_offset, lui, l2_lui, l3_lui, l4_lui;
     logic [31:0] pc_addr, l1_pc_addr, l2_pc_addr, l3_pc_addr, l4_pc_addr, pc_new, alu_out, l3_alu_out, l4_alu_out, l3_dmem_addr, l3_dmem_data;
-    logic [31:0] dmem_out_data, l4_dmem_out_data, csr_out_data, l4_csr_out_data, pc_update_from_execute ;
+    logic [31:0] dmem_out_data, l4_dmem_out_data, csr_out_data, l4_csr_out_data, pc_update_from_execute, reg_file_rd_data;
 
     logic [4:0] rs1_addr, l2_rs1_addr, rs2_addr, l2_rs2_addr, rd_addr, l2_rd_addr, l3_rd_addr, l4_rd_addr; 
     
@@ -87,7 +87,7 @@ module RippleV #(
         .stall_ex_o(stall_ex),
         .stall_mem_o(stall_mem),
         .stall_wb_o(stall_wb),
-        .hcu_hnd_stage_o(hcu_handler_stage) 
+        .hcu_hnd_stage_o(hcu_handler_stage), 
         .pc_en_o(pc_enable),
         .pc_sel_o(sel_pc)
     );
@@ -140,6 +140,8 @@ module RippleV #(
     Id id_inst (
         .clk_i,
         .rst_i,
+        .stall_id_i(stall_id),
+        .interrupt_ack_o,
         // CU
         .main_enable_i,
         .interrupt_i(interrupt_status),
@@ -154,7 +156,7 @@ module RippleV #(
         .inst_mem_en_o(imem_enable),
         .reg_file_data_mux_sel_o(sel_reg_file_data),
         .reg_file_read_en_o(reg_file_read_enable),
-        .reg_file_write_en_o(reg_file_write_enable)
+        .reg_file_write_en_o(reg_file_write_enable),
         .alu_en_o(alu_enable),
         .alu_opr_o(alu_operation),
         .alu_a_mux_sel_o(sel_alu_a),
@@ -162,7 +164,7 @@ module RippleV #(
         .bl_opr_o(bl_operation),
         .branch_logic_en_o(bl_enable),
         .data_mem_en_o(dmem_enable),
-        .data_mem_transfer_type_o(dmem_enable),
+        .data_mem_transfer_type_o(dmem_transfer_type),
         .data_mem_rw_o(dmem_rw),
         .data_mem_load_type_o(dmem_load_type),
         .hcu_inst_type_o(hcu_instruction),
@@ -173,7 +175,7 @@ module RippleV #(
         .rs2_o(rs2_addr),
         .csr_addr_o(csr_addr_decoder),
         .imm_offset_o(imm_offset),
-        .lui_o(lui),
+        .lui_o(lui)
     );
     
     // Pipeline register II -----------------------------------------------------------------------
@@ -205,8 +207,6 @@ module RippleV #(
         .csr_en_i(csr_enable), 
         .csr_data_from_ctrl_i(csr_data_from_cu), 
         .reg_file_data_mux_sel_i(sel_reg_file_data),
-        .reg_file_read_en_i(reg_file_read_enable),
-        .reg_file_write_en_i(reg_file_write_enable),
         .alu_opr_i(alu_operation),
         .alu_a_mux_sel_i(sel_alu_a),
         .alu_b_mux_sel_i(sel_alu_b),
@@ -217,13 +217,13 @@ module RippleV #(
         .data_mem_rw_i(dmem_rw),
         .data_mem_load_type_i(dmem_load_type), 
         .data_mem_en_i(dmem_enable),
-        .l2_csr_addr_from_ctrl_o(l2_csr_data_from_cu), 
+        .l2_csr_addr_from_ctrl_o(l2_csr_addr_from_cu), 
         .l2_csr_addr_mux_sel_o(l2_sel_csr_addr), 
         .l2_csr_data_mux_sel_o(l2_sel_csr_data), 
         .l2_csr_write_type_o(l2_csr_write_type), 
         .l2_csr_rw_o(l2_csr_rw), 
         .l2_csr_en_o(l2_csr_enable), 
-        .l2_csr_data_from_ctrl_o(l2_csr_addr_from_cu), 
+        .l2_csr_data_from_ctrl_o(l2_csr_data_from_cu), 
         .l2_reg_file_data_mux_sel_o(l2_sel_reg_file_data),
         .l2_alu_opr_o(l2_alu_operation),
         .l2_alu_a_mux_sel_o(l2_sel_alu_a),
@@ -269,7 +269,7 @@ module RippleV #(
         // BL
         .bl_en_i(l2_bl_enable),
         .bl_opr_i(l2_bl_operation),
-        .bl_take_branch_o(bl_take_branch)
+        .bl_take_branch_o(bl_take_branch),
         // Output
         .pc_update_o(pc_update_from_execute)
     );
@@ -282,7 +282,7 @@ module RippleV #(
         .stall_l3_i(stall_l3), 
         .clear_l3_i(clear_l3), 
         .lui_i(l2_lui),
-        .l3_lui_o(l3_lui)
+        .l3_lui_o(l3_lui),
         .alu_out_i(alu_out),
         .l3_alu_out_o(l3_alu_out),
         .dmem_en_i(l2_dmem_enable),
@@ -297,8 +297,8 @@ module RippleV #(
         .l3_data_mem_load_type_o(l3_dmem_load_type),
         .l3_data_mem_addr_o(l3_dmem_addr),
         .l3_data_mem_data_o(l3_dmem_data),
-        .sel_mux_csr_addr(l2_sel_csr_addr),
-        .sel_mux_csr_data(l2_sel_csr_data),
+        .sel_mux_csr_addr_i(l2_sel_csr_addr),
+        .sel_mux_csr_data_i(l2_sel_csr_data),
         .csr_addr_from_cu_i(l2_csr_addr_from_cu),
         .csr_addr_from_decoder_i(l2_csr_addr_decoder),
         .csr_pc_i(l2_pc_addr),
@@ -324,7 +324,7 @@ module RippleV #(
         .reg_file_data_mux_sel_i(l2_sel_reg_file_data), 
         .l3_reg_file_write_en_o(l3_reg_file_write_enable),
         .l3_reg_file_rd_addr_o(l3_rd_addr), 
-        .l3_reg_file_data_mux_sel_o(l3_sel_reg_file_data), 
+        .l3_reg_file_data_mux_sel_o(l3_sel_reg_file_data)
     );
 
     // Memory -------------------------------------------------------------------------------------
@@ -375,7 +375,7 @@ module RippleV #(
         .lui_i(l3_lui),
         .l4_lui_o(l4_lui),
         .pc_addr_i(l3_pc_addr),
-        .l4_pc_addr_o(l4_pc_add),
+        .l4_pc_addr_o(l4_pc_addr),
         .reg_file_write_en_i(l3_reg_file_write_enable),
         .l4_reg_file_write_en_o(l4_reg_file_write_enable),
         .reg_file_rd_addr_i(l3_rd_addr),
@@ -390,7 +390,7 @@ module RippleV #(
         .sel_i(l4_sel_reg_file_data),
         .from_data_mem_i(l4_dmem_out_data),
         .from_ALU_i(l4_alu_out),
-        .from_decoder(l4_lui),
+        .from_decoder_i(l4_lui),
         .from_pc_i(l4_pc_addr),
         .from_csr_i(l4_csr_out_data),
         .data_o(reg_file_rd_data)
