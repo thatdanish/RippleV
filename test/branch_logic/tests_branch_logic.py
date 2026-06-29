@@ -34,7 +34,7 @@ def model_BL(a:LogicArray,b:LogicArray,opr:str) -> LogicArray | Logic :
         # JAL
         a = a.to_unsigned()
         b = b.to_unsigned()
-        z = LogicArray(a + b - 4, 33)
+        z = LogicArray(a + b , 33)
         return z[31:0]
     elif opr == "ALU_JALR":
         # JALR

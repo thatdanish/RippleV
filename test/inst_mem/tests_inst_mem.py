@@ -16,7 +16,7 @@ from utils.simulation import NextClockCycle, ResetTrigger, clk_
 MAX_CLKS = 13000
 N_TESTS = 6000
 MAX_ADDR_RANGE = 16384
-FILE = "../../../data/sample/sample_instructions.hex"
+FILE = "../../../tc_data/sample/sample_instructions.hex"
 
 # Initialize inputs
 
