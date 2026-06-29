@@ -4,7 +4,7 @@
 module data_mem #( 
     parameter ADDR_WIDTH = 32,
     parameter LOAD_FROM_DMEM_HEX = 0,
-    parameter string FILE = "../../../data/sample/sample_instructions.hex"
+    parameter string FILE = "../../../tc_data/sample/sample_instructions.hex"
 ) (
     input clk_i,
     input rst_i,

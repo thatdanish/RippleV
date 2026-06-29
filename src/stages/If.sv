@@ -18,6 +18,8 @@ module If #(
 );
     logic [ADDR_WIDTH-1:0] pc_out_address;
 
+    assign pc_out_o = pc_out_address;
+
     inst_mem #(
         .FILE(FILE),
         .ADDR_WIDTH(ADDR_WIDTH),

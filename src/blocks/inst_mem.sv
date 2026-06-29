@@ -2,7 +2,7 @@
 `default_nettype  none
 
 module inst_mem #( 
-    parameter string FILE = "../../../data/sample/sample_instructions.hex",
+    parameter string FILE = "../../../tc_data/sample/sample_instructions.hex",
     parameter ADDR_WIDTH = 32,
     parameter WORD_SIZE = 32
 ) (

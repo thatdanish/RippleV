@@ -5,7 +5,7 @@ from cocotb_tools.runner import get_runner
 # Parameters
 
 def get_test_cases():
-    TC_DIR = "../../data/"
+    TC_DIR = "../../tc_data/"
     tests = []
     for dname in sorted(os.listdir(TC_DIR)):
         if dname.startswith("tc_"):

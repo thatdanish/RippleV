@@ -5,7 +5,7 @@ from cocotb_tools.runner import get_runner
 # Parameters
 
 def get_test_cases():
-    TC_DIR = "../../data/"
+    TC_DIR = "../../tc_data/"
     tests = []
     for dname in sorted(os.listdir(TC_DIR)):
         if dname.startswith("tc_"):
@@ -20,12 +20,12 @@ def test_runner_RippleV(test_case):
     SIM = os.getenv("SIM", "verilator")
     WAVES = os.getenv("WAVES", 1)
    
-    DMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}-dmem.hex"
+    DMEM_HEX_FILE_PATH = f"../../../tc_data/{test_case}/{test_case}-dmem.hex"
     if os.path.exists(DMEM_HEX_FILE_PATH[3:]):
-        IMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}-imem.hex"
+        IMEM_HEX_FILE_PATH = f"../../../tc_data/{test_case}/{test_case}-imem.hex"
         LOAD_FROM_DMEM_HEX = 1
     else:
-        IMEM_HEX_FILE_PATH = f"../../../data/{test_case}/{test_case}.hex"
+        IMEM_HEX_FILE_PATH = f"../../../tc_data/{test_case}/{test_case}.hex"
         LOAD_FROM_DMEM_HEX = 0
 
     SOURCES = [

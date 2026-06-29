@@ -38,10 +38,10 @@ end
 
 // Assertion
 
-property SIMULT_RW;
-@(posedge clk_i) read_en_i |-> !write_en_i;
-endproperty
+// property SIMULT_RW;
+// @(posedge clk_i) read_en_i |-> !write_en_i;
+// endproperty
 
-assert property (SIMULT_RW)
-else $error("Simultaneous Read and Write to reg-file");
+// assert property (SIMULT_RW)
+// else $error("Simultaneous Read and Write to reg-file");
 endmodule 

@@ -29,7 +29,7 @@ module BranchLogic (
                 take_branch_o <= int_take_branch;
             end else begin
                 pc_update_o <= pc_update_o;
-                take_branch_o <= take_branch_o;
+                take_branch_o <= 1'b0;
             end
         end
     end
@@ -80,7 +80,7 @@ module BranchLogic (
     // Functions
     function logic [31:0] func_jal (logic [31:0] a, b);
         bit [31:0] int_result;
-        int_result = a + b - 31'(4);
+        int_result = a + b;
         return int_result;
     endfunction
 

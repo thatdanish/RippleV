@@ -1,5 +1,5 @@
 TC ?= undefined
-FINAL ?= ../data/$(TC)
+FINAL ?= ../tc_data/$(TC)
 
 CROSS   := riscv32-unknown-elf
 CC      := $(CROSS)-gcc

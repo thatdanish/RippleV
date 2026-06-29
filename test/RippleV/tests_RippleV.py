@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import cocotb
+from cocotb.types import LogicArray
 from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb_tools.runner import get_runner
 
@@ -34,7 +35,7 @@ async def monitor(dut):
     while True:
         await NextClockCycle(dut)
 
-        if (dut.data_mem_inst.dmem[TO_HOST].value == SUCCESS) or (dut.data_mem_inst.dmem[TO_HOST_RVT].value == SUCCESS_RVT) or (dut.data_mem_inst.dmem[TO_HOST_RVT_2].value == SUCCESS_RVT):
+        if (dut.mem_inst.data_mem_inst.dmem[TO_HOST].value == SUCCESS) or (dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT].value == SUCCESS_RVT) or (dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT_2].value == SUCCESS_RVT):
             cocotb.pass_test()
 
 @cocotb.test()
@@ -49,9 +50,9 @@ async def run_test(dut):
     
     # Check Reset Handler Address
     try: 
-        assert dut.pc_final.value == RST_HND
+        assert dut.pc_addr.value ==RST_HND
     except:
-        raise AssertionError(f"Invalid RST_HND : expected : {RST_HND}, got : {dut.pc_final.value}")
+        raise AssertionError(f"Invalid RST_HND : expected : {RST_HND}, got : {dut.pc_addr.value}")
 
     # Start Test
     dut.main_enable_i.value = 1
@@ -59,6 +60,6 @@ async def run_test(dut):
     await clk
     
     # If not passed, then fail
-    raise AssertionError(f"Incorrect TO_HOST ({hex(TO_HOST)}) read --> exp : {hex(SUCCESS)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST].value)}, OR\n"
-                         f"Incorrect TO_HOST_RVT ({hex(TO_HOST_RVT)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST_RVT].value)}, OR \n"
-                         f"Incorrect TO_HOST_RVT_2 ({hex(TO_HOST_RVT_2)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.data_mem_inst.dmem[TO_HOST_RVT_2].value)}")
+    raise AssertionError(f"Incorrect TO_HOST ({hex(TO_HOST)}) read --> exp : {hex(SUCCESS)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST].value)}, OR\n"
+                         f"Incorrect TO_HOST_RVT ({hex(TO_HOST_RVT)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT].value)}, OR \n"
+                         f"Incorrect TO_HOST_RVT_2 ({hex(TO_HOST_RVT_2)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT_2].value)}")

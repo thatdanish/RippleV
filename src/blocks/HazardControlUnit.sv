@@ -56,7 +56,7 @@ always_ff @( posedge clk_i ) begin
         rd_prev[3] <= rd_prev[2];      
         rd_stale <= rd_prev[3];      
 
-        if (bl_take_branch_i == 1'b1) 
+        if (bl_take_branch_i == 1'b1 && hcu_inst_type_i != HCU_UCJ_type ) 
             set_outputs <= clear_L1_L2;
         else begin
             case (hcu_inst_type_i)

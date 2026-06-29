@@ -23,6 +23,8 @@ module Ex (
     // Output
     output logic [31:0] pc_update_o
 );  
+    import typed_pkg::*;
+
     logic [31:0] alu_out, bl_pc_update, alu_a_out, alu_b_out;
 
     assign alu_out_o = alu_out;
@@ -68,10 +70,13 @@ module Ex (
 
     // Mux
     always_comb begin
-        case (bl_take_branch_o)
-            1'b0: pc_update_o = alu_out;
-            1'b1: pc_update_o = bl_pc_update;
-        endcase
+        if ( bl_opr_i inside {ALU_JAL, ALU_JALR, ALU_BEQ, ALU_BNE, ALU_BLT, ALU_BLTU, ALU_BGE, ALU_BGEU}) begin
+            case (bl_take_branch_o)
+                1'b0: pc_update_o = alu_out;
+                1'b1: pc_update_o = bl_pc_update;
+            endcase
+        end else 
+            pc_update_o = bl_pc_update;
     end
     
 endmodule

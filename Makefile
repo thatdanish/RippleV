@@ -182,7 +182,7 @@ gcc_clean:
 compile_rvtests:
 	for test in /opt/riscv-tests/isa/rv32ui-p* /opt/riscv-tests/isa/rv32um-p*; do \
 		    name=$${test##*-p-}; \
-    		mkdir -p data/tc_$$name; \
+    		mkdir -p tc_data/tc_$$name; \
 			\
 			riscv32-unknown-elf-objcopy \
         	-O verilog \
@@ -199,15 +199,15 @@ compile_rvtests:
     		--change-section-lma .data=0x00000000 \
     		--change-section-lma .tohost=0x00000040 \
 			--verilog-data-width 4\
-        	$$test data/tc_$$name/tc_$$name-dmem.hex; \
+        	$$test tc_data/tc_$$name/tc_$$name-dmem.hex; \
 			\
-			riscv32-unknown-elf-objdump -d -M no-aliases $$test > data/tc_$$name/tc_$$name.dump;\
+			riscv32-unknown-elf-objdump -d -M no-aliases $$test > tc_data/tc_$$name/tc_$$name.dump;\
 	done
 
 # clean $(TC) directories
 clean_rvtests:
 	for test in /opt/riscv-tests/isa/rv32ui-p* /opt/riscv-tests/isa/rv32um-p*; do \
 		name=$${test##*-p-};\
-		rm -rf data/tc_$$name; \
+		rm -rf tc_data/tc_$$name; \
 	done
 
