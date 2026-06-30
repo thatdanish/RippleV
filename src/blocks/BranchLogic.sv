@@ -39,11 +39,11 @@ module BranchLogic (
         int_take_branch = 'd0;
         case (opr_i)
             ALU_JAL: begin
-                int_take_branch = 1'b1;
+                int_take_branch = 1'b0;
                 int_pc_update = func_jal(pc_i, sign_ext_offset_i);
             end
             ALU_JALR: begin
-                int_take_branch = 1'b1;
+                int_take_branch = 1'b0;
                 int_pc_update = func_jalr(rs1_i, sign_ext_offset_i);
             end
             ALU_BEQ: begin

@@ -21,13 +21,13 @@ logic [31:0] current_instruction;
 logic [6:0] op_code, funct_7;
 logic [2:0] funct_3;
 
-assign rd_o = inst_i[11:7];
-assign rs1_o = inst_i[19:15];
-assign rs2_o = inst_i[24:20];
+assign rd_o = current_instruction[11:7];
+assign rs1_o = current_instruction[19:15];
+assign rs2_o = current_instruction[24:20];
 
-assign csr_addr_o = csr_addr_t'(inst_i[31:20]);
+assign csr_addr_o = csr_addr_t'(current_instruction[31:20]);
 
-assign lui_o = {inst_i[31:12], 12'd0};
+assign lui_o = {current_instruction[31:12], 12'd0};
 
 assign op_code = inst_i[6:0];
 assign funct_3 = inst_i[14:12];

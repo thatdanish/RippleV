@@ -27,7 +27,7 @@ module HazardControlUnit (
 );
 import typed_pkg::*;
 
-localparam UCJ_STALL_MAX = 4;
+localparam UCJ_STALL_MAX = 2;
 localparam TRAP_STALL_MAX = 12;
 localparam TRAP_STAGE_TWO = 4;
 localparam TRAP_STAGE_THREE = 8;
@@ -56,7 +56,7 @@ always_ff @( posedge clk_i ) begin
         rd_prev[3] <= rd_prev[2];      
         rd_stale <= rd_prev[3];      
 
-        if (bl_take_branch_i == 1'b1 && hcu_inst_type_i != HCU_UCJ_type ) 
+        if ( bl_take_branch_i == 1'b1 ) 
             set_outputs <= clear_L1_L2;
         else begin
             case (hcu_inst_type_i)
@@ -67,6 +67,12 @@ always_ff @( posedge clk_i ) begin
                         set_outputs <= stall_clear;
                         rd_prev[0] <= rd_i;  // store rd
                     end
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
                 end
                 HCU_R_type: begin
                     if (rs_hazard(rs1_i) || rs_hazard(rs2_i)) begin
@@ -75,18 +81,45 @@ always_ff @( posedge clk_i ) begin
                         set_outputs <= stall_clear;
                         rd_prev[0] <= rd_i; // store rd
                     end
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
+                end
+                HCU_LS_type: begin
+                    set_outputs <= stall_clear;
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+ 
                 end
                 HCU_UCJ_type: begin
                     // Increment counter
-                    ucj_stall_counter <= ( ucj_stall_counter == UCJ_STALL_MAX ) ? 'd0 : ucj_stall_counter + 'd1;
+                    ucj_stall_counter <= ( ucj_stall_counter == UCJ_STALL_MAX ) ? ucj_stall_counter : ucj_stall_counter + 'd1;
+                    // TODO : 1 clk is wasted in wait here.
                     
                     if ( ucj_stall_counter == UCJ_STALL_MAX )
                         set_outputs <= stall_clear; // clear stall after delay
                     else
                         set_outputs <= stall_IF; // stall IF
+
+                    // Clear counters
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
                 end
                 HCU_CJ_type: begin
                     set_outputs <= stall_clear; // only take action if take_branch_i is asserted
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
                 end
                 HCU_CSR_type: begin
                     if (csr_hazard(rs1_i)) begin
@@ -95,35 +128,71 @@ always_ff @( posedge clk_i ) begin
                         set_outputs <= stall_clear;
                         rd_prev[0] <= rd_i;  // store rd
                     end
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
                 end
                 HCU_ecall: begin
                     // Increment counter
-                    trap_stall_counter <= ( trap_stall_counter == TRAP_STALL_MAX ) ? 'd0 : trap_stall_counter + 'd1;
+                    trap_stall_counter <= ( trap_stall_counter == TRAP_STALL_MAX ) ? trap_stall_counter : trap_stall_counter + 'd1;
                     
                     set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_clear : handle_trap;
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
                 end
                 HCU_mret: begin
                     // Increment counter
-                    mret_stall_counter <= ( mret_stall_counter == MRET_STALL_MAX ) ? 'd0 : mret_stall_counter + 'd1;
+                    mret_stall_counter <= ( mret_stall_counter == MRET_STALL_MAX ) ? mret_stall_counter : mret_stall_counter + 'd1;
                     
                     if ( mret_stall_counter == MRET_STALL_MAX )
                         set_outputs <= stall_clear; // clear stall after delay
                     else
                         set_outputs <= stall_IF; // stall IF
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    
                 end
                 HCU_wfi: begin
                     // Increment counter
                     wfi_stall_counter <= ( wfi_stall_counter == WFI_STALL_WAIT ) ? wfi_stall_counter : wfi_stall_counter + 'd1;
 
                     set_outputs <= stall_all; // stall complete core
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
                 end
                 HCU_trap: begin
                     // Increment counter
-                    trap_stall_counter <= ( trap_stall_counter == TRAP_STALL_MAX ) ? 'd0 : trap_stall_counter + 'd1;
+                    trap_stall_counter <= ( trap_stall_counter == TRAP_STALL_MAX ) ? trap_stall_counter : trap_stall_counter + 'd1;
                     
                     set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_clear : handle_trap;
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
                 end
-                default: set_outputs <= stall_all;
+                default: begin
+                    set_outputs <= stall_all;
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+
+                end
             endcase
         end
     end
@@ -218,7 +287,7 @@ end
 
 function logic rs_hazard(input logic[4:0] rs_reg);
     if ( (rs_reg == rd_prev[0] || rs_reg == rd_prev[1] || rs_reg == rd_prev[2] || rs_reg == rd_prev[3]) 
-        && (rs1_i !=rd_stale) && (rs1_i != 5'd0) )
+        && (rs_reg != rd_stale) && (rs_reg != 5'd0) )
         return 1'b1;
     else 
         return 1'b0;
@@ -226,7 +295,7 @@ endfunction
 
 function logic csr_hazard(input logic[4:0] rs_reg);
     if ( ((rs_reg == rd_prev[0] || rs_reg == rd_prev[1] || rs_reg == rd_prev[2] || rs_reg == rd_prev[3]) 
-        && (rs1_i !=rd_stale) && (rs1_i != 5'd0)) || (rs1_i == rd_i) )
+        && (rs_reg != rd_stale) && (rs_reg != 5'd0)) || (rs_reg == rd_i) )
         return 1'b1;
     else 
         return 1'b0;

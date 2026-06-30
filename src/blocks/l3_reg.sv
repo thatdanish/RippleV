@@ -59,6 +59,19 @@ module l3_reg (
 );
     import typed_pkg::*;
     
+    logic dmem_en_1, csr_en_1, reg_file_write_en_1;
+    logic [4:0] reg_file_rd_addr_1;
+    logic [31:0] lui_1, data_mem_data_1, csr_pc_1, csr_uimm_1, csr_rs1_1, csr_data_from_ctrl_unit_1;
+    rw_t data_mem_rw_1, csr_rw_1;
+    transfer_t data_mem_transfer_type_1;
+    load_t data_mem_load_type_1;
+    sel_csr_addr_t sel_mux_csr_addr_1;
+    sel_csr_data_t sel_mux_csr_data_1;
+    csr_addr_t csr_addr_from_cu_1;
+    csr_addr_t csr_addr_from_decoder_1;
+    write_t csr_write_type_1;
+    sel_reg_file_data_t reg_file_data_mux_sel_1;
+
     always_ff @( posedge clk_i ) begin
         if ( !rst_i ) begin
             l3_alu_out_o <= 'd0;
@@ -85,10 +98,34 @@ module l3_reg (
             l3_reg_file_rd_addr_o <= 'd0;
             l3_reg_file_data_mux_sel_o <= sel_reg_file_data_t'('d0);
         end else begin
+            
+            // Delay - I
+
+            lui_1 <= lui_i;
+            dmem_en_1 <= dmem_en_i;
+            data_mem_rw_1 <= data_mem_rw_i;
+            data_mem_transfer_type_1 <= data_mem_transfer_type_i;
+            data_mem_load_type_1 <= data_mem_load_type_i;
+            data_mem_data_1 <= data_mem_data_i;
+            sel_mux_csr_addr_1 <= sel_mux_csr_addr_i;
+            sel_mux_csr_data_1 <= sel_mux_csr_data_i;
+            csr_addr_from_cu_1 <= csr_addr_from_cu_i;
+            csr_addr_from_decoder_1 <= csr_addr_from_decoder_i;
+            csr_pc_1 <= csr_pc_i;
+            csr_uimm_1 <= csr_uimm_i;
+            csr_rs1_1 <= csr_rs1_i;
+            csr_data_from_ctrl_unit_1 <= csr_data_from_ctrl_unit_i;
+            csr_write_type_1 <= csr_write_type_i;
+            csr_rw_1 <= csr_rw_i;
+            csr_en_1 <= csr_en_i;
+            reg_file_write_en_1 <= reg_file_write_en_i;
+            reg_file_rd_addr_1 <= reg_file_rd_addr_i;
+            reg_file_data_mux_sel_1 <= reg_file_data_mux_sel_i;
+
+
             if ( clear_l3_i == 1'b1 ) begin 
                 l3_alu_out_o <= 'd0;
                 l3_lui_o <= 'd0;
-                l3_alu_out_o <= 'd0;
                 l3_dmem_en_o <= 'd0;
                 l3_data_mem_rw_o <= rw_t'('d0);
                 l3_data_mem_transfer_type_o <= transfer_t'('d0);
@@ -111,28 +148,28 @@ module l3_reg (
                 l3_reg_file_data_mux_sel_o <= sel_reg_file_data_t'('d0);
             end
             else begin
-                l3_lui_o <= ( stall_l3_i == 1'b1 ) ? l3_lui_o : lui_i; 
+                l3_lui_o <= ( stall_l3_i == 1'b1 ) ? l3_lui_o : lui_1; 
                 l3_alu_out_o <= ( stall_l3_i == 1'b1 ) ? l3_alu_out_o : alu_out_i; 
-                l3_dmem_en_o <= (stall_l3_i == 1'b1 ) ? l3_dmem_en_o : dmem_en_i;
-                l3_data_mem_rw_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_rw_o : data_mem_rw_i;
-                l3_data_mem_transfer_type_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_transfer_type_o : data_mem_transfer_type_i;
-                l3_data_mem_load_type_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_load_type_o : data_mem_load_type_i;
+                l3_dmem_en_o <= (stall_l3_i == 1'b1 ) ? l3_dmem_en_o : dmem_en_1;
+                l3_data_mem_rw_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_rw_o : data_mem_rw_1;
+                l3_data_mem_transfer_type_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_transfer_type_o : data_mem_transfer_type_1;
+                l3_data_mem_load_type_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_load_type_o : data_mem_load_type_1;
                 l3_data_mem_addr_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_addr_o : data_mem_addr_i;
-                l3_data_mem_data_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_data_o : data_mem_data_i;
-                l3_sel_mux_csr_addr_o <= (stall_l3_i == 1'b1 ) ? l3_sel_mux_csr_addr_o : sel_mux_csr_addr_i;
-                l3_sel_mux_csr_data_o <= (stall_l3_i == 1'b1 ) ? l3_sel_mux_csr_data_o : sel_mux_csr_data_i;
-                l3_csr_addr_from_cu_o <= (stall_l3_i == 1'b1 ) ? l3_csr_addr_from_cu_o : csr_addr_from_cu_i;
-                l3_csr_addr_from_decoder_o <= (stall_l3_i == 1'b1 ) ? l3_csr_addr_from_decoder_o : csr_addr_from_decoder_i;
-                l3_csr_pc_o <= (stall_l3_i == 1'b1 ) ? l3_csr_pc_o : csr_pc_i;
-                l3_csr_uimm_o <= (stall_l3_i == 1'b1 ) ? l3_csr_uimm_o : csr_uimm_i;
-                l3_csr_rs1_o <= (stall_l3_i == 1'b1 ) ? l3_csr_rs1_o : csr_rs1_i;
-                l3_csr_data_from_ctrl_unit_o <= (stall_l3_i == 1'b1 ) ? l3_csr_data_from_ctrl_unit_o : csr_data_from_ctrl_unit_i;
-                l3_csr_write_type_o <= (stall_l3_i == 1'b1 ) ? l3_csr_write_type_o : csr_write_type_i;
-                l3_csr_rw_o <= (stall_l3_i == 1'b1 ) ? l3_csr_rw_o : csr_rw_i;
-                l3_csr_en_o <= (stall_l3_i == 1'b1 ) ? l3_csr_en_o : csr_en_i;
-                l3_reg_file_write_en_o <= (stall_l3_i == 1'b1 ) ? l3_reg_file_write_en_o : reg_file_write_en_i;
-                l3_reg_file_rd_addr_o <= (stall_l3_i == 1'b1 ) ? l3_reg_file_rd_addr_o : reg_file_rd_addr_i;
-                l3_reg_file_data_mux_sel_o <= (stall_l3_i == 1'b1 ) ? l3_reg_file_data_mux_sel_o : reg_file_data_mux_sel_i;
+                l3_data_mem_data_o <= (stall_l3_i == 1'b1 ) ? l3_data_mem_data_o : data_mem_data_1;
+                l3_sel_mux_csr_addr_o <= (stall_l3_i == 1'b1 ) ? l3_sel_mux_csr_addr_o : sel_mux_csr_addr_1;
+                l3_sel_mux_csr_data_o <= (stall_l3_i == 1'b1 ) ? l3_sel_mux_csr_data_o : sel_mux_csr_data_1;
+                l3_csr_addr_from_cu_o <= (stall_l3_i == 1'b1 ) ? l3_csr_addr_from_cu_o : csr_addr_from_cu_1;
+                l3_csr_addr_from_decoder_o <= (stall_l3_i == 1'b1 ) ? l3_csr_addr_from_decoder_o : csr_addr_from_decoder_1;
+                l3_csr_pc_o <= (stall_l3_i == 1'b1 ) ? l3_csr_pc_o : csr_pc_1;
+                l3_csr_uimm_o <= (stall_l3_i == 1'b1 ) ? l3_csr_uimm_o : csr_uimm_1;
+                l3_csr_rs1_o <= (stall_l3_i == 1'b1 ) ? l3_csr_rs1_o : csr_rs1_1;
+                l3_csr_data_from_ctrl_unit_o <= (stall_l3_i == 1'b1 ) ? l3_csr_data_from_ctrl_unit_o : csr_data_from_ctrl_unit_1;
+                l3_csr_write_type_o <= (stall_l3_i == 1'b1 ) ? l3_csr_write_type_o : csr_write_type_1;
+                l3_csr_rw_o <= (stall_l3_i == 1'b1 ) ? l3_csr_rw_o : csr_rw_1;
+                l3_csr_en_o <= (stall_l3_i == 1'b1 ) ? l3_csr_en_o : csr_en_1;
+                l3_reg_file_write_en_o <= (stall_l3_i == 1'b1 ) ? l3_reg_file_write_en_o : reg_file_write_en_1;
+                l3_reg_file_rd_addr_o <= (stall_l3_i == 1'b1 ) ? l3_reg_file_rd_addr_o : reg_file_rd_addr_1;
+                l3_reg_file_data_mux_sel_o <= (stall_l3_i == 1'b1 ) ? l3_reg_file_data_mux_sel_o : reg_file_data_mux_sel_1;
             end
         end
     end

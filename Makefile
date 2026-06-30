@@ -142,19 +142,6 @@ coverage_rvp:
 
 # --------------------------------------------------------------------------------------- #
 
-# RippleV
-
-rv:
-	cd test/RippleV && rm -rf coverage_per_test && pytest test_runner_RippleV.py -vvvk "tc_$(TC)" $(TOP_PYTEST_FLAG) -x -ra
-
-wave_rv:
-	cd test/RippleV/sim_build && $(WAVE) dump.fst
-
-coverage_rv: 
-	cd test/RippleV/coverage_per_test && verilator_coverage --annotate . merged.dat
-
-# --------------------------------------------------------------------------------------- #
-
 # C
 
 # generate .hex, .efl, .dump from .c & copy into a  new $(TC) directory

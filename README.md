@@ -76,6 +76,7 @@ RippleV is a RISC-V core, supporting 32 bits *I*, *M* & *Zicsr* extensions, base
 | riscv-tests: BEQ      |    2156       |    xxxx       |
 | riscv-tests: LW       |    1853       |    xxxx       |
 | riscv-tests: SW       |    3133       |    xxxx       |
+| custom-SW: first      |    0146       |    0192       |
 | custom-SW: factorial  |    0625       |    xxxx       |
 
 

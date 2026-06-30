@@ -73,7 +73,7 @@ module l2_reg (
 
     logic csr_en_1, reg_file_read_en_1, reg_file_write_en_1, alu_en_1, branch_logic_en_1, data_mem_en_1;
     logic [31:0] pc_1, imm_offset_1, lui_1, csr_data_from_ctrl_1, pc_2, imm_offset_2, lui_2, pc_3, imm_offset_3, lui_3;
-    logic [31:0] pc_4;
+    logic [31:0] pc_4 , rs1_data_1, rs2_data_1;
     logic [4:0] rs1_1, rs2_1, rd_1, rs1_2, rs2_2, rd_2, rs1_3, rs2_3, rd_3;
     csr_addr_t csr_addr_1, csr_addr_from_ctrl_1, csr_addr_2, csr_addr_3;
     sel_csr_addr_t csr_addr_mux_sel_1;
@@ -120,7 +120,7 @@ module l2_reg (
             l2_rs2_data_o <= 'd0; 
         end else begin
             
-            // Delay I -  CU, Decoder & PC
+            // Delay I -  CU, Decoder, PC & RegFile
             pc_1 <= pc_i;
             rs1_1 <= rs1_i;
             rs2_1 <= rs2_i;
@@ -148,6 +148,8 @@ module l2_reg (
             data_mem_rw_1 <= data_mem_rw_i;
             data_mem_load_type_1 <= data_mem_load_type_i;
             data_mem_en_1 <= data_mem_en_i;
+            rs1_data_1 <= rs1_data_i;
+            rs2_data_1 <= rs2_data_i;
 
             // Delay II - Decoder & PC
             pc_2 <= pc_1;
@@ -202,12 +204,12 @@ module l2_reg (
                 l2_rs2_data_o <= 'd0;            
             end else begin
                 l2_pc_out_o <= ( stall_l2_i == 1'b1 ) ? l2_pc_out_o : pc_4;
-                l2_rs1_o <= ( stall_l2_i == 1'b1 ) ? l2_rs1_o : rs1_3;
-                l2_rs2_o <= ( stall_l2_i == 1'b1 ) ? l2_rs2_o : rs2_3;
-                l2_rd_o <= ( stall_l2_i == 1'b1 ) ? l2_rd_o : rd_3;
-                l2_imm_offset_o <= ( stall_l2_i == 1'b1 ) ? l2_imm_offset_o : imm_offset_3;
-                l2_lui_o <= ( stall_l2_i == 1'b1 ) ? l2_lui_o : lui_3;
-                l2_csr_addr_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_addr_o : csr_addr_3;
+                l2_rs1_o <= ( stall_l2_i == 1'b1 ) ? l2_rs1_o : rs1_2;
+                l2_rs2_o <= ( stall_l2_i == 1'b1 ) ? l2_rs2_o : rs2_2;
+                l2_rd_o <= ( stall_l2_i == 1'b1 ) ? l2_rd_o : rd_2;
+                l2_imm_offset_o <= ( stall_l2_i == 1'b1 ) ? l2_imm_offset_o : imm_offset_2;
+                l2_lui_o <= ( stall_l2_i == 1'b1 ) ? l2_lui_o : lui_2;
+                l2_csr_addr_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_addr_o : csr_addr_2;
                 l2_csr_addr_from_ctrl_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_addr_from_ctrl_o : csr_addr_from_ctrl_1; 
                 l2_csr_addr_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_addr_mux_sel_o : csr_addr_mux_sel_1; 
                 l2_csr_data_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_data_mux_sel_o : csr_data_mux_sel_1; 
@@ -228,8 +230,8 @@ module l2_reg (
                 l2_data_mem_rw_o <= ( stall_l2_i == 1'b1 ) ? l2_data_mem_rw_o  : data_mem_rw_1;
                 l2_data_mem_load_type_o <= ( stall_l2_i == 1'b1 ) ? l2_data_mem_load_type_o : data_mem_load_type_1; 
                 l2_data_mem_en_o <= ( stall_l2_i == 1'b1 ) ? l2_data_mem_en_o  : data_mem_en_1;
-                l2_rs1_data_o <= ( stall_l2_i == 1'b1 ) ? l2_rs1_data_o  : rs1_data_i;
-                l2_rs2_data_o <= ( stall_l2_i == 1'b1 ) ? l2_rs2_data_o : rs2_data_i; 
+                l2_rs1_data_o <= ( stall_l2_i == 1'b1 ) ? l2_rs1_data_o  : rs1_data_1;
+                l2_rs2_data_o <= ( stall_l2_i == 1'b1 ) ? l2_rs2_data_o : rs2_data_1; 
             end
         end
     end

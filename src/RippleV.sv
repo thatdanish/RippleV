@@ -32,7 +32,7 @@ module RippleV #(
     logic [31:0] pc_addr, l1_pc_addr, l2_pc_addr, l3_pc_addr, l4_pc_addr, pc_new, alu_out, l3_alu_out, l4_alu_out, l3_dmem_addr, l3_dmem_data;
     logic [31:0] dmem_out_data, l4_dmem_out_data, csr_out_data, l4_csr_out_data, pc_update_from_execute, reg_file_rd_data;
 
-    logic [4:0] rs1_addr, l2_rs1_addr, rs2_addr, l2_rs2_addr, rd_addr, l2_rd_addr, l3_rd_addr, l4_rd_addr; 
+    logic [4:0] rs1_addr, rs1_addr_hcu, l2_rs1_addr, rs2_addr, rs2_addr_hcu, l2_rs2_addr, rd_addr, rd_addr_hcu, l2_rd_addr, l3_rd_addr, l4_rd_addr; 
     
     // CSR
     sel_csr_addr_t sel_csr_addr, l2_sel_csr_addr, l3_sel_csr_addr;
@@ -71,9 +71,9 @@ module RippleV #(
         .rst_i,
         .hcu_inst_type_i(hcu_instruction),
         .bl_take_branch_i(bl_take_branch), 
-        .rs1_i(rs1_addr), 
-        .rs2_i(rs2_addr), 
-        .rd_i(rd_addr), 
+        .rs1_i(rs1_addr_hcu), 
+        .rs2_i(rs2_addr_hcu), 
+        .rd_i(rd_addr_hcu), 
         .stall_l1_o(stall_l1),
         .clear_l1_o(clear_l1),
         .stall_l2_o(stall_l2),
@@ -91,6 +91,12 @@ module RippleV #(
         .pc_en_o(pc_enable),
         .pc_sel_o(sel_pc)
     );
+
+    always_ff @( posedge clk_i ) begin : DelayRegisters
+        rs1_addr_hcu <= rs1_addr;
+        rs2_addr_hcu <= rs2_addr;
+        rd_addr_hcu <= rd_addr;
+    end
 
     // Instruction-fetch --------------------------------------------------------------------------
 
@@ -290,7 +296,7 @@ module RippleV #(
         .data_mem_transfer_type_i(l2_dmem_transfer_type),
         .data_mem_load_type_i(l2_dmem_load_type),
         .data_mem_addr_i(alu_out),
-        .data_mem_data_i(l2_rs1_data),
+        .data_mem_data_i(l2_rs2_data),
         .l3_dmem_en_o(l3_dmem_enable),
         .l3_data_mem_rw_o(l3_dmem_rw),
         .l3_data_mem_transfer_type_o(l3_dmem_transfer_type),
