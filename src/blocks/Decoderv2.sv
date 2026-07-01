@@ -12,7 +12,8 @@ module Decoderv2 (
     output typed_pkg::csr_addr_t csr_addr_o,
     output logic [31:0] imm_offset_o,
     output logic [31:0] lui_o,
-    output typed_pkg::ctrl_inst_t inst_to_ctrl_o
+    output typed_pkg::ctrl_inst_t inst_to_ctrl_o,
+    output typed_pkg::instruction_type_t hcu_inst_type_o
 );
     import Opcodes_pkg::*;
     import typed_pkg::*;
@@ -38,7 +39,7 @@ always_ff @( posedge clk_i ) begin
         inst_to_ctrl_o <= ctrl_inst_t'('d0);
         current_instruction <= 'd0;
     end else begin
-        current_instruction <= inst_i;
+        current_instruction <= ( stall_id_i == 1'b1 ) ? current_instruction : inst_i;
         case (inst_i)
             MRET: inst_to_ctrl_o <= (stall_id_i == 1'b1) ? inst_to_ctrl_o : CTRL_MRET;
             WFI: inst_to_ctrl_o <= (stall_id_i == 1'b1) ? inst_to_ctrl_o : CTRL_WFI;
@@ -161,60 +162,230 @@ end
 
 always_comb begin : ImmOutputBlock
     case (inst_to_ctrl_o)
-        CTRL_ADDI: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_SLTI: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_SLTIU: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_ANDI: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_ORI: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_XORI: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_SLLI: imm_offset_o = 32'(current_instruction[24:20]);
-        CTRL_SRLI: imm_offset_o = 32'(current_instruction[24:20]);
-        CTRL_SRAI: imm_offset_o = 32'(current_instruction[24:20]);
-        CTRL_LUI: imm_offset_o = {current_instruction[31:12], 12'd0};
-        CTRL_AUIPC: imm_offset_o = {current_instruction[31:12], 12'd0};
-        CTRL_ADD: imm_offset_o = 'd0;
-        CTRL_SUB: imm_offset_o = 'd0;
-        CTRL_SLTU: imm_offset_o = 'd0;
-        CTRL_SLT: imm_offset_o = 'd0;
-        CTRL_AND: imm_offset_o = 'd0;
-        CTRL_OR: imm_offset_o = 'd0;
-        CTRL_XOR: imm_offset_o = 'd0;
-        CTRL_SLL: imm_offset_o = 'd0;
-        CTRL_SRL: imm_offset_o = 'd0;
-        CTRL_SRA: imm_offset_o = 'd0;
-        CTRL_JAL: imm_offset_o = (current_instruction[31] == 1) ? {11'hFFF, {current_instruction[31], current_instruction[19:12], current_instruction[20], current_instruction[30:21], 1'b0}} : {11'b0, {current_instruction[31], current_instruction[19:12], current_instruction[20], current_instruction[30:21], 1'b0}};
-        CTRL_JALR: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_BEQ: imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
-        CTRL_BNE: imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
-        CTRL_BGE: imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
-        CTRL_BLT: imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
-        CTRL_BLTU: imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
-        CTRL_BGEU: imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
-        CTRL_LW: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_LH: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_LHU: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_LB: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_LBU: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_SW: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:25], current_instruction[11:7]} : {20'b0, current_instruction[31:25], current_instruction[11:7]};
-        CTRL_SH: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:25], current_instruction[11:7]} : {20'b0, current_instruction[31:25], current_instruction[11:7]};
-        CTRL_SB: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:25], current_instruction[11:7]} : {20'b0, current_instruction[31:25], current_instruction[11:7]};
-        CTRL_MUL: imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
-        CTRL_MULH: imm_offset_o = 'd0;
-        CTRL_MULHU: imm_offset_o = 'd0;
-        CTRL_MULHSU: imm_offset_o = 'd0;
-        CTRL_DIV: imm_offset_o = 'd0;
-        CTRL_DIVU: imm_offset_o = 'd0;
-        CTRL_REM: imm_offset_o = 'd0;
-        CTRL_REMU: imm_offset_o = 'd0;
-        CTRL_MRET: imm_offset_o = 'd0;
-        CTRL_WFI: imm_offset_o = 'd0;
-        CTRL_CSRRW: imm_offset_o = 'd0; 
-        CTRL_CSRRS: imm_offset_o = 'd0; 
-        CTRL_CSRRC: imm_offset_o = 'd0; 
-        CTRL_CSRRWI: imm_offset_o = 32'(current_instruction[19:15]); 
-        CTRL_CSRRSI: imm_offset_o = 32'(current_instruction[19:15]); 
-        CTRL_CSRRCI:imm_offset_o = 32'(current_instruction[19:15]); 
-        default: imm_offset_o = 'd0;
+        CTRL_ADDI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_SLTI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_SLTIU: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_ANDI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_ORI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_XORI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_SLLI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = 32'(current_instruction[24:20]);
+        end
+        CTRL_SRLI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = 32'(current_instruction[24:20]);
+        end
+        CTRL_SRAI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = 32'(current_instruction[24:20]);
+        end
+        CTRL_LUI: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = {current_instruction[31:12], 12'd0};
+        end
+        CTRL_AUIPC: begin
+            hcu_inst_type_o = HCU_I_type;
+            imm_offset_o = {current_instruction[31:12], 12'd0};
+        end
+        CTRL_ADD: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_SUB: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_SLTU: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_SLT: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_AND: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_OR: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_XOR: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_SLL: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_SRL: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_SRA: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_JAL: begin
+            hcu_inst_type_o = HCU_UCJ_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {11'hFFF, {current_instruction[31], current_instruction[19:12], current_instruction[20], current_instruction[30:21], 1'b0}} : {11'b0, {current_instruction[31], current_instruction[19:12], current_instruction[20], current_instruction[30:21], 1'b0}};
+        end
+        CTRL_JALR: begin
+            hcu_inst_type_o = HCU_UCJ_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_BEQ: begin
+            hcu_inst_type_o = HCU_CJ_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
+        end
+        CTRL_BNE: begin
+            hcu_inst_type_o = HCU_CJ_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
+        end
+        CTRL_BGE: begin
+            hcu_inst_type_o = HCU_CJ_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
+        end
+        CTRL_BLT: begin
+            hcu_inst_type_o = HCU_CJ_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
+        end
+        CTRL_BLTU: begin
+            hcu_inst_type_o = HCU_CJ_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
+        end
+        CTRL_BGEU: begin
+            hcu_inst_type_o = HCU_CJ_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {19'hFFFFF, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}} : {19'b0, {current_instruction[31], current_instruction[7], current_instruction[30:25], current_instruction[11:8], 1'b0}};
+        end
+        CTRL_LW: begin
+            hcu_inst_type_o = HCU_LOAD_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_LH: begin
+            hcu_inst_type_o = HCU_LOAD_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_LHU: begin
+            hcu_inst_type_o = HCU_LOAD_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_LB: begin
+            hcu_inst_type_o = HCU_LOAD_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_LBU: begin
+            hcu_inst_type_o = HCU_LOAD_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_SW: begin
+            hcu_inst_type_o = HCU_STORE_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:25], current_instruction[11:7]} : {20'b0, current_instruction[31:25], current_instruction[11:7]};
+        end
+        CTRL_SH: begin
+            hcu_inst_type_o = HCU_STORE_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:25], current_instruction[11:7]} : {20'b0, current_instruction[31:25], current_instruction[11:7]};
+        end
+        CTRL_SB: begin
+            hcu_inst_type_o = HCU_STORE_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:25], current_instruction[11:7]} : {20'b0, current_instruction[31:25], current_instruction[11:7]};
+        end
+        CTRL_MUL: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = (current_instruction[31] == 1) ? {20'hFFFFF, current_instruction[31:20]} : {20'b0, current_instruction[31:20]};
+        end
+        CTRL_MULH: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_MULHU: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_MULHSU: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_DIV: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_DIVU: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_REM: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_REMU: begin
+            hcu_inst_type_o = HCU_R_type;
+            imm_offset_o = 'd0;
+        end
+        CTRL_MRET: begin
+            hcu_inst_type_o = HCU_mret;
+            imm_offset_o = 'd0;
+        end
+        CTRL_WFI: begin
+            hcu_inst_type_o = HCU_wfi;
+            imm_offset_o = 'd0;
+        end
+        CTRL_ECALL: begin
+            hcu_inst_type_o = HCU_ecall;
+            imm_offset_o = 'd0;
+        end
+        CTRL_EBREAK: begin
+            hcu_inst_type_o = HCU_trap;
+            imm_offset_o = 'd0;
+        end
+        CTRL_CSRRW: begin
+            hcu_inst_type_o = HCU_CSR_type;
+            imm_offset_o = 'd0; 
+        end
+        CTRL_CSRRS: begin
+            hcu_inst_type_o = HCU_CSR_type;
+            imm_offset_o = 'd0; 
+        end
+        CTRL_CSRRC: begin
+            hcu_inst_type_o = HCU_CSR_type;
+            imm_offset_o = 'd0; 
+        end
+        CTRL_CSRRWI: begin
+            hcu_inst_type_o = HCU_CSR_type;
+            imm_offset_o = 32'(current_instruction[19:15]); 
+        end
+        CTRL_CSRRSI: begin
+            hcu_inst_type_o = HCU_CSR_type;
+            imm_offset_o = 32'(current_instruction[19:15]); 
+        end
+        CTRL_CSRRCI:begin
+            hcu_inst_type_o = HCU_CSR_type;
+            imm_offset_o = 32'(current_instruction[19:15]); 
+        end
+        default: begin
+            hcu_inst_type_o = instruction_type_t'('d0);
+            imm_offset_o = 'd0;
+        end
     endcase
 end
 

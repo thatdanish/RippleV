@@ -37,7 +37,7 @@ def test_runner_RippleV(test_case):
     "../../src/blocks/HazardControlUnit.sv",
     "../../src/blocks/data_mem.sv",
     "../../src/blocks/Decoderv2.sv",
-    "../../src/blocks/inst_mem.sv",
+    "../../src/blocks/InstMemv2.sv",
     "../../src/blocks/MUXs.sv",
     "../../src/blocks/ProgramCounterv2.sv",
     "../../src/blocks/RegFilev2.sv",

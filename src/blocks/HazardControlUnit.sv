@@ -27,7 +27,8 @@ module HazardControlUnit (
 );
 import typed_pkg::*;
 
-localparam UCJ_STALL_MAX = 2;
+localparam UCJ_STALL_MAX = 3;
+localparam UCJ_SECONDARY_MAX = 4;
 localparam TRAP_STALL_MAX = 12;
 localparam TRAP_STAGE_TWO = 4;
 localparam TRAP_STAGE_THREE = 8;
@@ -35,11 +36,13 @@ localparam MRET_STALL_MAX = 4;
 localparam WFI_STALL_WAIT = 4;
 
 
-typedef enum bit[2:0] { stall_clear, stall_ID_IF , stall_IF, clear_L1_L2, handle_trap, stall_all} outputs_type_t;
+typedef enum bit[2:0] { stall_off, stall_I_R , stall_clear_UCJ, clear_CJ, handle_trap, stall_all, propagate_pc_jump} outputs_type_t;
 outputs_type_t set_outputs;
 
+instruction_type_t prev_hcu_instruction;
+
 logic [4:0] rd_prev[4], rd_stale;
-logic [3:0] ucj_stall_counter, trap_stall_counter, mret_stall_counter, wfi_stall_counter;
+logic [3:0] ucj_stall_counter, ucj_secondary_counter, trap_stall_counter, mret_stall_counter, wfi_stall_counter;
 
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin
@@ -48,7 +51,9 @@ always_ff @( posedge clk_i ) begin
         rd_prev[2] <= 'd0;
         rd_prev[3] <= 'd0;
         ucj_stall_counter <= 'd0;
+        ucj_secondary_counter <= 'd0;
         set_outputs <= outputs_type_t'('d0);
+        prev_hcu_instruction <= instruction_type_t'('d0);
     end else begin
         // shift rd reg
         rd_prev[1] <= rd_prev[0];
@@ -57,14 +62,15 @@ always_ff @( posedge clk_i ) begin
         rd_stale <= rd_prev[3];      
 
         if ( bl_take_branch_i == 1'b1 ) 
-            set_outputs <= clear_L1_L2;
+            set_outputs <= clear_CJ;
         else begin
             case (hcu_inst_type_i)
                 HCU_I_type: begin
                     if (rs_hazard(rs1_i)) begin
-                        set_outputs <= stall_ID_IF; // stall ID & IF
+                        set_outputs <= stall_I_R; // stall ID & IF
                     end else begin
-                        set_outputs <= stall_clear;
+                        prev_hcu_instruction <= HCU_I_type;
+                        set_outputs <= stall_off;
                         rd_prev[0] <= rd_i;  // store rd
                     end
 
@@ -76,9 +82,10 @@ always_ff @( posedge clk_i ) begin
                 end
                 HCU_R_type: begin
                     if (rs_hazard(rs1_i) || rs_hazard(rs2_i)) begin
-                        set_outputs <= stall_ID_IF; // stall ID & IF
+                        set_outputs <= stall_I_R; // stall ID & IF
                     end else begin
-                        set_outputs <= stall_clear;
+                        prev_hcu_instruction <= HCU_R_type;
+                        set_outputs <= stall_off;
                         rd_prev[0] <= rd_i; // store rd
                     end
 
@@ -88,8 +95,20 @@ always_ff @( posedge clk_i ) begin
                     mret_stall_counter <= 'd0;
 
                 end
-                HCU_LS_type: begin
-                    set_outputs <= stall_clear;
+                HCU_LOAD_type: begin
+                    set_outputs <= stall_off;
+                    rd_prev[0] <= rd_i;
+                    prev_hcu_instruction <= HCU_LOAD_type;
+
+                    // Clear counters
+                    ucj_stall_counter <= 'd0;
+                    trap_stall_counter <= 'd0;
+                    mret_stall_counter <= 'd0;
+ 
+                end
+                HCU_STORE_type: begin
+                    set_outputs <= stall_off;
+                    prev_hcu_instruction <= HCU_STORE_type;
 
                     // Clear counters
                     ucj_stall_counter <= 'd0;
@@ -98,14 +117,22 @@ always_ff @( posedge clk_i ) begin
  
                 end
                 HCU_UCJ_type: begin
-                    // Increment counter
-                    ucj_stall_counter <= ( ucj_stall_counter == UCJ_STALL_MAX ) ? ucj_stall_counter : ucj_stall_counter + 'd1;
-                    // TODO : 1 clk is wasted in wait here.
-                    
-                    if ( ucj_stall_counter == UCJ_STALL_MAX )
-                        set_outputs <= stall_clear; // clear stall after delay
-                    else
-                        set_outputs <= stall_IF; // stall IF
+                    // Increment counter                 
+                        ucj_stall_counter <= ( ucj_stall_counter == UCJ_STALL_MAX ) ? ucj_stall_counter : ucj_stall_counter + 'd1;
+                                        
+                    if ( ucj_stall_counter == UCJ_STALL_MAX ) begin
+                        // Increment secondary counter
+                        ucj_secondary_counter <= ( ucj_secondary_counter == UCJ_SECONDARY_MAX ) ? 'd0 : ucj_secondary_counter + 'd1;
+                        
+                        if ( ucj_secondary_counter == UCJ_SECONDARY_MAX ) begin
+                            ucj_stall_counter <= 'd0; 
+                            prev_hcu_instruction <= HCU_UCJ_type;
+                            set_outputs <= stall_off; // clear stall after delay
+                        end else begin
+                            set_outputs <= propagate_pc_jump;
+                        end
+                    end else
+                        set_outputs <= stall_clear_UCJ; // stall IF
 
                     // Clear counters
                     trap_stall_counter <= 'd0;
@@ -113,7 +140,8 @@ always_ff @( posedge clk_i ) begin
 
                 end
                 HCU_CJ_type: begin
-                    set_outputs <= stall_clear; // only take action if take_branch_i is asserted
+                    set_outputs <= stall_off; // only take action if take_branch_i is asserted
+                    prev_hcu_instruction <= HCU_CJ_type;
 
                     // Clear counters
                     ucj_stall_counter <= 'd0;
@@ -123,9 +151,10 @@ always_ff @( posedge clk_i ) begin
                 end
                 HCU_CSR_type: begin
                     if (csr_hazard(rs1_i)) begin
-                        set_outputs <= stall_ID_IF; // stall ID & IF
+                        set_outputs <= stall_I_R; // stall ID & IF
                     end else begin
-                        set_outputs <= stall_clear;
+                        prev_hcu_instruction <= HCU_CSR_type;
+                        set_outputs <= stall_off;
                         rd_prev[0] <= rd_i;  // store rd
                     end
 
@@ -138,8 +167,9 @@ always_ff @( posedge clk_i ) begin
                 HCU_ecall: begin
                     // Increment counter
                     trap_stall_counter <= ( trap_stall_counter == TRAP_STALL_MAX ) ? trap_stall_counter : trap_stall_counter + 'd1;
+                    prev_hcu_instruction <= HCU_ecall;
                     
-                    set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_clear : handle_trap;
+                    set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_off : handle_trap;
 
                     // Clear counters
                     ucj_stall_counter <= 'd0;
@@ -149,11 +179,12 @@ always_ff @( posedge clk_i ) begin
                 HCU_mret: begin
                     // Increment counter
                     mret_stall_counter <= ( mret_stall_counter == MRET_STALL_MAX ) ? mret_stall_counter : mret_stall_counter + 'd1;
-                    
-                    if ( mret_stall_counter == MRET_STALL_MAX )
-                        set_outputs <= stall_clear; // clear stall after delay
-                    else
-                        set_outputs <= stall_IF; // stall IF
+
+                    if ( mret_stall_counter == MRET_STALL_MAX ) begin
+                        prev_hcu_instruction <= HCU_mret;
+                        set_outputs <= stall_off; // clear stall after delay
+                    end else
+                        set_outputs <= stall_clear_UCJ; // stall IF
 
                     // Clear counters
                     ucj_stall_counter <= 'd0;
@@ -163,6 +194,7 @@ always_ff @( posedge clk_i ) begin
                 HCU_wfi: begin
                     // Increment counter
                     wfi_stall_counter <= ( wfi_stall_counter == WFI_STALL_WAIT ) ? wfi_stall_counter : wfi_stall_counter + 'd1;
+                    prev_hcu_instruction <= HCU_wfi;
 
                     set_outputs <= stall_all; // stall complete core
 
@@ -175,8 +207,9 @@ always_ff @( posedge clk_i ) begin
                 HCU_trap: begin
                     // Increment counter
                     trap_stall_counter <= ( trap_stall_counter == TRAP_STALL_MAX ) ? trap_stall_counter : trap_stall_counter + 'd1;
-                    
-                    set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_clear : handle_trap;
+                    prev_hcu_instruction <= HCU_trap;
+
+                    set_outputs <= (trap_stall_counter == TRAP_STALL_MAX) ? stall_off : handle_trap;
 
                     // Clear counters
                     ucj_stall_counter <= 'd0;
@@ -186,7 +219,7 @@ always_ff @( posedge clk_i ) begin
                 end
                 default: begin
                     set_outputs <= stall_all;
-
+                
                     // Clear counters
                     ucj_stall_counter <= 'd0;
                     trap_stall_counter <= 'd0;
@@ -219,28 +252,37 @@ always_comb begin
     hcu_hnd_stage_o = hcu_handler_stages_t'('d0);
     
     case (set_outputs)
-        stall_clear: begin
+        stall_off: begin
             pc_en_o = 1'b1;
-            pc_sel_o = sel_pc_update;
+            pc_sel_o = sel_pc_direct_update;
         end
-        stall_ID_IF: begin
+        propagate_pc_jump : begin
+            stall_l1_o = ( ucj_secondary_counter > 'd2 ) ? 1'b0 : 1'b1;
+            stall_id_o = ( ucj_secondary_counter > 'd3 ) ? 1'b0 : 1'b1;
+            
+            pc_en_o = 1'b1;
+            pc_sel_o = ( ucj_secondary_counter > 2 ) ? sel_pc_direct_update : sel_pc_update;
+
+        end
+        stall_I_R: begin
             // I & R types
             stall_id_o = 1'b1;
             stall_l1_o = 1'b1;
             stall_if_o = 1'b1;
 
             pc_en_o = 1'b1;
-            pc_sel_o = sel_pc_update;
+            pc_sel_o = sel_pc_direct_update;
         end
-        stall_IF: begin
+        stall_clear_UCJ: begin
             // UCJ type
             stall_l1_o = 1'b1;
             stall_if_o = 1'b1;
+            stall_id_o = 1'b1;
 
-            pc_en_o = 1'b0;
+            pc_en_o = 1'b1;
             pc_sel_o = sel_pc_update;
         end
-        clear_L1_L2: begin
+        clear_CJ: begin
             // CJ type
             clear_l1_o = 1'b1;
             clear_l2_o = 1'b1;

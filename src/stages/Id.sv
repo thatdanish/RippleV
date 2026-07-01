@@ -44,7 +44,6 @@ module Id (
 
     ctrl_inst_t ctrl_instruction;
     
-
     ControlUnitv2 ctrl_unit_inst (
         .clk_i,
         .rst_i,
@@ -73,8 +72,7 @@ module Id (
         .data_mem_transfer_type_o,
         .data_mem_rw_o,
         .data_mem_load_type_o,
-        .hcu_hnd_stage_i,
-        .hcu_inst_type_o
+        .hcu_hnd_stage_i
     );
 
     Decoderv2 decoder_inst (
@@ -88,7 +86,8 @@ module Id (
         .csr_addr_o,
         .imm_offset_o,
         .lui_o,
-        .inst_to_ctrl_o(ctrl_instruction) 
+        .inst_to_ctrl_o(ctrl_instruction),
+        .hcu_inst_type_o
     );
     
 endmodule

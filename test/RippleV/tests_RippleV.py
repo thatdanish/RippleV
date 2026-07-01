@@ -46,7 +46,7 @@ async def run_test(dut):
     await init_inputs(dut)
     await ResetTrigger(dut)
 
-    await ClockCycles(dut.clk_i, 3)
+    await NextClockCycle(dut)
     
     # Check Reset Handler Address
     try: 

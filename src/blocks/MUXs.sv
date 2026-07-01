@@ -136,6 +136,35 @@ module mux_pc #(
     end
 endmodule
 
+module mux_pc_v2 #( 
+    parameter ADDR_WIDTH = 32,
+    parameter INT_HND = 32'd8
+) (
+    input clk_i,
+    input typed_pkg::sel_pc_t sel_i, 
+    input logic [ADDR_WIDTH-1:0] pc_update_i, 
+    input logic [ADDR_WIDTH-1:0] pc_direct_update_i, 
+    input logic [ADDR_WIDTH-1:0] jump_vec_i,    
+    output logic [ADDR_WIDTH-1:0] data_o
+);
+    import typed_pkg::*;
+    logic [ADDR_WIDTH-1:0] int_hnd;
+    
+    always_ff @( posedge clk_i ) begin 
+        int_hnd <= INT_HND;
+    end
+
+    always_comb begin 
+        case (sel_i)
+            sel_pc_direct_update : data_o = pc_direct_update_i;
+            sel_pc_update : data_o = pc_update_i;
+            sel_pc_jump_vec : data_o = jump_vec_i;
+            sel_pc_int_hnd : data_o = int_hnd;
+            default: data_o = 'd0;
+        endcase
+    end
+endmodule
+
 module mux_csr_data (
     input typed_pkg::sel_csr_data_t sel_i,
     input logic [31:0] pc_i,

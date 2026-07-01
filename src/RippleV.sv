@@ -30,7 +30,7 @@ module RippleV #(
     logic [31:0] riscv_instruction, l1_riscv_instruction, csr_data_from_cu, l2_csr_data_from_cu, l3_csr_data_from_cu;
     logic [31:0] rs1_data, l2_rs1_data, l3_rs1_data, rs2_data, l2_rs2_data, imm_offset, l2_imm_offset, l3_imm_offset, lui, l2_lui, l3_lui, l4_lui;
     logic [31:0] pc_addr, l1_pc_addr, l2_pc_addr, l3_pc_addr, l4_pc_addr, pc_new, alu_out, l3_alu_out, l4_alu_out, l3_dmem_addr, l3_dmem_data;
-    logic [31:0] dmem_out_data, l4_dmem_out_data, csr_out_data, l4_csr_out_data, pc_update_from_execute, reg_file_rd_data;
+    logic [31:0] dmem_out_data, l4_dmem_out_data, csr_out_data, l4_csr_out_data, pc_update_from_execute, pc_direct_update_from_execute, reg_file_rd_data;
 
     logic [4:0] rs1_addr, rs1_addr_hcu, l2_rs1_addr, rs2_addr, rs2_addr_hcu, l2_rs2_addr, rd_addr, rd_addr_hcu, l2_rd_addr, l3_rd_addr, l4_rd_addr; 
     
@@ -100,12 +100,13 @@ module RippleV #(
 
     // Instruction-fetch --------------------------------------------------------------------------
 
-    mux_pc #( 
+    mux_pc_v2 #( 
         .ADDR_WIDTH(ADDR_WIDTH),
         .INT_HND(INT_HND)
     ) mux_pc_inst (
         .clk_i,
         .sel_i(sel_pc),
+        .pc_direct_update_i(pc_direct_update_from_execute),
         .pc_update_i(pc_update_from_execute),
         .jump_vec_i(csr_out_data),
         .data_o(pc_new)
@@ -118,7 +119,7 @@ module RippleV #(
     ) if_inst (
         .clk_i,
         .rst_i,
-        .stall_if_i(stall_l1),
+        .stall_if_i(stall_if),
         // IMEM
         .inst_mem_en_i(imem_enable),
         .inst_mem_data_o(riscv_instruction),
@@ -173,7 +174,6 @@ module RippleV #(
         .data_mem_transfer_type_o(dmem_transfer_type),
         .data_mem_rw_o(dmem_rw),
         .data_mem_load_type_o(dmem_load_type),
-        .hcu_inst_type_o(hcu_instruction),
         // Decoder
         .decoder_inst_i(l1_riscv_instruction),
         .rd_o(rd_addr),
@@ -181,7 +181,8 @@ module RippleV #(
         .rs2_o(rs2_addr),
         .csr_addr_o(csr_addr_decoder),
         .imm_offset_o(imm_offset),
-        .lui_o(lui)
+        .lui_o(lui),
+        .hcu_inst_type_o(hcu_instruction)
     );
     
     // Pipeline register II -----------------------------------------------------------------------
@@ -274,10 +275,12 @@ module RippleV #(
         .alu_out_o(alu_out),
         // BL
         .bl_en_i(l2_bl_enable),
+        .pc_direct_i(pc_addr),
         .bl_opr_i(l2_bl_operation),
         .bl_take_branch_o(bl_take_branch),
         // Output
-        .pc_update_o(pc_update_from_execute)
+        .pc_update_o(pc_update_from_execute),
+        .pc_direct_update_o(pc_direct_update_from_execute)
     );
     
     // Pipeline register III ----------------------------------------------------------------------
@@ -406,6 +409,7 @@ module RippleV #(
     RegFilev2 reg_file_inst (
         .clk_i,
         .rst_i,
+        .stall_wb_i(stall_wb), 
         .stall_id_i(stall_id), 
         .read_en_i(reg_file_read_enable),
         .write_en_i(l4_reg_file_write_enable),

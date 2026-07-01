@@ -67,12 +67,12 @@ module BranchLogic (
                 int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
             end
             ALU_BGEU:begin 
-                 int_take_branch = (unsigned'(rs1_i) >= unsigned'(rs2_i));
-                 int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
+                int_take_branch = (unsigned'(rs1_i) >= unsigned'(rs2_i));
+                int_pc_update = signed'(pc_i) + signed'(sign_ext_offset_i);
                 end
             default: begin
                 int_take_branch = 'd0;
-                int_pc_update = signed'(pc_i) + signed'(32'd4);
+                int_pc_update = 'd0;
             end
         endcase
     end

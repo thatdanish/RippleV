@@ -46,7 +46,7 @@ typedef enum bit [1:0] { sel_alu_pc, sel_alu_rs1  } sel_alu_b_t;
 
 // mux_pc
 
-typedef enum bit [1:0] { sel_pc_update, sel_pc_jump_vec, sel_pc_int_hnd  } sel_pc_t;
+typedef enum bit [1:0] { sel_pc_direct_update, sel_pc_update, sel_pc_jump_vec, sel_pc_int_hnd  } sel_pc_t;
 
 // mux_csr_data
 
@@ -74,7 +74,7 @@ typedef enum bit[1:0] { load_signed, load_unsigned } load_t;
 
 // Instruction type
 
-typedef enum bit[3:0] { HCU_I_type, HCU_R_type, HCU_LS_type, HCU_CJ_type , HCU_UCJ_type, HCU_CSR_type, 
+typedef enum bit[3:0] { HCU_I_type, HCU_R_type, HCU_LOAD_type, HCU_STORE_type, HCU_CJ_type , HCU_UCJ_type, HCU_CSR_type, 
                         HCU_ecall, HCU_mret, HCU_wfi, HCU_trap} instruction_type_t;
 
 // HCU special stages

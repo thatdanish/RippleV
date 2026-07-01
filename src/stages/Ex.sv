@@ -18,9 +18,11 @@ module Ex (
     output logic [31:0] alu_out_o,
     // BL
     input bl_en_i,
+    input logic [31:0] pc_direct_i,
     input typed_pkg::alu_opr_t bl_opr_i,
     output bl_take_branch_o,
     // Output
+    output logic [31:0] pc_direct_update_o,
     output logic [31:0] pc_update_o
 );  
     import typed_pkg::*;
@@ -67,6 +69,13 @@ module Ex (
         .pc_update_o(bl_pc_update),
         .take_branch_o(bl_take_branch_o)  
     );
+
+    // PC + 4
+
+    always_ff @( posedge clk_i ) begin 
+        if (!rst_i) pc_direct_update_o <= 'd0;
+        else pc_direct_update_o <= pc_direct_i + 32'd4;
+    end
 
     // Mux
     always_comb begin

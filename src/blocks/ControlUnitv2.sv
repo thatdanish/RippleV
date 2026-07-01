@@ -38,8 +38,7 @@ module ControlUnitv2 (
     output typed_pkg::load_t data_mem_load_type_o, 
     output logic data_mem_en_o,
     // HCU
-    input typed_pkg::hcu_handler_stages_t hcu_hnd_stage_i,
-    output typed_pkg::instruction_type_t hcu_inst_type_o
+    input typed_pkg::hcu_handler_stages_t hcu_hnd_stage_i
 );
 
     import typed_pkg::*;
@@ -81,7 +80,7 @@ module ControlUnitv2 (
                     CTRL_SRL: current_asserted_outputs  = OUTPUTS_R_TYPE;
                     CTRL_SRA: current_asserted_outputs  = OUTPUTS_R_TYPE;
                     CTRL_JAL: current_asserted_outputs  = OUTPUTS_UCJ_TYPE;
-                    CTRL_JALR: current_asserted_outputs  = OUTPUTS_R_TYPE;
+                    CTRL_JALR: current_asserted_outputs  = OUTPUTS_UCJ_TYPE;
                     CTRL_BEQ: current_asserted_outputs  = OUTPUTS_CJ_TYPE;
                     CTRL_BNE: current_asserted_outputs  = OUTPUTS_CJ_TYPE;
                     CTRL_BGE: current_asserted_outputs  = OUTPUTS_CJ_TYPE;
@@ -156,7 +155,7 @@ module ControlUnitv2 (
         data_mem_load_type_o = load_t'('d0);
         data_mem_en_o = 1'b0;
         // HCU
-        hcu_inst_type_o = instruction_type_t'('d0);
+
         // ALU operations
         case (current_instruction)
             CTRL_ADDI: alu_opr_o = ALU_ADD;
@@ -219,7 +218,7 @@ module ControlUnitv2 (
                 reg_file_read_en_o = 1'b1;
 
                 // Inform HCU
-                hcu_inst_type_o = HCU_I_type;
+        
 
                 // Compute @ ALU - mux a, b
                 alu_en_o = 1'b1;
@@ -231,8 +230,6 @@ module ControlUnitv2 (
                 if ( current_instruction == CTRL_LUI ) reg_file_data_mux_sel_o =  sel_reg_file_decoder;
                 else reg_file_data_mux_sel_o =  sel_reg_file_alu;
 
-                // Update PC -> PC+4    
-                branch_logic_en_o = 1'b1;
             end 
             OUTPUTS_R_TYPE: begin
                 // IMEM enable
@@ -242,7 +239,7 @@ module ControlUnitv2 (
                 reg_file_read_en_o = 1'b1;
 
                 // Inform HCU
-                hcu_inst_type_o = HCU_R_type;
+        
 
                 // Compute @ ALU - mux a, b
                 alu_en_o = 1'b1;
@@ -253,8 +250,6 @@ module ControlUnitv2 (
                 reg_file_write_en_o = 1'b1;  
                 reg_file_data_mux_sel_o =  sel_reg_file_alu;
 
-                // Update PC -> PC+4    
-                branch_logic_en_o = 1'b1;
             end 
             OUTPUTS_LS_TYPE: begin
                 // IMEM enable
@@ -264,7 +259,7 @@ module ControlUnitv2 (
                 reg_file_read_en_o = 1'b1;
 
                 // Inform HCU
-                hcu_inst_type_o = HCU_LS_type;
+        
                 
                 // Address gen @ ALU - mux a, b
                 alu_en_o = 1'b1;
@@ -328,8 +323,6 @@ module ControlUnitv2 (
                     end
                 endcase
 
-                // Update PC -> PC+4    
-                branch_logic_en_o = 1'b1;
             end  
             OUTPUTS_UCJ_TYPE: begin
                 // IMEM enable
@@ -339,7 +332,7 @@ module ControlUnitv2 (
                 reg_file_read_en_o = 1'b1;
 
                 // Inform HCU
-                hcu_inst_type_o = HCU_UCJ_type;
+        
 
                 // Jump PC gen @ BL - mux a, b
                 branch_logic_en_o = 1'b1;
@@ -363,7 +356,7 @@ module ControlUnitv2 (
                 reg_file_read_en_o = 1'b1;
 
                 // Inform HCU
-                hcu_inst_type_o = HCU_CJ_type;
+        
 
                 // Check for branch @ BL
                 branch_logic_en_o = 1'b1;
@@ -397,7 +390,7 @@ module ControlUnitv2 (
                 reg_file_read_en_o = 1'b1;
 
                 // Inform HCU
-                hcu_inst_type_o = HCU_CSR_type;
+        
                 
                 // Read & write @ CSR
                 csr_en_o = 1'b1;
@@ -434,16 +427,13 @@ module ControlUnitv2 (
                 // Write RD
                 reg_file_write_en_o = 1'b1;  
                 reg_file_data_mux_sel_o =  sel_reg_file_csr;
-
-                // Update PC -> PC+4    
-                branch_logic_en_o = 1'b1;
             end 
             OUTPUTS_ECALL: begin
                 // IMEM enable
                 inst_mem_en_o = 1'b1;
                 
                 // Inform HCU
-                hcu_inst_type_o = HCU_ecall;
+        
                 
                 csr_en_o = 1'b1;
                 if (hcu_hnd_stage_i == first ) begin
@@ -474,7 +464,7 @@ module ControlUnitv2 (
                 inst_mem_en_o = 1'b1;
                 
                 // Inform HCU
-                hcu_inst_type_o = HCU_mret;
+        
 
                 // Read mepc @ CSR
                 csr_rw_o = read;
@@ -488,14 +478,14 @@ module ControlUnitv2 (
                 inst_mem_en_o = 1'b1;
                 
                 // Inform HCU
-                hcu_inst_type_o = HCU_wfi;
+        
             end 
             OUTPUTS_INCORRECT_INST: begin
                 // IMEM enable
                 inst_mem_en_o = 1'b1;
                 
                 // Inform HCU
-                hcu_inst_type_o = HCU_trap;
+        
 
                 if (hcu_hnd_stage_i == first) begin
                     // Write mepc @ CSR

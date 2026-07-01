@@ -17,7 +17,7 @@ module ProgramCounterv2 #(
 always_ff @( posedge clk_i ) begin 
     if (!rst_i) pc_o <= RST_HND;
     else begin 
-        if (en_i == 1'b1 && stall_if_i == 1'b0)
+        if ( en_i == 1'b1 && stall_if_i == 1'b0 )
             pc_o <= pc_update_i;
         else 
             pc_o <= pc_o;

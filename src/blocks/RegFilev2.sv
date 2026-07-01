@@ -7,6 +7,7 @@ module RegFilev2 (
     input read_en_i,
     input write_en_i,
     input stall_id_i, 
+    input stall_wb_i, 
     input logic[4:0] rs1_addr_i,
     input logic[4:0] rs2_addr_i,
     input logic[4:0] rd_addr_i,
@@ -25,7 +26,7 @@ always_ff @( posedge clk_i ) begin
         rs2_data_o <= 'd0;
         int_regs <= 'd0;
     end else begin
-        if (write_en_i == 1'b1) begin // write
+        if (write_en_i == 1'b1 && stall_wb_i == 1'b0 ) begin // write
             if (rd_addr_i != 'd0) int_regs[rd_addr_i] <= rd_data_i;
             else int_regs <= int_regs;
         end 

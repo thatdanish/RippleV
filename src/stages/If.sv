@@ -20,13 +20,14 @@ module If #(
 
     assign pc_out_o = pc_out_address;
 
-    inst_mem #(
+    InstMemv2 #(
         .FILE(FILE),
         .ADDR_WIDTH(ADDR_WIDTH),
         .WORD_SIZE(WORD_SIZE)
     ) inst_mem_inst (
         .clk_i,
         .rst_i,
+        .stall_if_i,
         .en_i(inst_mem_en_i), 
         .addr_i(pc_out_address),
         .data_o(inst_mem_data_o)
