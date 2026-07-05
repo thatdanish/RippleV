@@ -81,4 +81,8 @@ typedef enum bit[3:0] { HCU_I_type, HCU_R_type, HCU_LOAD_type, HCU_STORE_type, H
 
 typedef enum bit[1:0] {first, second, third, fourth} hcu_handler_stages_t;
 
+// Status
+
+typedef enum bit [2:0] { ACTIVE, ALL_STALLED, HZRD_HND, PROPGT, STALL} status_t;
+
 endpackage

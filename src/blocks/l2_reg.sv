@@ -121,35 +121,35 @@ module l2_reg (
         end else begin
             
             // Delay I -  CU, Decoder, PC & RegFile
-            pc_1 <= pc_i;
-            rs1_1 <= rs1_i;
-            rs2_1 <= rs2_i;
-            rd_1 <= rd_i;
-            imm_offset_1 <= imm_offset_i;
-            lui_1 <= lui_i;
-            csr_addr_1 <= csr_addr_i;
-            csr_addr_from_ctrl_1 <= csr_addr_from_ctrl_i;
-            csr_addr_mux_sel_1 <= csr_addr_mux_sel_i;
-            csr_data_mux_sel_1 <= csr_data_mux_sel_i;
-            csr_write_type_1 <= csr_write_type_i;
-            csr_rw_1 <= csr_rw_i;
-            csr_en_1 <= csr_en_i;
-            csr_data_from_ctrl_1 <= csr_data_from_ctrl_i;
-            reg_file_data_mux_sel_1 <= reg_file_data_mux_sel_i;
-            reg_file_read_en_1 <= reg_file_read_en_i;
-            reg_file_write_en_1 <= reg_file_write_en_i;
-            alu_opr_1 <= alu_opr_i;
-            alu_a_mux_sel_1 <= alu_a_mux_sel_i;
-            alu_b_mux_sel_1 <= alu_b_mux_sel_i;
-            alu_en_1 <= alu_en_i;
-            bl_opr_1 <= bl_opr_i;
-            branch_logic_en_1 <= branch_logic_en_i;
-            data_mem_transfer_type_1 <= data_mem_transfer_type_i;
-            data_mem_rw_1 <= data_mem_rw_i;
-            data_mem_load_type_1 <= data_mem_load_type_i;
-            data_mem_en_1 <= data_mem_en_i;
-            rs1_data_1 <= rs1_data_i;
-            rs2_data_1 <= rs2_data_i;
+            pc_1 <= ( stall_l2_i == 1'b1 ) ? pc_1 : pc_i;
+            rs1_1 <= ( stall_l2_i == 1'b1 ) ? rs1_1 : rs1_i;
+            rs2_1 <= ( stall_l2_i == 1'b1 ) ? rs2_1 : rs2_i;
+            rd_1 <= ( stall_l2_i == 1'b1 ) ? rd_1 : rd_i;
+            imm_offset_1 <= ( stall_l2_i == 1'b1 ) ? imm_offset_1 : imm_offset_i;
+            lui_1 <= ( stall_l2_i == 1'b1 ) ? lui_1 : lui_i;
+            csr_addr_1 <= ( stall_l2_i == 1'b1 ) ? csr_addr_1 : csr_addr_i;
+            csr_addr_from_ctrl_1 <= ( stall_l2_i == 1'b1 ) ? csr_addr_from_ctrl_1 : csr_addr_from_ctrl_i;
+            csr_addr_mux_sel_1 <= ( stall_l2_i == 1'b1 ) ? csr_addr_mux_sel_1 : csr_addr_mux_sel_i;
+            csr_data_mux_sel_1 <= ( stall_l2_i == 1'b1 ) ? csr_data_mux_sel_1 : csr_data_mux_sel_i;
+            csr_write_type_1 <= ( stall_l2_i == 1'b1 ) ? csr_write_type_1 : csr_write_type_i;
+            csr_rw_1 <= ( stall_l2_i == 1'b1 ) ? csr_rw_1 : csr_rw_i;
+            csr_en_1 <= ( stall_l2_i == 1'b1 ) ? csr_en_1 : csr_en_i;
+            csr_data_from_ctrl_1 <= ( stall_l2_i == 1'b1 ) ? csr_data_from_ctrl_1 : csr_data_from_ctrl_i;
+            reg_file_data_mux_sel_1 <= ( stall_l2_i == 1'b1 ) ? reg_file_data_mux_sel_1 : reg_file_data_mux_sel_i;
+            reg_file_read_en_1 <= ( stall_l2_i == 1'b1 ) ? reg_file_read_en_1 : reg_file_read_en_i;
+            reg_file_write_en_1 <= ( stall_l2_i == 1'b1 ) ? reg_file_write_en_1 : reg_file_write_en_i;
+            alu_opr_1 <= ( stall_l2_i == 1'b1 ) ? alu_opr_1 : alu_opr_i;
+            alu_a_mux_sel_1 <= ( stall_l2_i == 1'b1 ) ? alu_a_mux_sel_1 : alu_a_mux_sel_i;
+            alu_b_mux_sel_1 <= ( stall_l2_i == 1'b1 ) ? alu_b_mux_sel_1 : alu_b_mux_sel_i;
+            alu_en_1 <= ( stall_l2_i == 1'b1 ) ? alu_en_1 : alu_en_i;
+            bl_opr_1 <= ( stall_l2_i == 1'b1 ) ? bl_opr_1 : bl_opr_i;
+            branch_logic_en_1 <= ( stall_l2_i == 1'b1 ) ? branch_logic_en_1 : branch_logic_en_i;
+            data_mem_transfer_type_1 <= ( stall_l2_i == 1'b1 ) ? data_mem_transfer_type_1 : data_mem_transfer_type_i;
+            data_mem_rw_1 <= ( stall_l2_i == 1'b1 ) ? data_mem_rw_1 : data_mem_rw_i;
+            data_mem_load_type_1 <= ( stall_l2_i == 1'b1 ) ? data_mem_load_type_1 : data_mem_load_type_i;
+            data_mem_en_1 <= ( stall_l2_i == 1'b1 ) ? data_mem_en_1 : data_mem_en_i;
+            rs1_data_1 <= ( stall_l2_i == 1'b1 ) ? rs1_data_1 : rs1_data_i;
+            rs2_data_1 <= ( stall_l2_i == 1'b1 ) ? rs2_data_1 : rs2_data_i;
 
             // Delay II - Decoder & PC
             pc_2 <= pc_1;
@@ -203,35 +203,35 @@ module l2_reg (
                 l2_rs1_data_o <= 'd0;
                 l2_rs2_data_o <= 'd0;            
             end else begin
-                l2_pc_out_o <= ( stall_l2_i == 1'b1 ) ? l2_pc_out_o : pc_4;
-                l2_rs1_o <= ( stall_l2_i == 1'b1 ) ? l2_rs1_o : rs1_2;
-                l2_rs2_o <= ( stall_l2_i == 1'b1 ) ? l2_rs2_o : rs2_2;
-                l2_rd_o <= ( stall_l2_i == 1'b1 ) ? l2_rd_o : rd_2;
-                l2_imm_offset_o <= ( stall_l2_i == 1'b1 ) ? l2_imm_offset_o : imm_offset_2;
-                l2_lui_o <= ( stall_l2_i == 1'b1 ) ? l2_lui_o : lui_2;
-                l2_csr_addr_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_addr_o : csr_addr_2;
-                l2_csr_addr_from_ctrl_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_addr_from_ctrl_o : csr_addr_from_ctrl_1; 
-                l2_csr_addr_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_addr_mux_sel_o : csr_addr_mux_sel_1; 
-                l2_csr_data_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_data_mux_sel_o : csr_data_mux_sel_1; 
-                l2_csr_write_type_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_write_type_o : csr_write_type_1; 
-                l2_csr_rw_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_rw_o : csr_rw_1; 
-                l2_csr_en_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_en_o : csr_en_1; 
-                l2_csr_data_from_ctrl_o <= ( stall_l2_i == 1'b1 ) ? l2_csr_data_from_ctrl_o : csr_data_from_ctrl_1; 
-                l2_reg_file_data_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_reg_file_data_mux_sel_o  : reg_file_data_mux_sel_1;
+                l2_pc_out_o <= pc_4;
+                l2_rs1_o <= rs1_2;
+                l2_rs2_o <= rs2_2;
+                l2_rd_o <= rd_2;
+                l2_imm_offset_o <= imm_offset_2;
+                l2_lui_o <= lui_2;
+                l2_csr_addr_o <= csr_addr_2;
+                l2_csr_addr_from_ctrl_o <= csr_addr_from_ctrl_1; 
+                l2_csr_addr_mux_sel_o <= csr_addr_mux_sel_1; 
+                l2_csr_data_mux_sel_o <= csr_data_mux_sel_1; 
+                l2_csr_write_type_o <= csr_write_type_1; 
+                l2_csr_rw_o <= csr_rw_1; 
+                l2_csr_en_o <= csr_en_1; 
+                l2_csr_data_from_ctrl_o <= csr_data_from_ctrl_1; 
+                l2_reg_file_data_mux_sel_o <=  reg_file_data_mux_sel_1;
         
-                l2_reg_file_write_en_o <= ( stall_l2_i == 1'b1 ) ? l2_reg_file_write_en_o  : reg_file_write_en_1;
-                l2_alu_opr_o <= ( stall_l2_i == 1'b1 ) ? l2_alu_opr_o  : alu_opr_1;
-                l2_alu_a_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_alu_a_mux_sel_o  : alu_a_mux_sel_1;
-                l2_alu_b_mux_sel_o <= ( stall_l2_i == 1'b1 ) ? l2_alu_b_mux_sel_o  : alu_b_mux_sel_1;
-                l2_alu_en_o <= ( stall_l2_i == 1'b1 ) ? l2_alu_en_o : alu_en_1; 
-                l2_bl_opr_o <= ( stall_l2_i == 1'b1 ) ? l2_bl_opr_o  : bl_opr_1;
-                l2_branch_logic_en_o <= ( stall_l2_i == 1'b1 ) ? l2_branch_logic_en_o  : branch_logic_en_1;
-                l2_data_mem_transfer_type_o <= ( stall_l2_i == 1'b1 ) ? l2_data_mem_transfer_type_o  : data_mem_transfer_type_1;
-                l2_data_mem_rw_o <= ( stall_l2_i == 1'b1 ) ? l2_data_mem_rw_o  : data_mem_rw_1;
-                l2_data_mem_load_type_o <= ( stall_l2_i == 1'b1 ) ? l2_data_mem_load_type_o : data_mem_load_type_1; 
-                l2_data_mem_en_o <= ( stall_l2_i == 1'b1 ) ? l2_data_mem_en_o  : data_mem_en_1;
-                l2_rs1_data_o <= ( stall_l2_i == 1'b1 ) ? l2_rs1_data_o  : rs1_data_1;
-                l2_rs2_data_o <= ( stall_l2_i == 1'b1 ) ? l2_rs2_data_o : rs2_data_1; 
+                l2_reg_file_write_en_o <=  reg_file_write_en_1;
+                l2_alu_opr_o <=  alu_opr_1;
+                l2_alu_a_mux_sel_o <=  alu_a_mux_sel_1;
+                l2_alu_b_mux_sel_o <=  alu_b_mux_sel_1;
+                l2_alu_en_o <= alu_en_1; 
+                l2_bl_opr_o <=  bl_opr_1;
+                l2_branch_logic_en_o <=  branch_logic_en_1;
+                l2_data_mem_transfer_type_o <=  data_mem_transfer_type_1;
+                l2_data_mem_rw_o <=  data_mem_rw_1;
+                l2_data_mem_load_type_o <= data_mem_load_type_1; 
+                l2_data_mem_en_o <=  data_mem_en_1;
+                l2_rs1_data_o <=  rs1_data_1;
+                l2_rs2_data_o <= rs2_data_1; 
             end
         end
     end
