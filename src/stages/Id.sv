@@ -4,6 +4,7 @@ module Id (
     input clk_i,
     input rst_i,
     input stall_id_i,
+    input stall_cu_i,
     output interrupt_ack_o,
     // CU
     input main_enable_i,
@@ -48,6 +49,7 @@ module Id (
         .clk_i,
         .rst_i,
         .main_enable_i, 
+        .stall_cu_i,
         .interrupt_ack_o,
         .interrupt_i,
         .instruction_i(ctrl_instruction),

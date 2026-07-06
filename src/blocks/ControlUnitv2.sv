@@ -6,6 +6,7 @@ module ControlUnitv2 (
     input clk_i,
     input rst_i,
     input main_enable_i,
+    input stall_cu_i,
     output logic interrupt_ack_o,
     // Decoder 
     input typed_pkg::ctrl_inst_t instruction_i,
@@ -56,7 +57,7 @@ module ControlUnitv2 (
             current_instruction <= ctrl_inst_t'('d0);
         end else begin
             current_instruction <= instruction_i;
-            if (main_enable_i == 1'b1 && interrupt_i == 1'b0) begin
+            if (main_enable_i == 1'b1 && interrupt_i == 1'b0 && stall_cu_i == 1'b0) begin
                 case (instruction_i)
                     CTRL_ADDI: current_asserted_outputs  = OUTPUTS_I_TYPE;
                     CTRL_SLTI: current_asserted_outputs  = OUTPUTS_I_TYPE;

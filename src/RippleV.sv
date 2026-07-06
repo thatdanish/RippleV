@@ -23,7 +23,7 @@ module RippleV #(
     import typed_pkg::*;
     
     // Misc
-    logic stall_if, stall_l1, stall_id, stall_l2, stall_ex, stall_l3, stall_mem, stall_l4, stall_wb, clear_l1, clear_l2;
+    logic stall_if, stall_l1, stall_id, stall_cu, stall_l2, stall_ex, stall_l3, stall_mem, stall_l4, stall_wb, clear_l1, clear_l2;
     logic clear_l3, clear_l4, imem_enable, csr_enable, l2_csr_enable, l3_csr_enable, alu_enable, l2_alu_enable, bl_enable, l2_bl_enable;
     logic dmem_enable, l2_dmem_enable, l3_dmem_enable, reg_file_read_enable, reg_file_write_enable, l2_reg_file_write_enable, l3_reg_file_write_enable, l4_reg_file_write_enable;
     logic bl_take_branch, interrupt_status, pc_enable, jump_valid, stall_pc_direct;
@@ -65,7 +65,31 @@ module RippleV #(
     // CU
     instruction_type_t hcu_instruction;
 
-     // Hazard Control Unit -----------------------------------------------------------------------
+    // Misc --------------------------------------------------------------------------------------
+
+    // Core status
+    always_comb begin 
+        case ( {stall_if, stall_l1, stall_id, stall_cu, stall_l2, stall_ex, stall_l3, stall_mem, stall_l4, stall_wb, clear_l1, clear_l2, clear_l3, clear_l4} )
+            14'b0 : core_status_o = ACTIVE;
+            14'hFFFF : core_status_o = ALL_STALLED;
+            default: core_status_o = STALL;
+        endcase
+    end
+
+    // Reg - b/w Decoder & HCU
+    always_ff @( posedge clk_i ) begin : DelayRegisters
+        rs1_addr_hcu <= rs1_addr;
+        rs2_addr_hcu <= rs2_addr;
+        rd_addr_hcu <= rd_addr;
+    end
+
+    // PC + 4
+    always_ff @( posedge clk_i ) begin 
+        if (!rst_i) pc_direct_update_from_execute <= 'd0;
+        else pc_direct_update_from_execute <= ( stall_pc_direct == 1'b1 ) ? pc_update_from_execute : pc_addr + 32'd4;
+    end
+
+    // Hazard Control Unit -----------------------------------------------------------------------
 
     HazardControlUnit hcu_inst (
         .clk_i,
@@ -86,29 +110,15 @@ module RippleV #(
         .clear_l4_o(clear_l4),
         .stall_if_o(stall_if),
         .stall_id_o(stall_id),
+        .stall_cu_o(stall_cu),
         .stall_ex_o(stall_ex),
         .stall_mem_o(stall_mem),
         .stall_wb_o(stall_wb),
         .stall_pc_direct_o(stall_pc_direct),
         .hcu_hnd_stage_o(hcu_handler_stage), 
         .pc_en_o(pc_enable),
-        .pc_sel_o(sel_pc),
-        .core_status_o
+        .pc_sel_o(sel_pc)
     );
-
-    always_ff @( posedge clk_i ) begin : DelayRegisters
-        rs1_addr_hcu <= rs1_addr;
-        rs2_addr_hcu <= rs2_addr;
-        rd_addr_hcu <= rd_addr;
-    end
-
-    
-    // PC + 4
-    always_ff @( posedge clk_i ) begin 
-        if (!rst_i) pc_direct_update_from_execute <= 'd0;
-        else pc_direct_update_from_execute <= ( stall_pc_direct == 1'b1 ) ? pc_update_from_execute : pc_addr + 32'd4;
-    end
-
 
     // Instruction-fetch --------------------------------------------------------------------------
 
@@ -160,6 +170,7 @@ module RippleV #(
         .clk_i,
         .rst_i,
         .stall_id_i(stall_id),
+        .stall_cu_i(stall_cu),
         .interrupt_ack_o,
         // CU
         .main_enable_i,
@@ -416,7 +427,6 @@ module RippleV #(
         .data_o(reg_file_rd_data)
     );
 
-
     RegFilev2 reg_file_inst (
         .clk_i,
         .rst_i,
@@ -431,6 +441,5 @@ module RippleV #(
         .rs1_data_o(rs1_data),
         .rs2_data_o(rs2_data) 
     );
-
     
 endmodule
