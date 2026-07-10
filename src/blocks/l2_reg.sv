@@ -203,33 +203,36 @@ module l2_reg (
                 l2_rs1_data_o <= 'd0;
                 l2_rs2_data_o <= 'd0;            
             end else begin
+                // PC
                 l2_pc_out_o <= pc_4;
+                // Decoder
                 l2_rs1_o <= rs1_2;
                 l2_rs2_o <= rs2_2;
                 l2_rd_o <= rd_2;
                 l2_imm_offset_o <= imm_offset_2;
                 l2_lui_o <= lui_2;
                 l2_csr_addr_o <= csr_addr_2;
-                l2_csr_addr_from_ctrl_o <= csr_addr_from_ctrl_1; 
-                l2_csr_addr_mux_sel_o <= csr_addr_mux_sel_1; 
-                l2_csr_data_mux_sel_o <= csr_data_mux_sel_1; 
-                l2_csr_write_type_o <= csr_write_type_1; 
-                l2_csr_rw_o <= csr_rw_1; 
-                l2_csr_en_o <= csr_en_1; 
-                l2_csr_data_from_ctrl_o <= csr_data_from_ctrl_1; 
-                l2_reg_file_data_mux_sel_o <=  reg_file_data_mux_sel_1;
-        
-                l2_reg_file_write_en_o <=  reg_file_write_en_1;
-                l2_alu_opr_o <=  alu_opr_1;
-                l2_alu_a_mux_sel_o <=  alu_a_mux_sel_1;
-                l2_alu_b_mux_sel_o <=  alu_b_mux_sel_1;
-                l2_alu_en_o <= alu_en_1; 
-                l2_bl_opr_o <=  bl_opr_1;
-                l2_branch_logic_en_o <=  branch_logic_en_1;
-                l2_data_mem_transfer_type_o <=  data_mem_transfer_type_1;
-                l2_data_mem_rw_o <=  data_mem_rw_1;
-                l2_data_mem_load_type_o <= data_mem_load_type_1; 
-                l2_data_mem_en_o <=  data_mem_en_1;
+                // CU
+                l2_csr_addr_from_ctrl_o <= csr_addr_from_ctrl_i; 
+                l2_csr_addr_mux_sel_o <= csr_addr_mux_sel_i; 
+                l2_csr_data_mux_sel_o <= csr_data_mux_sel_i; 
+                l2_csr_write_type_o <= csr_write_type_i; 
+                l2_csr_rw_o <= csr_rw_i; 
+                l2_csr_en_o <= csr_en_i; 
+                l2_csr_data_from_ctrl_o <= csr_data_from_ctrl_i; 
+                l2_reg_file_data_mux_sel_o <=  reg_file_data_mux_sel_i;
+                l2_reg_file_write_en_o <=  reg_file_write_en_i;
+                l2_alu_opr_o <=  alu_opr_i;
+                l2_alu_a_mux_sel_o <=  alu_a_mux_sel_i;
+                l2_alu_b_mux_sel_o <=  alu_b_mux_sel_i;
+                l2_alu_en_o <= alu_en_i; 
+                l2_bl_opr_o <=  bl_opr_i;
+                l2_branch_logic_en_o <=  branch_logic_en_i;
+                l2_data_mem_transfer_type_o <=  data_mem_transfer_type_i;
+                l2_data_mem_rw_o <=  data_mem_rw_i;
+                l2_data_mem_load_type_o <= data_mem_load_type_i; 
+                l2_data_mem_en_o <=  data_mem_en_i;
+                // Reg file
                 l2_rs1_data_o <=  rs1_data_1;
                 l2_rs2_data_o <= rs2_data_1; 
             end

@@ -37,14 +37,26 @@ localparam WFI_STALL_WAIT = 4;
 localparam TRAP_STALL_MAX = 12;
 localparam TRAP_STAGE_TWO = 4;
 localparam TRAP_STAGE_THREE = 8;
+localparam ARRAY_MAX = 6;
 
+typedef struct packed {
+    logic [4:0] reg_addr;
+    bit active;
+} rd_monitor_t;
+
+typedef struct packed {
+    logic [4:0] reg_addr;
+    logic [2:0] rd_id;
+} rd_shift_reg_t;
 
 typedef enum bit[3:0] { STALL_AFTER_RST, STALL_OFF, STALL_FOR_CJ, STALL_FOR_UCJ, STALL_FOR_RBW, PROPAGATE_PC_JUMP, 
                         STALL_FOR_ECALL, STALL_FOR_MRET, STALL_FOR_WFI, STALL_FOR_TRAP } state_t;
-state_t current_state, next_state;
 
+state_t current_state, next_state;
+rd_monitor_t rd_prev[ARRAY_MAX];
+rd_shift_reg_t rd_shift_reg[ARRAY_MAX], rd_stale;
+logic [2:0] rd_idx;
 logic ucj_stall_ptr, mret_stall_ptr, trap_stall_ptr, ecall_stall_ptr, propagate_ptr, after_rst_ptr;
-logic [4:0] rd_prev[4], rd_stale;
 logic [3:0] stall_counter;
 instruction_type_t current_hcu_inst;
 
@@ -57,24 +69,71 @@ assign ecall_stall_ptr = ( stall_counter == TRAP_STALL_MAX );
 
 always_ff @( posedge clk_i ) begin
     if (!rst_i) begin
-        rd_prev[0] <= 'd0;
-        rd_prev[1] <= 'd0;
-        rd_prev[2] <= 'd0;
-        rd_prev[3] <= 'd0;
-        rd_stale <= 'd0;
+        rd_prev[0].reg_addr <= 'd0;
+        rd_prev[0].active <= 'd0;
+        rd_prev[1].reg_addr <= 'd0;
+        rd_prev[1].active <= 'd0;
+        rd_prev[2].reg_addr <= 'd0;
+        rd_prev[2].active <= 'd0;
+        rd_prev[3].reg_addr <= 'd0;
+        rd_prev[3].active <= 'd0;
+        rd_prev[4].reg_addr <= 'd0;
+        rd_prev[4].active <= 'd0;
+        rd_prev[5].reg_addr <= 'd0;
+        rd_prev[5].active <= 'd0;
+        
+        rd_shift_reg[0].reg_addr <= 'd0;
+        rd_shift_reg[0].rd_id <= 'd0;
+        rd_shift_reg[1].reg_addr <= 'd0;
+        rd_shift_reg[1].rd_id <= 'd0;
+        rd_shift_reg[2].reg_addr <= 'd0;
+        rd_shift_reg[2].rd_id <= 'd0;
+        rd_shift_reg[3].reg_addr <= 'd0;
+        rd_shift_reg[3].rd_id <= 'd0;
+        rd_shift_reg[4].reg_addr <= 'd0;
+        rd_shift_reg[4].rd_id <= 'd0;
+        rd_shift_reg[5].reg_addr <= 'd0;
+        rd_shift_reg[5].rd_id <= 'd0;
 
+        rd_stale.reg_addr <= 'd0;
+        rd_stale.rd_id <= 'd0;
+        
+        rd_idx <= 'd0;
         stall_counter <= 'd0;
         current_hcu_inst <= instruction_type_t'('d0);
     end else begin
         // shift rd reg
-        rd_prev[1] <= rd_prev[0];
-        rd_prev[2] <= rd_prev[1];
-        rd_prev[3] <= rd_prev[2];      
-        rd_stale <= rd_prev[3];    
+        rd_shift_reg[1].reg_addr <= rd_shift_reg[0].reg_addr;
+        rd_shift_reg[1].rd_id <= rd_shift_reg[0].rd_id;
+        rd_shift_reg[2].reg_addr <= rd_shift_reg[1].reg_addr;
+        rd_shift_reg[2].rd_id <= rd_shift_reg[1].rd_id;
+        rd_shift_reg[3].reg_addr <= rd_shift_reg[2].reg_addr;      
+        rd_shift_reg[3].rd_id <= rd_shift_reg[2].rd_id;      
+        rd_shift_reg[4].reg_addr <= rd_shift_reg[3].reg_addr;      
+        rd_shift_reg[4].rd_id <= rd_shift_reg[3].rd_id;      
+        rd_shift_reg[5].reg_addr <= rd_shift_reg[4].reg_addr;      
+        rd_shift_reg[5].rd_id <= rd_shift_reg[4].rd_id;      
+
+        rd_stale.reg_addr <= rd_shift_reg[5].reg_addr;    
+        rd_stale.rd_id <= rd_shift_reg[5].rd_id;    
         
         // Save Rd
-        if ( hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} )
-            rd_prev[0] <= rd_i;
+        if ( hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} ) begin
+            rd_prev[0].reg_addr <= rd_i;
+            
+            rd_prev[rd_idx].reg_addr <= rd_i;
+            rd_prev[rd_idx].active <= 1'b1;
+            rd_idx <= (rd_idx == ARRAY_MAX-1 ) ? 'd0 : rd_idx + 'd1;
+        end else begin
+        
+            // Toggle active bit
+            rd_prev[0].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd0 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[1].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd1 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[2].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd2 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[3].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd3 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[4].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd4 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[5].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd5 ) ? 1'b0 : rd_prev[0].active;
+        end
 
         // Save HCU instruction
         if ( current_state == STALL_OFF )
@@ -290,16 +349,21 @@ end
 // Functions ---------------------------------------------------------------------------------------------------------------
 
 function logic rs_hazard(input logic[4:0] rs_reg);
-    if ( (rs_reg == rd_prev[0] || rs_reg == rd_prev[1] || rs_reg == rd_prev[2] || rs_reg == rd_prev[3]) 
-        && (rs_reg != rd_stale) && (rs_reg != 5'd0) )
+    if ( ( (rs_reg == rd_prev[0].reg_addr && rd_prev[0].active == 1'b1) ||  (rs_reg == rd_prev[1].reg_addr && rd_prev[1].active == 1'b1) 
+        ||  (rs_reg == rd_prev[2].reg_addr && rd_prev[2].active == 1'b1) ||  (rs_reg == rd_prev[3].reg_addr && rd_prev[3].active == 1'b1) 
+        ||  (rs_reg == rd_prev[4].reg_addr && rd_prev[4].active == 1'b1) ||  (rs_reg == rd_prev[5].reg_addr && rd_prev[5].active == 1'b1) ) 
+        && (rs_reg != 5'd0) )
         return 1'b1;
     else 
         return 1'b0;
 endfunction
 
+
 function logic csr_hazard(input logic[4:0] rs_reg);
-    if ( ((rs_reg == rd_prev[0] || rs_reg == rd_prev[1] || rs_reg == rd_prev[2] || rs_reg == rd_prev[3]) 
-        && (rs_reg != rd_stale) && (rs_reg != 5'd0)) || (rs_reg == rd_i) )
+    if ( ( (rs_reg == rd_prev[0].reg_addr && rd_prev[0].active == 1'b1) ||  (rs_reg == rd_prev[1].reg_addr && rd_prev[1].active == 1'b1) 
+        ||  (rs_reg == rd_prev[2].reg_addr && rd_prev[2].active == 1'b1) ||  (rs_reg == rd_prev[3].reg_addr && rd_prev[3].active == 1'b1) 
+        ||  (rs_reg == rd_prev[4].reg_addr && rd_prev[4].active == 1'b1) ||  (rs_reg == rd_prev[5].reg_addr && rd_prev[5].active == 1'b1) ) 
+        && ( (rs_reg != 5'd0)) || (rs_reg == rd_i) )
         return 1'b1;
     else 
         return 1'b0;
