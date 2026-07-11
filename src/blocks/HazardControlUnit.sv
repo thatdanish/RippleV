@@ -118,21 +118,26 @@ always_ff @( posedge clk_i ) begin
         rd_stale.rd_id <= rd_shift_reg[5].rd_id;    
         
         // Save Rd
-        if ( hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} ) begin
-            rd_prev[0].reg_addr <= rd_i;
+        if ( hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} && current_state == STALL_OFF ) begin
+            rd_shift_reg[0].reg_addr <= rd_i;
             
             rd_prev[rd_idx].reg_addr <= rd_i;
-            rd_prev[rd_idx].active <= 1'b1;
             rd_idx <= (rd_idx == ARRAY_MAX-1 ) ? 'd0 : rd_idx + 'd1;
+
+            for ( logic[2:0] i = 0; i < ARRAY_MAX; i++ ) begin
+                if ( i == rd_idx)
+                    rd_prev[rd_idx].active <= 1'b1;        
+                else
+                    rd_prev[i].active <= ( rd_prev[i].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == i ) ? 1'b0 : rd_prev[i].active;
+            end
         end else begin
-        
             // Toggle active bit
-            rd_prev[0].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd0 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[1].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd1 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[2].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd2 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[3].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd3 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[4].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd4 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[5].active <= ( rd_prev[rd_idx].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd5 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[0].active <= ( rd_prev[0].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd0 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[1].active <= ( rd_prev[1].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd1 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[2].active <= ( rd_prev[2].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd2 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[3].active <= ( rd_prev[3].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd3 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[4].active <= ( rd_prev[4].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd4 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[5].active <= ( rd_prev[5].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd5 ) ? 1'b0 : rd_prev[0].active;
         end
 
         // Save HCU instruction
@@ -283,6 +288,7 @@ always_comb begin
             stall_id_o = 1'b1;
             stall_l1_o = 1'b1;
             stall_if_o = 1'b1;
+            stall_l2_o = 1'b1;
             
             pc_en_o = 1'b1;
             pc_sel_o = sel_pc_direct_update;
