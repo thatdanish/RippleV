@@ -26,7 +26,7 @@ module RippleV #(
     logic stall_if, stall_l1, stall_id, stall_cu, stall_l2, stall_ex, stall_l3, stall_mem, stall_l4, stall_wb, clear_l1, clear_l2;
     logic clear_l3, clear_l4, imem_enable, csr_enable, l2_csr_enable, l3_csr_enable, alu_enable, l2_alu_enable, bl_enable, l2_bl_enable;
     logic dmem_enable, l2_dmem_enable, l3_dmem_enable, reg_file_read_enable, reg_file_write_enable, l2_reg_file_write_enable, l3_reg_file_write_enable, l4_reg_file_write_enable;
-    logic bl_take_branch, interrupt_status, pc_enable, jump_valid, stall_pc_direct;
+    logic bl_take_branch, interrupt_status, pc_enable, jump_valid, stall_pc_direct, update_pc_direct;
     
     logic [31:0] riscv_instruction, l1_riscv_instruction, csr_data_from_cu, l2_csr_data_from_cu, l3_csr_data_from_cu;
     logic [31:0] rs1_data, l2_rs1_data, l3_rs1_data, rs2_data, l2_rs2_data, imm_offset, l2_imm_offset, l3_imm_offset, lui, l2_lui, l3_lui, l4_lui;
@@ -86,7 +86,7 @@ module RippleV #(
     // PC + 4
     always_ff @( posedge clk_i ) begin 
         if (!rst_i) pc_direct_update_from_execute <= 'd0;
-        else pc_direct_update_from_execute <= ( stall_pc_direct == 1'b1 ) ? pc_update_from_execute : pc_addr + 32'd4;
+        else pc_direct_update_from_execute <= ( update_pc_direct == 1'b1 ) ? pc_update_from_execute : ( (stall_pc_direct == 1'b1) ? pc_direct_update_from_execute : pc_addr + 32'd4 );
     end
 
     // Hazard Control Unit -----------------------------------------------------------------------
@@ -115,6 +115,7 @@ module RippleV #(
         .stall_mem_o(stall_mem),
         .stall_wb_o(stall_wb),
         .stall_pc_direct_o(stall_pc_direct),
+        .update_pc_direct_o(update_pc_direct),
         .hcu_hnd_stage_o(hcu_handler_stage), 
         .pc_en_o(pc_enable),
         .pc_sel_o(sel_pc)

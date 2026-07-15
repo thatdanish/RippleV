@@ -23,10 +23,12 @@ module HazardControlUnit (
     output logic stall_ex_o,
     output logic stall_mem_o,
     output logic stall_wb_o,
+    output logic update_pc_direct_o,
     output logic stall_pc_direct_o,
     output typed_pkg::hcu_handler_stages_t hcu_hnd_stage_o,
     output logic pc_en_o,
-    output typed_pkg::sel_pc_t pc_sel_o);
+    output typed_pkg::sel_pc_t pc_sel_o
+    );
 import typed_pkg::*;
 
 localparam AFTER_RST_STALL_MAX = 3;
@@ -38,6 +40,7 @@ localparam TRAP_STALL_MAX = 12;
 localparam TRAP_STAGE_TWO = 4;
 localparam TRAP_STAGE_THREE = 8;
 localparam ARRAY_MAX = 6;
+localparam SHIFT_ARRAY_MAX = 8;
 
 typedef struct packed {
     logic [4:0] reg_addr;
@@ -49,12 +52,12 @@ typedef struct packed {
     logic [2:0] rd_id;
 } rd_shift_reg_t;
 
-typedef enum bit[3:0] { STALL_AFTER_RST, STALL_OFF, STALL_FOR_CJ, STALL_FOR_UCJ, STALL_FOR_RBW, PROPAGATE_PC_JUMP, 
+typedef enum bit[3:0] { STALL_AFTER_RST, STALL_OFF, STALL_FOR_CJ, STALL_FOR_UCJ, STALL_FOR_RBW_LS_CSR, PROPAGATE_PC_JUMP, 
                         STALL_FOR_ECALL, STALL_FOR_MRET, STALL_FOR_WFI, STALL_FOR_TRAP } state_t;
 
 state_t current_state, next_state;
 rd_monitor_t rd_prev[ARRAY_MAX];
-rd_shift_reg_t rd_shift_reg[ARRAY_MAX], rd_stale;
+rd_shift_reg_t rd_shift_reg[SHIFT_ARRAY_MAX], rd_stale;
 logic [2:0] rd_idx;
 logic ucj_stall_ptr, mret_stall_ptr, trap_stall_ptr, ecall_stall_ptr, propagate_ptr, after_rst_ptr;
 logic [3:0] stall_counter;
@@ -94,6 +97,10 @@ always_ff @( posedge clk_i ) begin
         rd_shift_reg[4].rd_id <= 'd0;
         rd_shift_reg[5].reg_addr <= 'd0;
         rd_shift_reg[5].rd_id <= 'd0;
+        rd_shift_reg[6].reg_addr <= 'd0;
+        rd_shift_reg[6].rd_id <= 'd0;
+        rd_shift_reg[7].reg_addr <= 'd0;
+        rd_shift_reg[7].rd_id <= 'd0;
 
         rd_stale.reg_addr <= 'd0;
         rd_stale.rd_id <= 'd0;
@@ -113,16 +120,23 @@ always_ff @( posedge clk_i ) begin
         rd_shift_reg[4].rd_id <= rd_shift_reg[3].rd_id;      
         rd_shift_reg[5].reg_addr <= rd_shift_reg[4].reg_addr;      
         rd_shift_reg[5].rd_id <= rd_shift_reg[4].rd_id;      
+        rd_shift_reg[6].reg_addr <= rd_shift_reg[5].reg_addr;      
+        rd_shift_reg[6].rd_id <= rd_shift_reg[5].rd_id;      
+        rd_shift_reg[7].reg_addr <= rd_shift_reg[6].reg_addr;      
+        rd_shift_reg[7].rd_id <= rd_shift_reg[6].rd_id;      
 
-        rd_stale.reg_addr <= rd_shift_reg[5].reg_addr;    
-        rd_stale.rd_id <= rd_shift_reg[5].rd_id;    
+        rd_stale.reg_addr <= rd_shift_reg[1].reg_addr;    
+        rd_stale.rd_id <= rd_shift_reg[1].rd_id;    
         
         // Save Rd
         if ( hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} && current_state == STALL_OFF ) begin
-            rd_shift_reg[0].reg_addr <= rd_i;
-            
-            rd_prev[rd_idx].reg_addr <= rd_i;
+            // Update rd idx
             rd_idx <= (rd_idx == ARRAY_MAX-1 ) ? 'd0 : rd_idx + 'd1;
+            // Feed initial shift reg
+            rd_shift_reg[0].reg_addr <= rd_i;
+            rd_shift_reg[0].rd_id <= rd_idx;
+            // Monitor rd
+            rd_prev[rd_idx].reg_addr <= rd_i;
 
             for ( logic[2:0] i = 0; i < ARRAY_MAX; i++ ) begin
                 if ( i == rd_idx)
@@ -133,11 +147,11 @@ always_ff @( posedge clk_i ) begin
         end else begin
             // Toggle active bit
             rd_prev[0].active <= ( rd_prev[0].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd0 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[1].active <= ( rd_prev[1].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd1 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[2].active <= ( rd_prev[2].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd2 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[3].active <= ( rd_prev[3].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd3 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[4].active <= ( rd_prev[4].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd4 ) ? 1'b0 : rd_prev[0].active;
-            rd_prev[5].active <= ( rd_prev[5].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd5 ) ? 1'b0 : rd_prev[0].active;
+            rd_prev[1].active <= ( rd_prev[1].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd1 ) ? 1'b0 : rd_prev[1].active;
+            rd_prev[2].active <= ( rd_prev[2].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd2 ) ? 1'b0 : rd_prev[2].active;
+            rd_prev[3].active <= ( rd_prev[3].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd3 ) ? 1'b0 : rd_prev[3].active;
+            rd_prev[4].active <= ( rd_prev[4].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd4 ) ? 1'b0 : rd_prev[4].active;
+            rd_prev[5].active <= ( rd_prev[5].reg_addr == rd_stale.reg_addr && rd_stale.rd_id == 'd5 ) ? 1'b0 : rd_prev[5].active;
         end
 
         // Save HCU instruction
@@ -181,17 +195,17 @@ always_comb begin
                 next_state = STALL_FOR_CJ;
             else begin
                 case (hcu_inst_type_i)
-                    HCU_I_type: begin
-                        if (rs_hazard(rs1_i)) next_state = STALL_FOR_RBW; // stall ID & IF  
+                    HCU_I_type, HCU_LOAD_type : begin
+                        if (rs_hazard(rs1_i)) next_state = STALL_FOR_RBW_LS_CSR; // stall ID & IF  
                     end
-                    HCU_R_type: begin
-                        if (rs_hazard(rs1_i) || rs_hazard(rs2_i)) next_state = STALL_FOR_RBW; // stall ID & IF
+                    HCU_R_type, HCU_STORE_type : begin
+                        if (rs_hazard(rs1_i) || rs_hazard(rs2_i)) next_state = STALL_FOR_RBW_LS_CSR; // stall ID & IF
                     end
                     HCU_UCJ_type: begin
                         next_state =  STALL_FOR_UCJ;
                     end
                     HCU_CSR_type: begin
-                        if (csr_hazard(rs1_i)) next_state = STALL_FOR_RBW; // stall ID & IF
+                        if (csr_hazard(rs1_i)) next_state = STALL_FOR_RBW_LS_CSR; // stall ID & IF
                     end
                     HCU_ecall: begin
                         next_state = STALL_FOR_ECALL;
@@ -209,17 +223,17 @@ always_comb begin
                 endcase
             end
         end
-        STALL_FOR_RBW: begin
+        STALL_FOR_RBW_LS_CSR: begin
             case (current_hcu_inst)
-                HCU_I_type: begin 
-                    if ( rs_hazard(rs1_i) ) next_state = STALL_FOR_RBW;
+                HCU_I_type, HCU_LOAD_type: begin 
+                    if ( rs_hazard(rs1_i) ) next_state = STALL_FOR_RBW_LS_CSR;
                     else next_state = STALL_OFF;
                 end
-                HCU_R_type: begin
-                    if ( rs_hazard(rs1_i) || rs_hazard(rs2_i) ) next_state = STALL_FOR_RBW;
+                HCU_R_type, HCU_STORE_type: begin
+                    if ( rs_hazard(rs1_i) || rs_hazard(rs2_i) ) next_state = STALL_FOR_RBW_LS_CSR;
                     else next_state = STALL_OFF;
                 end
-                default: next_state = STALL_FOR_RBW;
+                default: next_state = STALL_FOR_RBW_LS_CSR;
             endcase
         end
         STALL_FOR_UCJ: begin
@@ -250,6 +264,7 @@ always_comb begin
     stall_mem_o = 1'b0;
     stall_wb_o = 1'b0;
     stall_pc_direct_o = 1'b0;
+    update_pc_direct_o = 1'b0;
     stall_cu_o = 1'b0;
     pc_en_o = 1'b0;
     pc_sel_o = sel_pc_t'('d0);
@@ -278,13 +293,14 @@ always_comb begin
             stall_l1_o = 1'b1;
             stall_id_o = 1'b1;
             clear_l2_o = ( stall_counter > 'd2 ) ? 1'b1 : 1'b0;
-            stall_pc_direct_o = 1'b1;
+            update_pc_direct_o = 1'b1;
 
             pc_en_o = 1'b1;
             pc_sel_o = sel_pc_update;
         end
-        STALL_FOR_RBW: begin
+        STALL_FOR_RBW_LS_CSR: begin
             // I & R types
+            stall_pc_direct_o = 1'b1;
             stall_id_o = 1'b1;
             stall_l1_o = 1'b1;
             stall_if_o = 1'b1;
