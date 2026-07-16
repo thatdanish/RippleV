@@ -31,7 +31,7 @@ module HazardControlUnit (
     );
 import typed_pkg::*;
 
-localparam AFTER_RST_STALL_MAX = 3;
+localparam AFTER_RST_STALL_MAX = 1;
 localparam UCJ_STALL_MAX = 3;
 localparam PROPAGATE_MAX = 3;
 localparam MRET_STALL_MAX = 4;
