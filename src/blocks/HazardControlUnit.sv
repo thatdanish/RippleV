@@ -34,6 +34,7 @@ import typed_pkg::*;
 localparam AFTER_RST_STALL_MAX = 1;
 localparam UCJ_STALL_MAX = 3;
 localparam PROPAGATE_MAX = 3;
+localparam PROPAGATE_MAX_2 = 1;
 localparam MRET_STALL_MAX = 4;
 localparam WFI_STALL_WAIT = 4;
 localparam TRAP_STALL_MAX = 12;
@@ -53,18 +54,19 @@ typedef struct packed {
 } rd_shift_reg_t;
 
 typedef enum bit[3:0] { STALL_AFTER_RST, STALL_OFF, STALL_FOR_CJ, STALL_FOR_UCJ, STALL_FOR_RBW_LS_CSR, PROPAGATE_PC_JUMP, 
-                        STALL_FOR_ECALL, STALL_FOR_MRET, STALL_FOR_WFI, STALL_FOR_TRAP } state_t;
+                        STALL_FOR_ECALL, STALL_FOR_MRET, STALL_FOR_WFI, STALL_FOR_TRAP, PROPAGATE_PC } state_t;
 
 state_t current_state, next_state;
 rd_monitor_t rd_prev[ARRAY_MAX];
 rd_shift_reg_t rd_shift_reg[SHIFT_ARRAY_MAX], rd_stale;
 logic [2:0] rd_idx;
-logic ucj_stall_ptr, mret_stall_ptr, trap_stall_ptr, ecall_stall_ptr, propagate_ptr, after_rst_ptr;
+logic ucj_stall_ptr, mret_stall_ptr, trap_stall_ptr, ecall_stall_ptr, propagate_ptr, propagate_ptr_2, after_rst_ptr;
 logic [3:0] stall_counter;
 instruction_type_t current_hcu_inst;
 
 assign after_rst_ptr = ( stall_counter == AFTER_RST_STALL_MAX );
 assign ucj_stall_ptr = ( stall_counter == UCJ_STALL_MAX );
+assign propagate_ptr_2 = ( stall_counter == PROPAGATE_MAX_2 );
 assign propagate_ptr = ( stall_counter == PROPAGATE_MAX );
 assign mret_stall_ptr = ( stall_counter == MRET_STALL_MAX );
 assign trap_stall_ptr = ( stall_counter == TRAP_STALL_MAX );
@@ -125,8 +127,8 @@ always_ff @( posedge clk_i ) begin
         rd_shift_reg[7].reg_addr <= rd_shift_reg[6].reg_addr;      
         rd_shift_reg[7].rd_id <= rd_shift_reg[6].rd_id;      
 
-        rd_stale.reg_addr <= rd_shift_reg[1].reg_addr;    
-        rd_stale.rd_id <= rd_shift_reg[1].rd_id;    
+        rd_stale.reg_addr <= rd_shift_reg[2].reg_addr;    
+        rd_stale.rd_id <= rd_shift_reg[2].rd_id;    
         
         // Save Rd
         if ( hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} && current_state == STALL_OFF ) begin
@@ -162,6 +164,7 @@ always_ff @( posedge clk_i ) begin
         case (current_state)
             STALL_AFTER_RST :  stall_counter <= ( stall_counter == AFTER_RST_STALL_MAX ) ? 'd0 : stall_counter + 'd1;
             STALL_FOR_UCJ :  stall_counter <= ( stall_counter == UCJ_STALL_MAX ) ? 'd0 : stall_counter + 'd1;
+            PROPAGATE_PC :  stall_counter <= ( stall_counter == PROPAGATE_MAX_2 ) ? 'd0 : stall_counter + 'd1;
             PROPAGATE_PC_JUMP :  stall_counter <= ( stall_counter == PROPAGATE_MAX ) ? 'd0 : stall_counter + 'd1;
             STALL_FOR_ECALL :  stall_counter <= ( stall_counter == TRAP_STALL_MAX ) ? 'd0 : stall_counter + 'd1;
             STALL_FOR_MRET : stall_counter <= ( stall_counter == MRET_STALL_MAX ) ? 'd0 : stall_counter + 'd1;
@@ -227,11 +230,11 @@ always_comb begin
             case (current_hcu_inst)
                 HCU_I_type, HCU_LOAD_type: begin 
                     if ( rs_hazard(rs1_i) ) next_state = STALL_FOR_RBW_LS_CSR;
-                    else next_state = STALL_OFF;
+                    else next_state = PROPAGATE_PC;
                 end
                 HCU_R_type, HCU_STORE_type: begin
                     if ( rs_hazard(rs1_i) || rs_hazard(rs2_i) ) next_state = STALL_FOR_RBW_LS_CSR;
-                    else next_state = STALL_OFF;
+                    else next_state = PROPAGATE_PC;
                 end
                 default: next_state = STALL_FOR_RBW_LS_CSR;
             endcase
@@ -239,6 +242,10 @@ always_comb begin
         STALL_FOR_UCJ: begin
             if ( ucj_stall_ptr == 1'b1 ) next_state = PROPAGATE_PC_JUMP;
             else next_state = STALL_FOR_UCJ;
+        end
+        PROPAGATE_PC: begin
+            if ( propagate_ptr_2 == 1'b1 ) next_state = STALL_OFF;
+            else next_state = PROPAGATE_PC;
         end
         PROPAGATE_PC_JUMP: begin
             if ( propagate_ptr == 1'b1 ) next_state = STALL_OFF;
@@ -281,9 +288,13 @@ always_comb begin
             pc_en_o = 1'b1;
             pc_sel_o = sel_pc_direct_update;
         end
+        PROPAGATE_PC : begin  
+            stall_l2_o = 1'b1;    
+            pc_en_o = 1'b1;
+            pc_sel_o = sel_pc_direct_update;
+        end
         PROPAGATE_PC_JUMP : begin
             stall_id_o = ( stall_counter > 'd1 ) ? 1'b0 : 1'b1;
-            stall_pc_direct_o = 1'b1;
       
             pc_en_o = 1'b1;
             pc_sel_o = sel_pc_direct_update;

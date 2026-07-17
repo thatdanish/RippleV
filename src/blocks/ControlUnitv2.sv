@@ -418,7 +418,7 @@ module ControlUnitv2 (
             end
             // Jumping PC to mtvec : handled by HCU
         end else begin
-            inst_mem_en_o = 1'b0;
+            inst_mem_en_o = ( rst_i == 1'b1 ) ? 1'b1 : 1'b0;
         end
     end
 endmodule
