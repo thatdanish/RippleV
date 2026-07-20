@@ -2,6 +2,11 @@
 // Pipelined RippleV Core.
 // 
 
+// verilog_format: off
+`timescale 1ns / 1ns
+`default_nettype none
+// verilog_format: on
+
 
 module RippleV #(
     parameter        ADDR_WIDTH         = 32,

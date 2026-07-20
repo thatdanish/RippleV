@@ -1,4 +1,7 @@
-`timescale 1ns / 1ns `default_nettype none
+// verilog_format: off
+`timescale 1ns / 1ns
+`default_nettype none
+// verilog_format: on
 
 module Decoderv2 (
     input                                       clk_i,

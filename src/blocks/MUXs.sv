@@ -1,4 +1,7 @@
-`timescale 1ns / 1ns `default_nettype none
+// verilog_format: off
+`timescale 1ns / 1ns
+`default_nettype none
+// verilog_format: on
 
 module mux_reg_file_addr (
     input  typed_pkg::sel_reg_file_addr_t       sel_i,

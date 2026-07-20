@@ -1,4 +1,7 @@
-`timescale 1ns / 1ns `default_nettype none
+// verilog_format: off
+`timescale 1ns / 1ns
+`default_nettype none
+// verilog_format: on
 
 module InstMemv2 #(
     parameter string FILE       = "../../../tc_data/sample/sample_instructions.hex",

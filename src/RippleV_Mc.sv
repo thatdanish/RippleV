@@ -2,7 +2,10 @@
 //  Multi-Cycle RippleV Core.
 // 
 
-`timescale 1ns / 1ns `default_nettype none
+// verilog_format: off
+`timescale 1ns / 1ns
+`default_nettype none
+// verilog_format: on
 
 module RippleV_Mc #(
     parameter        ADDR_WIDTH         = 32,
