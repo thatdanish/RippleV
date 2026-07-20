@@ -1,7 +1,8 @@
-import os 
-import sys 
+import os
+import sys
 import random
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import cocotb
@@ -20,11 +21,14 @@ FILE = "../../../tc_data/sample/sample_instructions.hex"
 
 # Initialize inputs
 
+
 async def init_inputs(dut):
     dut.en_i.value = 0
     dut.addr_i.value = 0
 
+
 # Tests
+
 
 @cocotb.test()
 async def smoke_test(dut):
@@ -40,12 +44,12 @@ async def smoke_test(dut):
     with open(FILE, "r") as file:
         for line in file:
             data.append(hex(int(line.strip(), 16)))
-    
+
     # Tests
     for _ in range(N_TESTS):
         await RisingEdge(dut.clk_i)
         dut.en_i.value = 1
-        addr = random.randint(0, MAX_ADDR_RANGE-1)
+        addr = random.randint(0, MAX_ADDR_RANGE - 1)
         dut.addr_i.value = addr
 
         await NextClockCycle(dut)
@@ -54,8 +58,10 @@ async def smoke_test(dut):
         try:
             assert data[addr >> 2] == hex(LogicArray(dut.data_o.value, 32))
         except:
-            raise AssertionError(f"Invalid read --> expected : {data[addr >> 2]}, got {dut.data_o.value}")
-        
+            raise AssertionError(
+                f"Invalid read --> expected : {data[addr >> 2]}, got {dut.data_o.value}"
+            )
+
     await ClockCycles(dut.clk_i, 10)
 
 
@@ -71,16 +77,17 @@ def test_runner_inst_mem():
         hdl_toplevel="inst_mem",
         waves=waves,
         clean=True,
-        parameters={"FILE":f'"{FILE}"'},  
-        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
+        parameters={"FILE": f'"{FILE}"'},
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"],
     )
 
     runner.test(
         hdl_toplevel="inst_mem",
         test_module="tests_inst_mem",
-        parameters={"FILE":f'"{FILE}"'},  
-        waves=waves
+        parameters={"FILE": f'"{FILE}"'},
+        waves=waves,
     )
+
 
 if __name__ == "__main__":
     test_runner_inst_mem()

@@ -1,33 +1,35 @@
 import os
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent))
 from tests_decoder import *
 
 from cocotb_tools.runner import get_runner
 
+
 def test_runner_decoder():
-    sim = os.getenv("SIM", "verilator")    
+    sim = os.getenv("SIM", "verilator")
     waves = os.getenv("WAVES", 1)
 
-    sources = ["../../src/Opcodes_pkg.sv", "../../src/typed_pkg.sv","../../src/blocks/decoder.sv"]
-    
+    sources = [
+        "../../src/Opcodes_pkg.sv",
+        "../../src/typed_pkg.sv",
+        "../../src/blocks/decoder.sv",
+    ]
+
     runner = get_runner(sim)
 
     runner.build(
         sources=sources,
         hdl_toplevel="decoder",
-        waves=waves, 
+        waves=waves,
         clean=True,
-        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
-
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"],
     )
 
-    runner.test(
-        hdl_toplevel="decoder",
-        test_module="test_runner_decoder",
-        waves=waves
-    )
+    runner.test(hdl_toplevel="decoder", test_module="test_runner_decoder", waves=waves)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     test_runner_decoder()

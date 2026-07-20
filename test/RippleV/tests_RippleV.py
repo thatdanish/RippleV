@@ -14,10 +14,10 @@ from utils.simulation import NextClockCycle, ResetTrigger, clk_
 
 MAX_CLKS = 8000
 N_TESTS = 1
-TO_HOST = 0x01FC>>2
-TO_HOST_RVT = 0x0>>2
-TO_HOST_RVT_2 = 0x40>>2
-RESULT = 0x0100>>2
+TO_HOST = 0x01FC >> 2
+TO_HOST_RVT = 0x0 >> 2
+TO_HOST_RVT_2 = 0x40 >> 2
+RESULT = 0x0100 >> 2
 RST_HND = 0x0000
 INT_HND = 0x3FF8
 SUCCESS = 0xCAFECAFE
@@ -25,18 +25,26 @@ SUCCESS_RVT = 0x01
 
 # Initialize Inputs
 
+
 async def init_inputs(dut):
     dut.ext_interrupt_i.value = 0
     dut.main_enable_i.value = 0
 
+
 # Monitor TO HOST
+
 
 async def monitor(dut):
     while True:
         await NextClockCycle(dut)
 
-        if (dut.mem_inst.data_mem_inst.dmem[TO_HOST].value == SUCCESS) or (dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT].value == SUCCESS_RVT) or (dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT_2].value == SUCCESS_RVT):
+        if (
+            (dut.mem_inst.data_mem_inst.dmem[TO_HOST].value == SUCCESS)
+            or (dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT].value == SUCCESS_RVT)
+            or (dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT_2].value == SUCCESS_RVT)
+        ):
             cocotb.pass_test()
+
 
 @cocotb.test()
 async def run_test(dut):
@@ -47,19 +55,23 @@ async def run_test(dut):
     await ResetTrigger(dut)
 
     await NextClockCycle(dut)
-    
+
     # Check Reset Handler Address
-    try: 
-        assert dut.pc_addr.value ==RST_HND
+    try:
+        assert dut.pc_addr.value == RST_HND
     except:
-        raise AssertionError(f"Invalid RST_HND : expected : {RST_HND}, got : {dut.pc_addr.value}")
+        raise AssertionError(
+            f"Invalid RST_HND : expected : {RST_HND}, got : {dut.pc_addr.value}"
+        )
 
     # Start Test
     dut.main_enable_i.value = 1
-        
+
     await clk
-    
+
     # If not passed, then fail
-    raise AssertionError(f"Incorrect TO_HOST ({hex(TO_HOST)}) read --> exp : {hex(SUCCESS)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST].value)}, OR\n"
-                         f"Incorrect TO_HOST_RVT ({hex(TO_HOST_RVT)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT].value)}, OR \n"
-                         f"Incorrect TO_HOST_RVT_2 ({hex(TO_HOST_RVT_2)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT_2].value)}")
+    raise AssertionError(
+        f"Incorrect TO_HOST ({hex(TO_HOST)}) read --> exp : {hex(SUCCESS)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST].value)}, OR\n"
+        f"Incorrect TO_HOST_RVT ({hex(TO_HOST_RVT)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT].value)}, OR \n"
+        f"Incorrect TO_HOST_RVT_2 ({hex(TO_HOST_RVT_2)}) read --> exp : {hex(SUCCESS_RVT)}, got : {hex(dut.mem_inst.data_mem_inst.dmem[TO_HOST_RVT_2].value)}"
+    )

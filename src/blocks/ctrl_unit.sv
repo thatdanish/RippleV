@@ -1,738 +1,731 @@
-`timescale 1ns/1ns
-`default_nettype none
+`timescale 1ns / 1ns `default_nettype none
 
-module ctrl_unit(
+module ctrl_unit (
     // External
-    input clk_i,
-    input rst_i,
-    input main_enable_i, 
-    output logic interrupt_ack_o,
+    input                                        clk_i,
+    input                                        rst_i,
+    input                                        main_enable_i,
+    output logic                                 interrupt_ack_o,
     // Decoder
-    input typed_pkg::ctrl_inst_t instruction_i,
+    input  typed_pkg::ctrl_inst_t                instruction_i,
     // PC
-    output typed_pkg::sel_pc_t pc_mux_sel_o, 
-    output logic pc_en_o,
+    output typed_pkg::sel_pc_t                   pc_mux_sel_o,
+    output logic                                 pc_en_o,
     // CSR
-    input interrupt_i,
-    output typed_pkg::csr_addr_t csr_addr_from_ctrl_o, 
-    output typed_pkg::sel_csr_addr_t csr_addr_mux_sel_o, 
-    output typed_pkg::sel_csr_data_t csr_data_mux_sel_o, 
-    output typed_pkg::write_t csr_write_type_o, 
-    output typed_pkg::rw_t csr_rw_o, 
-    output logic csr_en_o, 
-    output logic [31:0] csr_data_from_ctrl_o, 
+    input                                        interrupt_i,
+    output typed_pkg::csr_addr_t                 csr_addr_from_ctrl_o,
+    output typed_pkg::sel_csr_addr_t             csr_addr_mux_sel_o,
+    output typed_pkg::sel_csr_data_t             csr_data_mux_sel_o,
+    output typed_pkg::write_t                    csr_write_type_o,
+    output typed_pkg::rw_t                       csr_rw_o,
+    output logic                                 csr_en_o,
+    output logic                          [31:0] csr_data_from_ctrl_o,
     // Instruction Memory
-    output inst_mem_en_o,
+    output                                       inst_mem_en_o,
     // Reg-file
-    output typed_pkg::sel_reg_file_addr_t reg_file_addr_mux_sel_o,
-    output typed_pkg::sel_reg_file_data_t reg_file_data_mux_sel_o,
-    output typed_pkg::rw_t reg_file_rw_o,
-    output logic reg_file_en_o,
+    output typed_pkg::sel_reg_file_addr_t        reg_file_addr_mux_sel_o,
+    output typed_pkg::sel_reg_file_data_t        reg_file_data_mux_sel_o,
+    output typed_pkg::rw_t                       reg_file_rw_o,
+    output logic                                 reg_file_en_o,
     // ALU
-    output typed_pkg::alu_opr_t alu_opr_o,
-    output typed_pkg::sel_alu_a_t alu_a_mux_sel_o,
-    output typed_pkg::sel_alu_b_t alu_b_mux_sel_o,
-    input take_branch_i, 
-    output logic alu_en_o, 
+    output typed_pkg::alu_opr_t                  alu_opr_o,
+    output typed_pkg::sel_alu_a_t                alu_a_mux_sel_o,
+    output typed_pkg::sel_alu_b_t                alu_b_mux_sel_o,
+    input                                        take_branch_i,
+    output logic                                 alu_en_o,
     // Data Memory
-    output typed_pkg::transfer_t data_mem_transfer_type_o,
-    output typed_pkg::rw_t data_mem_rw_o,
-    output typed_pkg::load_t data_mem_load_type_o, 
-    output logic data_mem_en_o
+    output typed_pkg::transfer_t                 data_mem_transfer_type_o,
+    output typed_pkg::rw_t                       data_mem_rw_o,
+    output typed_pkg::load_t                     data_mem_load_type_o,
+    output logic                                 data_mem_en_o
 );
 
-    import typed_pkg::*;
+  import typed_pkg::*;
 
-    typedef enum bit[4:0] { IDLE, JUMP_PC, INST_START, READ_RS1, READ_RS2, ALU_COMPUTE, WRITE_RD,
-                            LOAD_FROM_DATA_MEM, STORE_DATA_MEM, BUFF_1,READ_CSR, WRITE_CSR, NOP,
-                            WRITE_MCAUSE, WRITE_MEPC, READ_MTVEC_MEPC, WFI_STALL, JUMP_OR_NOT} state_t;
+  typedef enum bit [4:0] {
+    IDLE,
+    JUMP_PC,
+    INST_START,
+    READ_RS1,
+    READ_RS2,
+    ALU_COMPUTE,
+    WRITE_RD,
+    LOAD_FROM_DATA_MEM,
+    STORE_DATA_MEM,
+    BUFF_1,
+    READ_CSR,
+    WRITE_CSR,
+    NOP,
+    WRITE_MCAUSE,
+    WRITE_MEPC,
+    READ_MTVEC_MEPC,
+    WFI_STALL,
+    JUMP_OR_NOT
+  } state_t;
 
-    state_t current_state, next_state;
-    logic take_branch_delayed;                        
-    ctrl_inst_t current_instruction;                    
+  state_t current_state, next_state;
+  logic       take_branch_delayed;
+  ctrl_inst_t current_instruction;
 
-    always_ff @( posedge clk_i ) begin : StateUpdateBlock
-        if (!rst_i) begin
-            current_state <= IDLE;
-            take_branch_delayed <= 1'b0;
-            current_instruction <= ctrl_inst_t'('d0);
-        end else begin
-            current_state <= next_state;
-            take_branch_delayed <= take_branch_i;
-            if (current_state == INST_START) current_instruction <= instruction_i;
-            else current_instruction <= current_instruction;
-        end
+  always_ff @(posedge clk_i) begin : StateUpdateBlock
+    if (!rst_i) begin
+      current_state       <= IDLE;
+      take_branch_delayed <= 1'b0;
+      current_instruction <= ctrl_inst_t'('d0);
+    end else begin
+      current_state       <= next_state;
+      take_branch_delayed <= take_branch_i;
+      if (current_state == INST_START) current_instruction <= instruction_i;
+      else current_instruction <= current_instruction;
     end
+  end
 
-    always_comb begin : NextStateComputeBlock
+  always_comb begin : NextStateComputeBlock
+    next_state = IDLE;
+    case (current_state)
+      IDLE: begin
+        if (interrupt_i == 1'b0) next_state = (main_enable_i == 1'b1) ? BUFF_1 : IDLE;
+        else next_state = WRITE_MCAUSE;
+      end
+      BUFF_1: next_state = INST_START;
+      INST_START: begin
+        unique case (instruction_i)
+          CTRL_ADDI:   next_state = READ_RS1;
+          CTRL_SLTI:   next_state = READ_RS1;
+          CTRL_SLTIU:  next_state = READ_RS1;
+          CTRL_ANDI:   next_state = READ_RS1;
+          CTRL_ORI:    next_state = READ_RS1;
+          CTRL_XORI:   next_state = READ_RS1;
+          CTRL_SLLI:   next_state = READ_RS1;
+          CTRL_SRLI:   next_state = READ_RS1;
+          CTRL_SRAI:   next_state = READ_RS1;
+          CTRL_LUI:    next_state = WRITE_RD;
+          CTRL_AUIPC:  next_state = ALU_COMPUTE;
+          CTRL_ADD:    next_state = READ_RS2;
+          CTRL_SUB:    next_state = READ_RS2;
+          CTRL_SLTU:   next_state = READ_RS2;
+          CTRL_SLT:    next_state = READ_RS2;
+          CTRL_AND:    next_state = READ_RS2;
+          CTRL_OR:     next_state = READ_RS2;
+          CTRL_XOR:    next_state = READ_RS2;
+          CTRL_SLL:    next_state = READ_RS2;
+          CTRL_SRL:    next_state = READ_RS2;
+          CTRL_SRA:    next_state = READ_RS2;
+          CTRL_JAL:    next_state = WRITE_RD;
+          // JALR --> READ_RS1 --> JUMP_PC ( + WRITE_RD compute jump address & WRITE RD BEFORE UPDATING) --> IDLE
+          CTRL_JALR:   next_state = READ_RS1;
+          // Conditional Branch --> ALU_COMPUTE-1(evaluate br condition)
+          // JUMP_OR_NOT --> If branch valid --> ALU_COMPUTE-2 else --> IDLE
+          // ALU_COMPUTE-2 (evaluate jump address) --> JUMP_PC --> IDLE
+          CTRL_BEQ:    next_state = READ_RS2;
+          CTRL_BNE:    next_state = READ_RS2;
+          CTRL_BGE:    next_state = READ_RS2;
+          CTRL_BLT:    next_state = READ_RS2;
+          CTRL_BLTU:   next_state = READ_RS2;
+          CTRL_BGEU:   next_state = READ_RS2;
+          CTRL_LW:     next_state = READ_RS1;
+          CTRL_LH:     next_state = READ_RS1;
+          CTRL_LHU:    next_state = READ_RS1;
+          CTRL_LB:     next_state = READ_RS1;
+          CTRL_LBU:    next_state = READ_RS1;
+          CTRL_SW:     next_state = READ_RS1;
+          CTRL_SH:     next_state = READ_RS1;
+          CTRL_SB:     next_state = READ_RS1;
+          CTRL_MUL:    next_state = READ_RS2;
+          CTRL_MULH:   next_state = READ_RS2;
+          CTRL_MULHU:  next_state = READ_RS2;
+          CTRL_MULHSU: next_state = READ_RS2;
+          CTRL_DIV:    next_state = READ_RS2;
+          CTRL_DIVU:   next_state = READ_RS2;
+          CTRL_REM:    next_state = READ_RS2;
+          CTRL_REMU:   next_state = READ_RS2;
+          CTRL_CSRRW:  next_state = READ_CSR;
+          CTRL_CSRRS:  next_state = READ_CSR;
+          CTRL_CSRRC:  next_state = READ_CSR;
+          CTRL_CSRRWI: next_state = READ_CSR;
+          CTRL_CSRRSI: next_state = READ_CSR;
+          CTRL_CSRRCI: next_state = READ_CSR;
+          CTRL_FENCE:  next_state = NOP;
+          CTRL_ECALL:  next_state = WRITE_MCAUSE;
+          CTRL_MRET:   next_state = READ_MTVEC_MEPC;
+          CTRL_WFI:    next_state = WFI_STALL;
+          default:     next_state = WRITE_MCAUSE;  // illegal instruction exception
+        endcase
+      end
+      READ_RS2: begin
+        next_state = READ_RS1;
+      end
+      READ_RS1: begin
+        if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI}) next_state = WRITE_CSR;
+        else next_state = ALU_COMPUTE;
+      end
+      ALU_COMPUTE: begin
+        if (current_instruction inside {CTRL_LW, CTRL_LH, CTRL_LHU, CTRL_LB, CTRL_LBU}) next_state = LOAD_FROM_DATA_MEM;
+        else if (current_instruction inside {CTRL_SW, CTRL_SH, CTRL_SB}) next_state = STORE_DATA_MEM;
+        else if (current_instruction inside {CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE}) begin
+          if (take_branch_delayed == 1'b1) begin
+            next_state = JUMP_PC;
+          end else next_state = JUMP_OR_NOT;
+        end else if (current_instruction inside {CTRL_JAL, CTRL_JALR}) next_state = JUMP_PC;
+        else next_state = WRITE_RD;
+      end
+      WRITE_RD: begin
+        if (current_instruction == CTRL_JAL) next_state = ALU_COMPUTE;
+        else if (current_instruction == CTRL_JALR) next_state = IDLE;
+        else if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI}) next_state = READ_RS1;
+        else next_state = IDLE;
+      end
+      LOAD_FROM_DATA_MEM: begin
+        next_state = WRITE_RD;
+      end
+      STORE_DATA_MEM: begin
         next_state = IDLE;
-        case (current_state)
-            IDLE: begin
-                if (interrupt_i == 1'b0) next_state = (main_enable_i == 1'b1) ? BUFF_1 : IDLE; 
-                else next_state = WRITE_MCAUSE;
+      end
+      JUMP_OR_NOT: begin
+        if (take_branch_i == 1'b1) next_state = ALU_COMPUTE;
+        else next_state = IDLE;
+      end
+      JUMP_PC: begin
+        next_state = IDLE;
+      end
+      READ_CSR: begin
+        next_state = WRITE_RD;
+      end
+      WRITE_CSR: begin
+        next_state = IDLE;
+      end
+      NOP: begin
+        next_state = IDLE;
+      end
+      WRITE_MCAUSE: begin
+        next_state = WRITE_MEPC;
+      end
+      WRITE_MEPC: begin
+        next_state = (interrupt_i == 1'b1) ? JUMP_PC : READ_MTVEC_MEPC;
+      end
+      READ_MTVEC_MEPC: begin
+        next_state = JUMP_PC;
+      end
+      WFI_STALL: begin
+        // Core hang
+        next_state = WFI_STALL;
+      end
+      default: begin
+        // UGLY : Fill default condition
+      end
+    endcase
+
+  end
+
+  always_comb begin : OutputBlock
+    // External
+    interrupt_ack_o          = 1'b0;
+    // CSR  
+    csr_rw_o                 = rw_t'(1'b0);
+    csr_addr_from_ctrl_o     = csr_addr_t'('d0);
+    csr_addr_mux_sel_o       = sel_csr_addr_t'('d0);
+    csr_data_mux_sel_o       = sel_csr_data_t'('d0);
+    csr_write_type_o         = write_t'('d0);
+    csr_en_o                 = 1'b0;
+    csr_data_from_ctrl_o     = 'd0;
+    // PC
+    pc_mux_sel_o             = sel_pc_t'('d0);
+    pc_en_o                  = 1'b0;
+    // Inst-mem
+    inst_mem_en_o            = 1'b0;
+    // Reg-file
+    reg_file_rw_o            = rw_t'(1'b0);
+    reg_file_addr_mux_sel_o  = sel_reg_file_addr_t'('b0);
+    reg_file_data_mux_sel_o  = sel_reg_file_data_t'('b0);
+    reg_file_en_o            = 1'b0;
+    // ALU
+    alu_a_mux_sel_o          = sel_alu_a_t'('d0);
+    alu_b_mux_sel_o          = sel_alu_b_t'('d0);
+    alu_opr_o                = alu_opr_t'('b0);
+    alu_en_o                 = 1'b0;
+    // Data-mem
+    data_mem_rw_o            = rw_t'(1'b0);
+    data_mem_transfer_type_o = transfer_t'(2'b0);
+    data_mem_load_type_o     = load_t'('d0);
+    data_mem_en_o            = 1'b0;
+
+    case (current_state)
+      IDLE: begin
+        if (main_enable_i == 1'b1 && interrupt_i == 1'b0) begin
+          inst_mem_en_o   = 1'b1;
+
+          // Update PC                    
+          alu_en_o        = 1'b1;
+          alu_opr_o       = ALU_ADD;
+          alu_a_mux_sel_o = sel_alu_const_4;
+          alu_b_mux_sel_o = sel_alu_pc;
+        end
+      end
+      INST_START: begin
+        // Update PC = PC+4
+        pc_mux_sel_o = sel_pc_update;
+        pc_en_o      = 1'b1;
+      end
+      READ_RS1: begin
+        reg_file_en_o           = 1'b1;
+        reg_file_addr_mux_sel_o = sel_reg_file_rs1;
+        reg_file_rw_o           = read;
+      end
+      READ_RS2: begin
+        reg_file_en_o           = 1'b1;
+        reg_file_addr_mux_sel_o = sel_reg_file_rs2;
+        reg_file_rw_o           = read;
+      end
+      ALU_COMPUTE: begin
+        if (take_branch_delayed == 1'b1) begin
+          // Conditional branch
+          alu_en_o        = 1'b1;
+          alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+          alu_b_mux_sel_o = sel_alu_pc;
+          alu_opr_o       = ALU_JAL;
+        end else begin
+          case (current_instruction)
+            CTRL_ADDI: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_ADD;
             end
-            BUFF_1: next_state = INST_START;
-            INST_START: begin
-                unique case (instruction_i)
-                    CTRL_ADDI: next_state  = READ_RS1;
-                    CTRL_SLTI: next_state  = READ_RS1;
-                    CTRL_SLTIU: next_state  = READ_RS1;
-                    CTRL_ANDI: next_state  = READ_RS1;
-                    CTRL_ORI: next_state  = READ_RS1;
-                    CTRL_XORI: next_state  = READ_RS1;
-                    CTRL_SLLI: next_state  = READ_RS1;
-                    CTRL_SRLI: next_state  = READ_RS1;
-                    CTRL_SRAI: next_state  = READ_RS1;
-                    CTRL_LUI: next_state  = WRITE_RD;
-                    CTRL_AUIPC: next_state  = ALU_COMPUTE;
-                    CTRL_ADD: next_state  = READ_RS2;
-                    CTRL_SUB: next_state  = READ_RS2;
-                    CTRL_SLTU: next_state  = READ_RS2;
-                    CTRL_SLT: next_state  = READ_RS2;
-                    CTRL_AND: next_state  = READ_RS2;
-                    CTRL_OR: next_state  = READ_RS2;
-                    CTRL_XOR: next_state  = READ_RS2;
-                    CTRL_SLL: next_state  = READ_RS2;
-                    CTRL_SRL: next_state  = READ_RS2;
-                    CTRL_SRA: next_state  = READ_RS2;
-                    CTRL_JAL: next_state  = WRITE_RD;
-                    // JALR --> READ_RS1 --> JUMP_PC ( + WRITE_RD compute jump address & WRITE RD BEFORE UPDATING) --> IDLE
-                    CTRL_JALR: next_state  = READ_RS1;
-                    // Conditional Branch --> ALU_COMPUTE-1(evaluate br condition)
-                    // JUMP_OR_NOT --> If branch valid --> ALU_COMPUTE-2 else --> IDLE
-                    // ALU_COMPUTE-2 (evaluate jump address) --> JUMP_PC --> IDLE
-                    CTRL_BEQ: next_state  = READ_RS2;
-                    CTRL_BNE: next_state  = READ_RS2;
-                    CTRL_BGE: next_state  = READ_RS2;
-                    CTRL_BLT: next_state  = READ_RS2;
-                    CTRL_BLTU: next_state  = READ_RS2;
-                    CTRL_BGEU: next_state  = READ_RS2;
-                    CTRL_LW: next_state  = READ_RS1;
-                    CTRL_LH: next_state  = READ_RS1;
-                    CTRL_LHU: next_state  = READ_RS1;
-                    CTRL_LB: next_state  = READ_RS1;
-                    CTRL_LBU: next_state  = READ_RS1;
-                    CTRL_SW: next_state  = READ_RS1;
-                    CTRL_SH: next_state  = READ_RS1;
-                    CTRL_SB: next_state  = READ_RS1;
-                    CTRL_MUL: next_state  = READ_RS2;
-                    CTRL_MULH: next_state  = READ_RS2;
-                    CTRL_MULHU: next_state  = READ_RS2;
-                    CTRL_MULHSU: next_state  = READ_RS2;
-                    CTRL_DIV: next_state  = READ_RS2;
-                    CTRL_DIVU: next_state  = READ_RS2;
-                    CTRL_REM: next_state  = READ_RS2;
-                    CTRL_REMU: next_state  = READ_RS2;
-                    CTRL_CSRRW: next_state = READ_CSR;
-                    CTRL_CSRRS: next_state = READ_CSR;
-                    CTRL_CSRRC: next_state = READ_CSR;
-                    CTRL_CSRRWI: next_state = READ_CSR;
-                    CTRL_CSRRSI: next_state = READ_CSR;
-                    CTRL_CSRRCI: next_state = READ_CSR;
-                    CTRL_FENCE: next_state = NOP;
-                    CTRL_ECALL: next_state = WRITE_MCAUSE;
-                    CTRL_MRET: next_state  = READ_MTVEC_MEPC;
-                    CTRL_WFI: next_state = WFI_STALL;
-                    default: next_state = WRITE_MCAUSE; // illegal instruction exception
-                endcase
+            CTRL_SLTI: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SLT;
             end
-            READ_RS2: begin
-                next_state = READ_RS1;
+            CTRL_SLTIU: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SLTU;
             end
-            READ_RS1: begin
-                if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI})
-                    next_state = WRITE_CSR;
-                else
-                    next_state = ALU_COMPUTE;
+            CTRL_ANDI: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_AND;
             end
-            ALU_COMPUTE: begin
-                if (current_instruction inside {CTRL_LW, CTRL_LH,CTRL_LHU,CTRL_LB,CTRL_LBU}) 
-                    next_state = LOAD_FROM_DATA_MEM;
-                else if (current_instruction inside {CTRL_SW,CTRL_SH,CTRL_SB})
-                    next_state = STORE_DATA_MEM;
-                else if (current_instruction inside {CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE}) begin
-                   if (take_branch_delayed == 1'b1) begin
-                        next_state = JUMP_PC;
-                   end else 
-                        next_state = JUMP_OR_NOT;
-                end
-                else if (current_instruction inside {CTRL_JAL, CTRL_JALR})
-                    next_state = JUMP_PC;
-                else 
-                    next_state = WRITE_RD;
+            CTRL_ORI: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_OR;
             end
-            WRITE_RD: begin
-                if (current_instruction == CTRL_JAL) 
-                    next_state = ALU_COMPUTE;
-                else if (current_instruction == CTRL_JALR)
-                    next_state = IDLE;
-                else if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI})
-                    next_state = READ_RS1;
-                else
-                    next_state = IDLE;
+            CTRL_XORI: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_XOR;
             end
-            LOAD_FROM_DATA_MEM: begin
-                next_state = WRITE_RD;
+            CTRL_SLLI: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SLL;
             end
-            STORE_DATA_MEM: begin
-                next_state = IDLE;
+            CTRL_SRLI: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SRL;
             end
-            JUMP_OR_NOT: begin
-                if (take_branch_i == 1'b1) 
-                    next_state = ALU_COMPUTE;
-                else 
-                    next_state = IDLE;
+            CTRL_SRAI: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SRA;
             end
-            JUMP_PC: begin
-                next_state =  IDLE;
+            CTRL_AUIPC: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_lui;
+              alu_b_mux_sel_o = sel_alu_pc;
+              alu_opr_o       = ALU_JAL;
             end
-            READ_CSR: begin
-                next_state = WRITE_RD;
+            CTRL_ADD: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_ADD;
             end
-            WRITE_CSR: begin
-                next_state = IDLE;
+            CTRL_SUB: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SUB;
             end
-            NOP: begin
-                next_state = IDLE;
+            CTRL_SLTU: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SLTU;
             end
-            WRITE_MCAUSE: begin
-                next_state = WRITE_MEPC;
+            CTRL_SLT: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SLT;
             end
-            WRITE_MEPC: begin
-                next_state = (interrupt_i == 1'b1) ? JUMP_PC : READ_MTVEC_MEPC;
+            CTRL_AND: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_AND;
             end
-            READ_MTVEC_MEPC: begin
-                next_state = JUMP_PC;
+            CTRL_OR: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_OR;
             end
-            WFI_STALL: begin
-                // Core hang
-                next_state = WFI_STALL;
+            CTRL_XOR: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_XOR;
+            end
+            CTRL_SLL: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SLL;
+            end
+            CTRL_SRL: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SRL;
+            end
+            CTRL_SRA: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_SRA;
+            end
+            CTRL_JAL: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_pc;
+              alu_opr_o       = ALU_JAL;
+            end
+            CTRL_JALR: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_JALR;
+            end
+            CTRL_BEQ: begin
+              alu_en_o = 1'b1;
+              if (take_branch_i == 1'b0) begin
+                alu_a_mux_sel_o = sel_alu_rs2;
+                alu_b_mux_sel_o = sel_alu_rs1;
+                alu_opr_o       = ALU_BEQ;
+              end else begin
+                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                alu_b_mux_sel_o = sel_alu_pc;
+                alu_opr_o       = ALU_ADD;
+              end
+            end
+            CTRL_BNE: begin
+              alu_en_o = 1'b1;
+              if (take_branch_i == 1'b0) begin
+                alu_a_mux_sel_o = sel_alu_rs2;
+                alu_b_mux_sel_o = sel_alu_rs1;
+                alu_opr_o       = ALU_BNE;
+              end else begin
+                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                alu_b_mux_sel_o = sel_alu_pc;
+                alu_opr_o       = ALU_ADD;
+              end
+            end
+            CTRL_BGE: begin
+              alu_en_o = 1'b1;
+              if (take_branch_i == 1'b0) begin
+                alu_a_mux_sel_o = sel_alu_rs2;
+                alu_b_mux_sel_o = sel_alu_rs1;
+                alu_opr_o       = ALU_BGE;
+              end else begin
+                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                alu_b_mux_sel_o = sel_alu_pc;
+                alu_opr_o       = ALU_ADD;
+              end
+            end
+            CTRL_BLT: begin
+              alu_en_o = 1'b1;
+              if (take_branch_i == 1'b0) begin
+                alu_a_mux_sel_o = sel_alu_rs2;
+                alu_b_mux_sel_o = sel_alu_rs1;
+                alu_opr_o       = ALU_BLT;
+              end else begin
+                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                alu_b_mux_sel_o = sel_alu_pc;
+                alu_opr_o       = ALU_ADD;
+              end
+            end
+            CTRL_BLTU: begin
+              alu_en_o = 1'b1;
+              if (take_branch_i == 1'b0) begin
+                alu_a_mux_sel_o = sel_alu_rs2;
+                alu_b_mux_sel_o = sel_alu_rs1;
+                alu_opr_o       = ALU_BLTU;
+              end else begin
+                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                alu_b_mux_sel_o = sel_alu_pc;
+                alu_opr_o       = ALU_ADD;
+              end
+            end
+            CTRL_BGEU: begin
+              alu_en_o = 1'b1;
+              if (take_branch_i == 1'b0) begin
+                alu_a_mux_sel_o = sel_alu_rs2;
+                alu_b_mux_sel_o = sel_alu_rs1;
+                alu_opr_o       = ALU_BGEU;
+              end else begin
+                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+                alu_b_mux_sel_o = sel_alu_pc;
+                alu_opr_o       = ALU_ADD;
+              end
+            end
+            CTRL_LW: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_ADD;
+            end
+            CTRL_LH: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_ADD;
+            end
+            CTRL_LHU: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_ADD;
+            end
+            CTRL_LB: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_ADD;
+            end
+            CTRL_LBU: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_ADD;
+            end
+            CTRL_SW: begin
+              alu_en_o                = 1'b1;
+              alu_a_mux_sel_o         = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o         = sel_alu_rs1;
+              alu_opr_o               = ALU_ADD;
+
+              // Read RS2 for storing
+              reg_file_en_o           = 1'b1;
+              reg_file_addr_mux_sel_o = sel_reg_file_rs2;
+              reg_file_rw_o           = read;
+            end
+            CTRL_SH: begin
+              alu_en_o                = 1'b1;
+              alu_a_mux_sel_o         = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o         = sel_alu_rs1;
+              alu_opr_o               = ALU_ADD;
+
+              // Read RS2 for storing
+              reg_file_en_o           = 1'b1;
+              reg_file_addr_mux_sel_o = sel_reg_file_rs2;
+              reg_file_rw_o           = read;
+            end
+            CTRL_SB: begin
+              alu_en_o                = 1'b1;
+              alu_a_mux_sel_o         = sel_alu_sign_ext_offset;
+              alu_b_mux_sel_o         = sel_alu_rs1;
+              alu_opr_o               = ALU_ADD;
+
+              // Read RS2 for storing
+              reg_file_en_o           = 1'b1;
+              reg_file_addr_mux_sel_o = sel_reg_file_rs2;
+              reg_file_rw_o           = read;
+            end
+            CTRL_MUL: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_MUL;
+            end
+            CTRL_MULH: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_MULH;
+            end
+            CTRL_MULHU: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_MULHU;
+            end
+            CTRL_MULHSU: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_MULHSU;
+            end
+            CTRL_DIV: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_DIV;
+            end
+            CTRL_DIVU: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_DIVU;
+            end
+            CTRL_REM: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_REM;
+            end
+            CTRL_REMU: begin
+              alu_en_o        = 1'b1;
+              alu_a_mux_sel_o = sel_alu_rs2;
+              alu_b_mux_sel_o = sel_alu_rs1;
+              alu_opr_o       = ALU_REMU;
             end
             default: begin
-               // UGLY : Fill default condition
+              // UGLY : Fill default condition
             end
+          endcase
+        end
+      end
+      WRITE_RD: begin
+        reg_file_en_o           = 1'b1;
+        reg_file_addr_mux_sel_o = sel_reg_file_rd;
+        reg_file_rw_o           = write;
+        if (current_instruction inside {CTRL_LW, CTRL_LH, CTRL_LHU, CTRL_LB, CTRL_LBU}) reg_file_data_mux_sel_o = sel_reg_file_data_mem;
+        else if (current_instruction inside {CTRL_JAL, CTRL_JALR}) reg_file_data_mux_sel_o = sel_reg_file_pc;
+        else if (current_instruction == CTRL_LUI) reg_file_data_mux_sel_o = sel_reg_file_decoder;
+        else if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI}) reg_file_data_mux_sel_o = sel_reg_file_csr;
+        else reg_file_data_mux_sel_o = sel_reg_file_alu;
+      end
+      LOAD_FROM_DATA_MEM: begin
+        data_mem_en_o = 1'b1;
+        data_mem_rw_o = read;
+        case (current_instruction)
+          CTRL_LW: begin
+            data_mem_load_type_o     = load_signed;
+            data_mem_transfer_type_o = transfer_word;
+          end
+          CTRL_LH: begin
+            data_mem_load_type_o     = load_signed;
+            data_mem_transfer_type_o = transfer_hex_byte;
+          end
+          CTRL_LHU: begin
+            data_mem_load_type_o     = load_unsigned;
+            data_mem_transfer_type_o = transfer_hex_byte;
+          end
+          CTRL_LB: begin
+            data_mem_load_type_o     = load_signed;
+            data_mem_transfer_type_o = transfer_byte;
+          end
+          CTRL_LBU: begin
+            data_mem_load_type_o     = load_unsigned;
+            data_mem_transfer_type_o = transfer_byte;
+          end
+          default: begin
+            data_mem_load_type_o     = load_signed;
+            data_mem_transfer_type_o = transfer_t'('d0);
+          end
         endcase
-        
-    end
-    
-    always_comb begin : OutputBlock
-        // External
-        interrupt_ack_o = 1'b0;
-        // CSR  
-        csr_rw_o = rw_t'(1'b0); 
-        csr_addr_from_ctrl_o = csr_addr_t'('d0); 
-        csr_addr_mux_sel_o = sel_csr_addr_t'('d0);
-        csr_data_mux_sel_o = sel_csr_data_t'('d0);
-        csr_write_type_o = write_t'('d0);
-        csr_en_o = 1'b0; 
-        csr_data_from_ctrl_o = 'd0; 
-        // PC
-        pc_mux_sel_o = sel_pc_t'('d0);
-        pc_en_o = 1'b0;
-        // Inst-mem
-        inst_mem_en_o = 1'b0;
-        // Reg-file
-        reg_file_rw_o = rw_t'(1'b0);
-        reg_file_addr_mux_sel_o = sel_reg_file_addr_t'('b0);
-        reg_file_data_mux_sel_o = sel_reg_file_data_t'('b0);
-        reg_file_en_o = 1'b0;
-        // ALU
-        alu_a_mux_sel_o = sel_alu_a_t'('d0);
-        alu_b_mux_sel_o = sel_alu_b_t'('d0);
-        alu_opr_o = alu_opr_t'('b0);
-        alu_en_o = 1'b0;
-        // Data-mem
-        data_mem_rw_o = rw_t'(1'b0);
-        data_mem_transfer_type_o = transfer_t'(2'b0);
-        data_mem_load_type_o = load_t'('d0);
-        data_mem_en_o = 1'b0;
-
-        case (current_state)
-            IDLE: begin
-                if (main_enable_i == 1'b1 && interrupt_i == 1'b0) begin
-                    inst_mem_en_o = 1'b1;    
-                    
-                    // Update PC                    
-                    alu_en_o = 1'b1;
-                    alu_opr_o = ALU_ADD;
-                    alu_a_mux_sel_o = sel_alu_const_4;
-                    alu_b_mux_sel_o = sel_alu_pc;
-                end
-            end
-            INST_START: begin
-                // Update PC = PC+4
-                pc_mux_sel_o = sel_pc_update;
-                pc_en_o = 1'b1;
-            end
-            READ_RS1: begin
-                reg_file_en_o = 1'b1;
-                reg_file_addr_mux_sel_o =  sel_reg_file_rs1;
-                reg_file_rw_o = read;
-            end
-            READ_RS2: begin
-                reg_file_en_o = 1'b1;
-                reg_file_addr_mux_sel_o =  sel_reg_file_rs2;
-                reg_file_rw_o = read;
-            end
-            ALU_COMPUTE: begin
-                if (take_branch_delayed == 1'b1) begin
-                    // Conditional branch
-                    alu_en_o = 1'b1;
-                    alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                    alu_b_mux_sel_o = sel_alu_pc;
-                    alu_opr_o = ALU_JAL;
-                end else begin
-                    case (current_instruction)
-                        CTRL_ADDI: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-                        end
-                        CTRL_SLTI: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SLT;
-                        end
-                        CTRL_SLTIU: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SLTU;
-                        end
-                        CTRL_ANDI: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_AND;
-                        end
-                        CTRL_ORI: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_OR;
-                        end
-                        CTRL_XORI: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_XOR;
-                        end
-                        CTRL_SLLI: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SLL;
-                        end
-                        CTRL_SRLI: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SRL;
-                        end
-                        CTRL_SRAI: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SRA;
-                        end
-                        CTRL_AUIPC: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_lui;
-                            alu_b_mux_sel_o = sel_alu_pc;
-                            alu_opr_o = ALU_JAL;
-                        end
-                        CTRL_ADD: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-                        end
-                        CTRL_SUB: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SUB;
-                        end
-                        CTRL_SLTU: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SLTU;
-                        end
-                        CTRL_SLT: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SLT;
-                        end
-                        CTRL_AND: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_AND;
-                        end
-                        CTRL_OR: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_OR;
-                        end
-                        CTRL_XOR: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_XOR;
-                        end
-                        CTRL_SLL: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SLL;
-                        end
-                        CTRL_SRL: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SRL;
-                        end
-                        CTRL_SRA: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_SRA;
-                        end
-                        CTRL_JAL: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_pc;
-                            alu_opr_o = ALU_JAL;
-                        end
-                        CTRL_JALR: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_JALR;
-                        end
-                        CTRL_BEQ: begin
-                            alu_en_o = 1'b1;
-                            if (take_branch_i == 1'b0) begin
-                                alu_a_mux_sel_o = sel_alu_rs2;
-                                alu_b_mux_sel_o = sel_alu_rs1;
-                                alu_opr_o = ALU_BEQ;
-                            end else begin
-                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                                alu_b_mux_sel_o = sel_alu_pc;
-                                alu_opr_o = ALU_ADD;
-                            end
-                        end
-                        CTRL_BNE: begin
-                            alu_en_o = 1'b1;
-                            if (take_branch_i == 1'b0) begin
-                                alu_a_mux_sel_o = sel_alu_rs2;
-                                alu_b_mux_sel_o = sel_alu_rs1;
-                                alu_opr_o = ALU_BNE;
-                            end else begin
-                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                                alu_b_mux_sel_o = sel_alu_pc;
-                                alu_opr_o = ALU_ADD;
-                            end
-                        end
-                        CTRL_BGE: begin
-                            alu_en_o = 1'b1;
-                            if (take_branch_i == 1'b0) begin
-                                alu_a_mux_sel_o = sel_alu_rs2;
-                                alu_b_mux_sel_o = sel_alu_rs1;
-                                alu_opr_o = ALU_BGE;
-                            end else begin
-                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                                alu_b_mux_sel_o = sel_alu_pc;
-                                alu_opr_o = ALU_ADD;
-                            end
-                        end
-                        CTRL_BLT: begin
-                            alu_en_o = 1'b1;
-                            if (take_branch_i == 1'b0) begin
-                                alu_a_mux_sel_o = sel_alu_rs2;
-                                alu_b_mux_sel_o = sel_alu_rs1;
-                                alu_opr_o = ALU_BLT;
-                            end else begin
-                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                                alu_b_mux_sel_o = sel_alu_pc;
-                                alu_opr_o = ALU_ADD;
-                            end
-                        end
-                        CTRL_BLTU: begin
-                            alu_en_o = 1'b1;
-                            if (take_branch_i == 1'b0) begin
-                                alu_a_mux_sel_o = sel_alu_rs2;
-                                alu_b_mux_sel_o = sel_alu_rs1;
-                                alu_opr_o = ALU_BLTU;
-                            end else begin
-                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                                alu_b_mux_sel_o = sel_alu_pc;
-                                alu_opr_o = ALU_ADD;
-                            end
-                        end
-                        CTRL_BGEU: begin
-                            alu_en_o = 1'b1;
-                            if (take_branch_i == 1'b0) begin
-                                alu_a_mux_sel_o = sel_alu_rs2;
-                                alu_b_mux_sel_o = sel_alu_rs1;
-                                alu_opr_o = ALU_BGEU;
-                            end else begin
-                                alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                                alu_b_mux_sel_o = sel_alu_pc;
-                                alu_opr_o = ALU_ADD;
-                            end
-                        end
-                        CTRL_LW: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-                        end
-                        CTRL_LH: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-                        end
-                        CTRL_LHU: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-                        end
-                        CTRL_LB: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-                        end
-                        CTRL_LBU: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-                        end
-                        CTRL_SW: begin
-                            alu_en_o = 1'b1; 
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset; 
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-
-                            // Read RS2 for storing
-                            reg_file_en_o = 1'b1;
-                            reg_file_addr_mux_sel_o =  sel_reg_file_rs2;
-                            reg_file_rw_o = read;
-                        end
-                        CTRL_SH: begin
-                            alu_en_o = 1'b1; 
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset; 
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD;
-                            
-                            // Read RS2 for storing
-                            reg_file_en_o = 1'b1;
-                            reg_file_addr_mux_sel_o =  sel_reg_file_rs2;
-                            reg_file_rw_o = read;
-                        end
-                        CTRL_SB: begin
-                            alu_en_o = 1'b1; 
-                            alu_a_mux_sel_o = sel_alu_sign_ext_offset; 
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_ADD; 
-
-                            // Read RS2 for storing
-                            reg_file_en_o = 1'b1;
-                            reg_file_addr_mux_sel_o =  sel_reg_file_rs2;
-                            reg_file_rw_o = read;
-                        end
-                        CTRL_MUL: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_MUL;
-                        end
-                        CTRL_MULH: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_MULH;
-                        end
-                        CTRL_MULHU: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_MULHU;
-                        end
-                        CTRL_MULHSU: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_MULHSU;
-                        end
-                        CTRL_DIV: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_DIV;
-                        end
-                        CTRL_DIVU: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_DIVU;
-                        end
-                        CTRL_REM: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_REM;
-                        end
-                        CTRL_REMU: begin
-                            alu_en_o = 1'b1;
-                            alu_a_mux_sel_o = sel_alu_rs2;
-                            alu_b_mux_sel_o = sel_alu_rs1;
-                            alu_opr_o = ALU_REMU;
-                        end
-                        default: begin
-                            // UGLY : Fill default condition
-                        end
-                    endcase
-                end
-            end
-            WRITE_RD: begin
-                reg_file_en_o = 1'b1;
-                reg_file_addr_mux_sel_o =  sel_reg_file_rd;
-                reg_file_rw_o = write;
-                if (current_instruction inside {CTRL_LW,CTRL_LH,CTRL_LHU,CTRL_LB,CTRL_LBU})
-                    reg_file_data_mux_sel_o =  sel_reg_file_data_mem;
-                else if (current_instruction inside {CTRL_JAL, CTRL_JALR})
-                    reg_file_data_mux_sel_o = sel_reg_file_pc;
-                else if (current_instruction == CTRL_LUI)
-                    reg_file_data_mux_sel_o =  sel_reg_file_decoder;
-                else if (current_instruction inside {CTRL_CSRRS, CTRL_CSRRW, CTRL_CSRRC, CTRL_CSRRWI, CTRL_CSRRSI, CTRL_CSRRCI})
-                    reg_file_data_mux_sel_o = sel_reg_file_csr;
-                else
-                    reg_file_data_mux_sel_o =  sel_reg_file_alu;
-            end
-            LOAD_FROM_DATA_MEM: begin
-                data_mem_en_o = 1'b1;
-                data_mem_rw_o = read;
-                case (current_instruction)
-                    CTRL_LW : begin
-                       data_mem_load_type_o = load_signed;
-                       data_mem_transfer_type_o = transfer_word;
-                    end
-                    CTRL_LH : begin
-                       data_mem_load_type_o = load_signed;
-                       data_mem_transfer_type_o = transfer_hex_byte;
-                    end
-                    CTRL_LHU : begin
-                       data_mem_load_type_o = load_unsigned;
-                       data_mem_transfer_type_o = transfer_hex_byte;
-                    end
-                    CTRL_LB : begin
-                       data_mem_load_type_o = load_signed;
-                       data_mem_transfer_type_o = transfer_byte;
-                    end
-                    CTRL_LBU : begin
-                       data_mem_load_type_o = load_unsigned;
-                       data_mem_transfer_type_o = transfer_byte;
-                    end
-                    default: begin
-                       data_mem_load_type_o = load_signed;
-                       data_mem_transfer_type_o = transfer_t'('d0);
-                    end
-                endcase
-            end
-            STORE_DATA_MEM: begin
-                data_mem_en_o = 1'b1;
-                data_mem_rw_o = write;
-                case (current_instruction)
-                    CTRL_SW :  data_mem_transfer_type_o = transfer_word;
-                    CTRL_SH :  data_mem_transfer_type_o = transfer_hex_byte;
-                    CTRL_SB :  data_mem_transfer_type_o = transfer_byte;
-                    default: data_mem_transfer_type_o = transfer_t'('d0);
-                endcase
-            end
-            JUMP_PC: begin
-                pc_en_o = 1'b1;
-                if (interrupt_i == 1'b1) begin
-                    interrupt_ack_o = 1'b1;
-                    pc_mux_sel_o = sel_pc_int_hnd;
-                end else begin
-                    if (current_instruction inside {CTRL_JAL, CTRL_JALR, CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE})
-                        pc_mux_sel_o = sel_pc_update;
-                    else
-                        pc_mux_sel_o = sel_pc_jump_vec;
-                end
-                // JALR --> Write RD before updating. 
-                if (current_instruction == CTRL_JALR) begin
-                    reg_file_en_o = 1'b1;
-                    reg_file_addr_mux_sel_o =  sel_reg_file_rd;
-                    reg_file_rw_o = write;
-                    reg_file_data_mux_sel_o = sel_reg_file_pc;
-                end
-            end
-            READ_CSR: begin
-                csr_en_o = 1'b1;
-                csr_rw_o = read;
-                csr_addr_mux_sel_o = sel_csr_addr_decoder;
-            end
-            WRITE_CSR: begin
-                csr_en_o = 1'b1;
-                csr_rw_o = write;
-                csr_addr_mux_sel_o =  sel_csr_addr_decoder;
-                csr_data_mux_sel_o = sel_csr_data_rs1;
-                case (current_instruction)
-                    CTRL_CSRRW: csr_write_type_o = write_complete;
-                    CTRL_CSRRS: csr_write_type_o = write_set;
-                    CTRL_CSRRC: csr_write_type_o = write_clear;
-                    CTRL_CSRRWI: csr_write_type_o = write_complete;
-                    CTRL_CSRRSI: csr_write_type_o = write_set;
-                    CTRL_CSRRCI: csr_write_type_o = write_clear;
-                    default: csr_write_type_o = write_t'('d0);
-                endcase
-            end
-            WRITE_MCAUSE: begin
-                csr_en_o = 1'b1;
-                csr_rw_o = write;
-                csr_addr_mux_sel_o =  sel_csr_addr_ctrl_unit;
-                csr_addr_from_ctrl_o =  CSR_mcause;
-                csr_data_mux_sel_o =  sel_csr_data_ctrl_unit;
-                if (interrupt_i == 1'b1) begin
-                    csr_data_from_ctrl_o = cause_interrupt;
-                end else begin
-                    case (current_instruction)
-                        CTRL_ECALL: csr_data_from_ctrl_o = cause_ecall;
-                        CTRL_EBREAK:csr_data_from_ctrl_o =  cause_break;
-                        default: csr_data_from_ctrl_o = cause_illegal_instruction;
-                    endcase
-                end
-            end
-            WRITE_MEPC: begin
-                csr_en_o = 1'b1;
-                csr_rw_o = write;
-                csr_addr_mux_sel_o =  sel_csr_addr_ctrl_unit;
-                csr_addr_from_ctrl_o =  CSR_mepc;
-                csr_data_mux_sel_o =  sel_csr_data_pc;
-            end
-            READ_MTVEC_MEPC: begin
-                csr_en_o = 1'b1;
-                csr_rw_o = read;
-                csr_addr_mux_sel_o =  sel_csr_addr_ctrl_unit;
-                if (current_instruction == CTRL_MRET)
-                    csr_addr_from_ctrl_o =  CSR_mepc;
-                else 
-                    csr_addr_from_ctrl_o =  CSR_mtvec;
-            end
-            default: begin
-                // UGLY : Fill default condition
-            end
+      end
+      STORE_DATA_MEM: begin
+        data_mem_en_o = 1'b1;
+        data_mem_rw_o = write;
+        case (current_instruction)
+          CTRL_SW: data_mem_transfer_type_o = transfer_word;
+          CTRL_SH: data_mem_transfer_type_o = transfer_hex_byte;
+          CTRL_SB: data_mem_transfer_type_o = transfer_byte;
+          default: data_mem_transfer_type_o = transfer_t'('d0);
         endcase
-    end
+      end
+      JUMP_PC: begin
+        pc_en_o = 1'b1;
+        if (interrupt_i == 1'b1) begin
+          interrupt_ack_o = 1'b1;
+          pc_mux_sel_o    = sel_pc_int_hnd;
+        end else begin
+          if (current_instruction inside {CTRL_JAL, CTRL_JALR, CTRL_BEQ, CTRL_BGE, CTRL_BGEU, CTRL_BLT, CTRL_BLTU, CTRL_BNE}) pc_mux_sel_o = sel_pc_update;
+          else pc_mux_sel_o = sel_pc_jump_vec;
+        end
+        // JALR --> Write RD before updating. 
+        if (current_instruction == CTRL_JALR) begin
+          reg_file_en_o           = 1'b1;
+          reg_file_addr_mux_sel_o = sel_reg_file_rd;
+          reg_file_rw_o           = write;
+          reg_file_data_mux_sel_o = sel_reg_file_pc;
+        end
+      end
+      READ_CSR: begin
+        csr_en_o           = 1'b1;
+        csr_rw_o           = read;
+        csr_addr_mux_sel_o = sel_csr_addr_decoder;
+      end
+      WRITE_CSR: begin
+        csr_en_o           = 1'b1;
+        csr_rw_o           = write;
+        csr_addr_mux_sel_o = sel_csr_addr_decoder;
+        csr_data_mux_sel_o = sel_csr_data_rs1;
+        case (current_instruction)
+          CTRL_CSRRW:  csr_write_type_o = write_complete;
+          CTRL_CSRRS:  csr_write_type_o = write_set;
+          CTRL_CSRRC:  csr_write_type_o = write_clear;
+          CTRL_CSRRWI: csr_write_type_o = write_complete;
+          CTRL_CSRRSI: csr_write_type_o = write_set;
+          CTRL_CSRRCI: csr_write_type_o = write_clear;
+          default:     csr_write_type_o = write_t'('d0);
+        endcase
+      end
+      WRITE_MCAUSE: begin
+        csr_en_o             = 1'b1;
+        csr_rw_o             = write;
+        csr_addr_mux_sel_o   = sel_csr_addr_ctrl_unit;
+        csr_addr_from_ctrl_o = CSR_mcause;
+        csr_data_mux_sel_o   = sel_csr_data_ctrl_unit;
+        if (interrupt_i == 1'b1) begin
+          csr_data_from_ctrl_o = cause_interrupt;
+        end else begin
+          case (current_instruction)
+            CTRL_ECALL:  csr_data_from_ctrl_o = cause_ecall;
+            CTRL_EBREAK: csr_data_from_ctrl_o = cause_break;
+            default:     csr_data_from_ctrl_o = cause_illegal_instruction;
+          endcase
+        end
+      end
+      WRITE_MEPC: begin
+        csr_en_o             = 1'b1;
+        csr_rw_o             = write;
+        csr_addr_mux_sel_o   = sel_csr_addr_ctrl_unit;
+        csr_addr_from_ctrl_o = CSR_mepc;
+        csr_data_mux_sel_o   = sel_csr_data_pc;
+      end
+      READ_MTVEC_MEPC: begin
+        csr_en_o           = 1'b1;
+        csr_rw_o           = read;
+        csr_addr_mux_sel_o = sel_csr_addr_ctrl_unit;
+        if (current_instruction == CTRL_MRET) csr_addr_from_ctrl_o = CSR_mepc;
+        else csr_addr_from_ctrl_o = CSR_mtvec;
+      end
+      default: begin
+        // UGLY : Fill default condition
+      end
+    endcase
+  end
 endmodule

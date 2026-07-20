@@ -1,8 +1,9 @@
-import os 
-import sys 
+import os
+import sys
 import random
 from pathlib import Path
 import math
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import numpy as np
@@ -20,6 +21,7 @@ N_TESTS = 5000
 
 # Init-inputs
 
+
 async def init_inputs(dut):
     dut.opr_i.value = 0
     dut.sign_ext_offset_i.value = 0
@@ -27,14 +29,16 @@ async def init_inputs(dut):
     dut.rs1_i.value = 0
     dut.pc_i.value = 0
 
+
 # Branch Logic Model
 
-def model_BL(a:LogicArray,b:LogicArray,opr:str) -> LogicArray | Logic :
+
+def model_BL(a: LogicArray, b: LogicArray, opr: str) -> LogicArray | Logic:
     if opr == "ALU_JAL":
         # JAL
         a = a.to_unsigned()
         b = b.to_unsigned()
-        z = LogicArray(a + b , 33)
+        z = LogicArray(a + b, 33)
         return z[31:0]
     elif opr == "ALU_JALR":
         # JALR
@@ -71,12 +75,13 @@ def model_BL(a:LogicArray,b:LogicArray,opr:str) -> LogicArray | Logic :
         return Logic(b >= a)
     else:
         raise NotImplementedError(f"Invalid operation {opr}")
-    
+
     # Test
+
 
 @cocotb.test()
 async def test(dut):
-    
+
     # Setup
     clk = cocotb.start_soon(clk_(dut, MAX_CLKS))
     await init_inputs(dut)
@@ -84,15 +89,47 @@ async def test(dut):
 
     await ClockCycles(dut.clk_i, 10)
 
-    ALL_ALU_operations = [ "ALU_ADD", "ALU_SUB", "ALU_MUL", "ALU_MULH", "ALU_MULHU", "ALU_MULHSU", "ALU_DIV", "ALU_DIVU", "ALU_REM",
-                    "ALU_REMU", "ALU_SLT", "ALU_SLTU", "ALU_AND", "ALU_OR", "ALU_XOR", "ALU_SLL", "ALU_SRL", "ALU_SRA", "ALU_BEQ", "ALU_BNE", "ALU_BLT",
-                    "ALU_BLTU", "ALU_BGE", "ALU_BGEU", "ALU_JAL", "ALU_JALR" ]
+    ALL_ALU_operations = [
+        "ALU_ADD",
+        "ALU_SUB",
+        "ALU_MUL",
+        "ALU_MULH",
+        "ALU_MULHU",
+        "ALU_MULHSU",
+        "ALU_DIV",
+        "ALU_DIVU",
+        "ALU_REM",
+        "ALU_REMU",
+        "ALU_SLT",
+        "ALU_SLTU",
+        "ALU_AND",
+        "ALU_OR",
+        "ALU_XOR",
+        "ALU_SLL",
+        "ALU_SRL",
+        "ALU_SRA",
+        "ALU_BEQ",
+        "ALU_BNE",
+        "ALU_BLT",
+        "ALU_BLTU",
+        "ALU_BGE",
+        "ALU_BGEU",
+        "ALU_JAL",
+        "ALU_JALR",
+    ]
 
-    VALID_ALU_operations = ["ALU_BEQ", "ALU_BNE", "ALU_BLT",
-                "ALU_BLTU", "ALU_BGE", "ALU_BGEU", "ALU_JAL", "ALU_JALR" ]
-    
+    VALID_ALU_operations = [
+        "ALU_BEQ",
+        "ALU_BNE",
+        "ALU_BLT",
+        "ALU_BLTU",
+        "ALU_BGE",
+        "ALU_BGEU",
+        "ALU_JAL",
+        "ALU_JALR",
+    ]
+
     cond_branch = ["ALU_BEQ", "ALU_BNE", "ALU_BLT", "ALU_BLTU", "ALU_BGE", "ALU_BGEU"]
-
 
     for _ in range(N_TESTS):
         opr = random.choice(VALID_ALU_operations)
@@ -111,22 +148,27 @@ async def test(dut):
 
         dut.en_i.value = 0
 
-        res = model_BL(a,b,opr)
+        res = model_BL(a, b, opr)
 
         if opr in cond_branch:
             try:
                 assert res == dut.take_branch_o.value
             except:
-                    raise AssertionError(f"Opr : {opr} --> Invalid take_branch_o value\n"
-                                        f"a : {a} ({int(a)}), b : {b} ({int(b)})"
-                                        f"Expected : {res} (), got : {dut.take_branch_o.value}")
+                raise AssertionError(
+                    f"Opr : {opr} --> Invalid take_branch_o value\n"
+                    f"a : {a} ({int(a)}), b : {b} ({int(b)})"
+                    f"Expected : {res} (), got : {dut.take_branch_o.value}"
+                )
         else:
             try:
                 assert res == dut.pc_update_o.value
             except:
-                    raise AssertionError(f"Invalid Output value -->\n"
-                                            f"Opr: {opr}, a : {a} ({a.to_unsigned()}), b : {b} ({b.to_unsigned()})\n"
-                                            f"Expected : {res} (), got : {dut.pc_update_o.value}")
+                raise AssertionError(
+                    f"Invalid Output value -->\n"
+                    f"Opr: {opr}, a : {a} ({a.to_unsigned()}), b : {b} ({b.to_unsigned()})\n"
+                    f"Expected : {res} (), got : {dut.pc_update_o.value}"
+                )
+
 
 def test_runner_bl():
     sim = os.getenv("SIM", "verilator")
@@ -140,14 +182,13 @@ def test_runner_bl():
         hdl_toplevel="BranchLogic",
         waves=waves,
         clean=True,
-        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"]
+        build_args=["--coverage", "--trace", "--trace-fst", "--trace-structs"],
     )
 
     runner.test(
-        hdl_toplevel="BranchLogic",
-        test_module="tests_branch_logic",
-        waves=waves
+        hdl_toplevel="BranchLogic", test_module="tests_branch_logic", waves=waves
     )
+
 
 if __name__ == "__main__":
     test_runner_bl()
