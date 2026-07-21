@@ -56,13 +56,13 @@ int main(void) {
   50:	00812c23          	sw	s0,24(sp)
   54:	02010413          	addi	s0,sp,32
     volatile uint32_t *result = (volatile uint32_t *)0x0100; /* DMEM address */
-  58:	10000793          	li	a5,256
+  58:	10000793          	li	a5,256 -> (addi a5, zero, 256)
   5c:	fef42623          	sw	a5,-20(s0)
     
     uint32_t a = 10, b = 20;
-  60:	00a00793          	li	a5,10
+  60:	00a00793          	li	a5,10 -> (addi a5, zero, 10)
   64:	fef42423          	sw	a5,-24(s0)
-  68:	01400793          	li	a5,20
+  68:	01400793          	li	a5,20 -> (addi, a5, zero, 20)
   6c:	fef42223          	sw	a5,-28(s0)
     *result = a + b;   /* should be 30 = 0x1E */
   70:	fe842703          	lw	a4,-24(s0)
