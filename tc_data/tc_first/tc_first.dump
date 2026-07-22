@@ -73,7 +73,7 @@ int main(void) {
 
     /* Signal success by writing a known value to a sentinel address */
     volatile uint32_t *done = (volatile uint32_t *)0x01FC;
-  84:	1fc00793          	li	a5,508
+  84:	1fc00793          	li	a5,508 -> (addi, a5, zero, 508)
   88:	fef42023          	sw	a5,-32(s0)
     *done = 0xCAFECAFE;
   8c:	fe042783          	lw	a5,-32(s0)

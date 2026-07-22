@@ -3,7 +3,9 @@
 `default_nettype none
 // verilog_format: on
 
-module Decoderv2 (
+module Decoderv2 #(
+    parameter INST_ID_MAX = 31
+) (
     input                                       clk_i,
     input                                       rst_i,
     input                                       stall_id_i,
@@ -11,6 +13,7 @@ module Decoderv2 (
     output logic                         [ 4:0] rd_o,
     output logic                         [ 4:0] rs1_o,
     output logic                         [ 4:0] rs2_o,
+    output logic                         [ 4:0] inst_id_o,
     output typed_pkg::csr_addr_t                csr_addr_o,
     output logic                         [31:0] imm_offset_o,
     output logic                         [31:0] lui_o,
@@ -35,6 +38,14 @@ module Decoderv2 (
   assign op_code    = inst_i[6:0];
   assign funct_3    = inst_i[14:12];
   assign funct_7    = inst_i[31:25];
+
+  always_ff @(posedge clk_i) begin
+    if (!rst_i) inst_id_o <= 'd0;
+    else begin
+      if (inst_i != current_instruction) inst_id_o <= (inst_id_o == INST_ID_MAX) ? 'd0 : inst_id_o + 'd1;
+      else inst_id_o <= inst_id_o;
+    end
+  end
 
   always_ff @(posedge clk_i) begin
     if (!rst_i) begin

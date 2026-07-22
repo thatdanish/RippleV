@@ -1,6 +1,8 @@
 // Instruction decode stage
 
-module Id (
+module Id #(
+    parameter INST_ID_MAX = 5
+) (
     input                                         clk_i,
     input                                         rst_i,
     input                                         stall_id_i,
@@ -37,6 +39,7 @@ module Id (
     output                                 [ 4:0] rd_o,
     output                                 [ 4:0] rs1_o,
     output                                 [ 4:0] rs2_o,
+    output                                 [ 4:0] inst_id_o,
     output typed_pkg::csr_addr_t                  csr_addr_o,
     output                                 [31:0] imm_offset_o,
     output                                 [31:0] lui_o
@@ -85,6 +88,7 @@ module Id (
       .rd_o,
       .rs1_o,
       .rs2_o,
+      .inst_id_o,
       .csr_addr_o,
       .imm_offset_o,
       .lui_o,

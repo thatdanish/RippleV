@@ -185,6 +185,7 @@ module l2_reg (
       data_mem_en_2            <= data_mem_en_1;
 
       // Delay III - Decoder & PC 
+      // TODO: Remove extra registers 
       pc_3                     <= pc_2;
       rs1_3                    <= rs1_2;
       rs2_3                    <= rs2_2;
@@ -193,7 +194,7 @@ module l2_reg (
       lui_3                    <= lui_2;
       csr_addr_3               <= csr_addr_2;
 
-      // Delay IV - PC
+      // Delay IV - PC & Decoder
       pc_4                     <= pc_3;
 
       if (clear_l2_i == 1'b1) begin

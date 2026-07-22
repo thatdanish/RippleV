@@ -10,6 +10,7 @@
 
 module RippleV #(
     parameter        ADDR_WIDTH         = 32,
+    parameter        INST_ID_MAX        = 5,
     parameter        WORD_SIZE          = 32,
     parameter string IMEM_FILE          = "../../../data/sample/sample_instructions.hex",
     parameter string DMEM_FILE          = "../../../data/sample/sample_instructions.hex",
@@ -38,7 +39,7 @@ module RippleV #(
   logic [31:0] pc_addr, l1_pc_addr, l2_pc_addr, l3_pc_addr, l4_pc_addr, pc_new, alu_out, l3_alu_out, l4_alu_out, l3_dmem_addr, l3_dmem_data;
   logic [31:0] dmem_out_data, l4_dmem_out_data, csr_out_data, l4_csr_out_data, pc_update_from_execute, pc_direct_update_from_execute, reg_file_rd_data;
 
-  logic [4:0] rs1_addr, rs1_addr_hcu, l2_rs1_addr, rs2_addr, rs2_addr_hcu, l2_rs2_addr, rd_addr, rd_addr_hcu, l2_rd_addr, l3_rd_addr, l4_rd_addr;
+  logic [4:0] inst_id, rs1_addr, rs1_addr_hcu, l2_rs1_addr, rs2_addr, rs2_addr_hcu, l2_rs2_addr, rd_addr, rd_addr_hcu, l2_rd_addr, l3_rd_addr, l4_rd_addr;
 
   // CSR
   sel_csr_addr_t sel_csr_addr, l2_sel_csr_addr, l3_sel_csr_addr;
@@ -98,7 +99,9 @@ module RippleV #(
 
   // Hazard Control Unit -----------------------------------------------------------------------
 
-  HazardControlUnit hcu_inst (
+  HazardControlUnit #(
+      .INST_ID_MAX(INST_ID_MAX)
+  ) hcu_inst (
       .clk_i,
       .rst_i,
       .jump_valid_i      (jump_valid),
@@ -107,6 +110,7 @@ module RippleV #(
       .rs1_i             (rs1_addr),
       .rs2_i             (rs2_addr),
       .rd_i              (rd_addr),
+      .inst_id_i         (inst_id),
       .stall_l1_o        (stall_l1),
       .clear_l1_o        (clear_l1),
       .stall_l2_o        (stall_l2),
@@ -174,7 +178,9 @@ module RippleV #(
 
   // Instruction-decode -------------------------------------------------------------------------
 
-  Id id_inst (
+  Id #(
+      .INST_ID_MAX(INST_ID_MAX)
+  ) id_inst (
       .clk_i,
       .rst_i,
       .stall_id_i              (stall_id),
@@ -210,6 +216,7 @@ module RippleV #(
       .rd_o                    (rd_addr),
       .rs1_o                   (rs1_addr),
       .rs2_o                   (rs2_addr),
+      .inst_id_o               (inst_id),
       .csr_addr_o              (csr_addr_decoder),
       .imm_offset_o            (imm_offset),
       .lui_o                   (lui),
