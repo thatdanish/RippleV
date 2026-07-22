@@ -100,7 +100,7 @@ module RippleV #(
   // Hazard Control Unit -----------------------------------------------------------------------
 
   HazardControlUnit #(
-      .INST_ID_MAX(INST_ID_MAX)
+    .INST_ID_MAX(INST_ID_MAX)
   ) hcu_inst (
       .clk_i,
       .rst_i,
@@ -135,8 +135,8 @@ module RippleV #(
   // Instruction-fetch --------------------------------------------------------------------------
 
   mux_pc_v2 #(
-      .ADDR_WIDTH(ADDR_WIDTH),
-      .INT_HND   (INT_HND)
+    .ADDR_WIDTH(ADDR_WIDTH),
+    .INT_HND   (INT_HND)
   ) mux_pc_inst (
       .clk_i,
       .sel_i             (sel_pc),
@@ -147,9 +147,9 @@ module RippleV #(
   );
 
   If #(
-      .FILE      (IMEM_FILE),
-      .ADDR_WIDTH(ADDR_WIDTH),
-      .WORD_SIZE (WORD_SIZE)
+    .FILE      (IMEM_FILE),
+    .ADDR_WIDTH(ADDR_WIDTH),
+    .WORD_SIZE (WORD_SIZE)
   ) if_inst (
       .clk_i,
       .rst_i,
@@ -179,7 +179,7 @@ module RippleV #(
   // Instruction-decode -------------------------------------------------------------------------
 
   Id #(
-      .INST_ID_MAX(INST_ID_MAX)
+    .INST_ID_MAX(INST_ID_MAX)
   ) id_inst (
       .clk_i,
       .rst_i,

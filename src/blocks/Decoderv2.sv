@@ -42,7 +42,7 @@ module Decoderv2 #(
   always_ff @(posedge clk_i) begin
     if (!rst_i) inst_id_o <= 'd0;
     else begin
-      if (inst_i != current_instruction) inst_id_o <= (inst_id_o == INST_ID_MAX) ? 'd0 : inst_id_o + 'd1;
+      if (inst_i != current_instruction && stall_id_i == 1'b0) inst_id_o <= (inst_id_o == INST_ID_MAX) ? 'd0 : inst_id_o + 'd1;
       else inst_id_o <= inst_id_o;
     end
   end

@@ -125,35 +125,35 @@ module l2_reg (
     end else begin
 
       // Delay I -  CU, Decoder, PC & RegFile
-      pc_1                     <= pc_i;
-      rs1_1                    <= rs1_i;
-      rs2_1                    <= rs2_i;
-      rd_1                     <= rd_i;
-      imm_offset_1             <= imm_offset_i;
-      lui_1                    <= lui_i;
-      csr_addr_1               <= csr_addr_i;
-      csr_addr_from_ctrl_1     <= csr_addr_from_ctrl_i;
-      csr_addr_mux_sel_1       <= csr_addr_mux_sel_i;
-      csr_data_mux_sel_1       <= csr_data_mux_sel_i;
-      csr_write_type_1         <= csr_write_type_i;
-      csr_rw_1                 <= csr_rw_i;
-      csr_en_1                 <= csr_en_i;
-      csr_data_from_ctrl_1     <= csr_data_from_ctrl_i;
-      reg_file_data_mux_sel_1  <= reg_file_data_mux_sel_i;
-      reg_file_read_en_1       <= reg_file_read_en_i;
-      reg_file_write_en_1      <= reg_file_write_en_i;
-      alu_opr_1                <= alu_opr_i;
-      alu_a_mux_sel_1          <= alu_a_mux_sel_i;
-      alu_b_mux_sel_1          <= alu_b_mux_sel_i;
-      alu_en_1                 <= alu_en_i;
-      bl_opr_1                 <= bl_opr_i;
-      branch_logic_en_1        <= branch_logic_en_i;
-      data_mem_transfer_type_1 <= data_mem_transfer_type_i;
-      data_mem_rw_1            <= data_mem_rw_i;
-      data_mem_load_type_1     <= data_mem_load_type_i;
-      data_mem_en_1            <= data_mem_en_i;
-      rs1_data_1               <= rs1_data_i;
-      rs2_data_1               <= rs2_data_i;
+      pc_1                     <= (stall_l2_i == 1'b1) ? pc_i : pc_i;
+      rs1_1                    <= (stall_l2_i == 1'b1) ? rs1_i : rs1_i;
+      rs2_1                    <= (stall_l2_i == 1'b1) ? rs2_i : rs2_i;
+      rd_1                     <= (stall_l2_i == 1'b1) ? rd_i : rd_i;
+      imm_offset_1             <= (stall_l2_i == 1'b1) ? imm_offset_i : imm_offset_i;
+      lui_1                    <= (stall_l2_i == 1'b1) ? lui_i : lui_i;
+      csr_addr_1               <= (stall_l2_i == 1'b1) ? csr_addr_i : csr_addr_i;
+      csr_addr_from_ctrl_1     <= (stall_l2_i == 1'b1) ? csr_addr_from_ctrl_i : csr_addr_from_ctrl_i;
+      csr_addr_mux_sel_1       <= (stall_l2_i == 1'b1) ? csr_addr_mux_sel_i : csr_addr_mux_sel_i;
+      csr_data_mux_sel_1       <= (stall_l2_i == 1'b1) ? csr_data_mux_sel_i : csr_data_mux_sel_i;
+      csr_write_type_1         <= (stall_l2_i == 1'b1) ? csr_write_type_i : csr_write_type_i;
+      csr_rw_1                 <= (stall_l2_i == 1'b1) ? csr_rw_i : csr_rw_i;
+      csr_en_1                 <= (stall_l2_i == 1'b1) ? csr_en_i : csr_en_i;
+      csr_data_from_ctrl_1     <= (stall_l2_i == 1'b1) ? csr_data_from_ctrl_i : csr_data_from_ctrl_i;
+      reg_file_data_mux_sel_1  <= (stall_l2_i == 1'b1) ? reg_file_data_mux_sel_i : reg_file_data_mux_sel_i;
+      reg_file_read_en_1       <= (stall_l2_i == 1'b1) ? reg_file_read_en_i : reg_file_read_en_i;
+      reg_file_write_en_1      <= (stall_l2_i == 1'b1) ? reg_file_write_en_i : reg_file_write_en_i;
+      alu_opr_1                <= (stall_l2_i == 1'b1) ? alu_opr_i : alu_opr_i;
+      alu_a_mux_sel_1          <= (stall_l2_i == 1'b1) ? alu_a_mux_sel_i : alu_a_mux_sel_i;
+      alu_b_mux_sel_1          <= (stall_l2_i == 1'b1) ? alu_b_mux_sel_i : alu_b_mux_sel_i;
+      alu_en_1                 <= (stall_l2_i == 1'b1) ? alu_en_i : alu_en_i;
+      bl_opr_1                 <= (stall_l2_i == 1'b1) ? bl_opr_i : bl_opr_i;
+      branch_logic_en_1        <= (stall_l2_i == 1'b1) ? branch_logic_en_i : branch_logic_en_i;
+      data_mem_transfer_type_1 <= (stall_l2_i == 1'b1) ? data_mem_transfer_type_i : data_mem_transfer_type_i;
+      data_mem_rw_1            <= (stall_l2_i == 1'b1) ? data_mem_rw_i : data_mem_rw_i;
+      data_mem_load_type_1     <= (stall_l2_i == 1'b1) ? data_mem_load_type_i : data_mem_load_type_i;
+      data_mem_en_1            <= (stall_l2_i == 1'b1) ? data_mem_en_i : data_mem_en_i;
+      rs1_data_1               <= (stall_l2_i == 1'b1) ? rs1_data_i : rs1_data_i;
+      rs2_data_1               <= (stall_l2_i == 1'b1) ? rs2_data_i : rs2_data_i;
 
       // Delay II - Decoder & PC, CU
       pc_2                     <= pc_1;

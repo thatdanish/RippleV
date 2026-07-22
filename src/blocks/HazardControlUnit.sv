@@ -129,8 +129,8 @@ module HazardControlUnit #(
       // shift rd reg
 
       // TODO: Remove extra shift registers
-      rd_shift_reg[1].reg_addr <= rd_shift_reg[0].reg_addr;
-      rd_shift_reg[1].rd_id    <= rd_shift_reg[0].rd_id;
+      rd_shift_reg[1].reg_addr <= (stall_shift() == 1'b1) ? rd_shift_reg[1].reg_addr : rd_shift_reg[0].reg_addr;
+      rd_shift_reg[1].rd_id    <= (stall_shift() == 1'b1) ? rd_shift_reg[1].rd_id : rd_shift_reg[0].rd_id;
       rd_shift_reg[2].reg_addr <= rd_shift_reg[1].reg_addr;
       rd_shift_reg[2].rd_id    <= rd_shift_reg[1].rd_id;
       rd_shift_reg[3].reg_addr <= rd_shift_reg[2].reg_addr;
@@ -144,12 +144,12 @@ module HazardControlUnit #(
       rd_shift_reg[7].reg_addr <= rd_shift_reg[6].reg_addr;
       rd_shift_reg[7].rd_id    <= rd_shift_reg[6].rd_id;
 
-      rd_stale.reg_addr        <= rd_shift_reg[3].reg_addr;
-      rd_stale.rd_id           <= rd_shift_reg[3].rd_id;
+      rd_stale.reg_addr        <= rd_shift_reg[4].reg_addr;
+      rd_stale.rd_id           <= rd_shift_reg[4].rd_id;
 
       // Save Rd
       /* verilator lint_off WIDTHTRUNC */
-      if (hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} && current_state inside {STALL_OFF} && is_not_monitored(inst_id_i)) begin
+      if (monitor_valid(inst_id_i)) begin
         // Update rd idx
         rd_idx                   <= (rd_idx == ARRAY_MAX - 1) ? 'd0 : rd_idx + 'd1;
         // Feed initial shift reg
@@ -213,16 +213,16 @@ module HazardControlUnit #(
         else begin
           case (hcu_inst_type_i)
             HCU_I_type, HCU_LOAD_type: begin
-              if (rs_hazard(rs1_i)) next_state = STALL_FOR_RBW_LS_CSR;  // stall ID & IF
+              if (rs_hazard(rs1_i, inst_id_i)) next_state = STALL_FOR_RBW_LS_CSR;  // stall ID & IF
             end
             HCU_R_type, HCU_STORE_type: begin
-              if (rs_hazard(rs1_i) || rs_hazard(rs2_i)) next_state = STALL_FOR_RBW_LS_CSR;  // stall ID & IF
+              if (rs_hazard(rs1_i, inst_id_i) || rs_hazard(rs2_i, inst_id_i)) next_state = STALL_FOR_RBW_LS_CSR;  // stall ID & IF
             end
             HCU_UCJ_type: begin
               next_state = STALL_FOR_UCJ;
             end
             HCU_CSR_type: begin
-              if (csr_hazard(rs1_i)) next_state = STALL_FOR_RBW_LS_CSR;  // stall ID & IF
+              if (csr_hazard(rs1_i, inst_id_i)) next_state = STALL_FOR_RBW_LS_CSR;  // stall ID & IF
             end
             HCU_ecall: begin
               next_state = STALL_FOR_ECALL;
@@ -243,11 +243,11 @@ module HazardControlUnit #(
       STALL_FOR_RBW_LS_CSR: begin
         case (current_hcu_inst)
           HCU_I_type, HCU_LOAD_type: begin
-            if (rs_hazard(rs1_i)) next_state = STALL_FOR_RBW_LS_CSR;
+            if (rs_hazard(rs1_i, inst_id_i)) next_state = STALL_FOR_RBW_LS_CSR;
             else next_state = PROPAGATE_PC;
           end
           HCU_R_type, HCU_STORE_type: begin
-            if (rs_hazard(rs1_i) || rs_hazard(rs2_i)) next_state = STALL_FOR_RBW_LS_CSR;
+            if (rs_hazard(rs1_i, inst_id_i) || rs_hazard(rs2_i, inst_id_i)) next_state = STALL_FOR_RBW_LS_CSR;
             else next_state = PROPAGATE_PC;
           end
           default: next_state = STALL_FOR_RBW_LS_CSR;
@@ -394,32 +394,39 @@ module HazardControlUnit #(
   end
 
   // Functions ---------------------------------------------------------------------------------------------------------------
-  function logic is_not_monitored(input logic [4:0] inst_id);
+  function logic stall_shift();
+    if (current_state inside {STALL_FOR_RBW_LS_CSR}) return 1'b1;
+    else return 1'b0;
+  endfunction
+
+  function logic monitor_valid(input logic [4:0] inst_id);
+    if ((hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} && current_state inside {STALL_OFF}) && _match_rd_id(inst_id) == 1'b0) return 1'b1;
+    else return 1'b0;
+  endfunction
+
+  function logic rs_hazard(input logic [4:0] rs_reg, logic [4:0] inst_id);
+    if ((_match_rd_prev(rs_reg)) && _match_rd_id(inst_id) && (rs_reg != 5'd0)) return 1'b1;
+    else return 1'b0;
+  endfunction
+
+  function logic csr_hazard(input logic [4:0] rs_reg, logic [4:0] inst_id);
+    if (_match_rd_prev(rs_reg) && _match_rd_id(inst_id) && ((rs_reg != 5'd0)) || (rs_reg == rd_i)) return 1'b1;
+    else return 1'b0;
+  endfunction
+
+  function logic _match_rd_prev(input logic [4:0] rs_reg);
+    if ((rs_reg == rd_prev[0].reg_addr && rd_prev[0].active == 1'b1) || (rs_reg == rd_prev[1].reg_addr && rd_prev[1].active == 1'b1) ||
+        (rs_reg == rd_prev[2].reg_addr && rd_prev[2].active == 1'b1) || (rs_reg == rd_prev[3].reg_addr && rd_prev[3].active == 1'b1) ||
+        (rs_reg == rd_prev[4].reg_addr && rd_prev[4].active == 1'b1) || (rs_reg == rd_prev[5].reg_addr && rd_prev[5].active == 1'b1))
+      return 1'b1;
+    else return 1'b0;
+  endfunction
+
+  function logic _match_rd_id(input logic [4:0] inst_id);
     if (( rd_prev[0].rd_id == inst_id) ||  ( rd_prev[1].rd_id == inst_id)
-           ||  ( rd_prev[2].rd_id == inst_id) ||  ( rd_prev[3].rd_id == inst_id)
-           ||  ( rd_prev[4].rd_id == inst_id) ||  ( rd_prev[5].rd_id == inst_id))
-      return 1'b0;
-    else return 1'b1;
-
-  endfunction
-
-  function logic rs_hazard(input logic [4:0] rs_reg);
-    if ( ( (rs_reg == rd_prev[0].reg_addr && rd_prev[0].active == 1'b1) ||  (rs_reg == rd_prev[1].reg_addr && rd_prev[1].active == 1'b1)
-           ||  (rs_reg == rd_prev[2].reg_addr && rd_prev[2].active == 1'b1) ||  (rs_reg == rd_prev[3].reg_addr && rd_prev[3].active == 1'b1)
-           ||  (rs_reg == rd_prev[4].reg_addr && rd_prev[4].active == 1'b1) ||  (rs_reg == rd_prev[5].reg_addr && rd_prev[5].active == 1'b1) )
-         && (rs_reg != 5'd0) )
+        ||  ( rd_prev[2].rd_id == inst_id) ||  ( rd_prev[3].rd_id == inst_id)
+        ||  ( rd_prev[4].rd_id == inst_id) ||  ( rd_prev[5].rd_id == inst_id))
       return 1'b1;
     else return 1'b0;
   endfunction
-
-
-  function logic csr_hazard(input logic [4:0] rs_reg);
-    if ( ( (rs_reg == rd_prev[0].reg_addr && rd_prev[0].active == 1'b1) ||  (rs_reg == rd_prev[1].reg_addr && rd_prev[1].active == 1'b1)
-           ||  (rs_reg == rd_prev[2].reg_addr && rd_prev[2].active == 1'b1) ||  (rs_reg == rd_prev[3].reg_addr && rd_prev[3].active == 1'b1)
-           ||  (rs_reg == rd_prev[4].reg_addr && rd_prev[4].active == 1'b1) ||  (rs_reg == rd_prev[5].reg_addr && rd_prev[5].active == 1'b1) )
-         && ( (rs_reg != 5'd0)) || (rs_reg == rd_i) )
-      return 1'b1;
-    else return 1'b0;
-  endfunction
-
 endmodule
