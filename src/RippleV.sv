@@ -32,12 +32,12 @@ module RippleV #(
   logic stall_if, stall_l1, stall_id, stall_cu, stall_l2, stall_ex, stall_l3, stall_mem, stall_l4, stall_wb, clear_l1, clear_l2;
   logic clear_l3, clear_l4, imem_enable, csr_enable, l2_csr_enable, l3_csr_enable, alu_enable, l2_alu_enable, bl_enable, l2_bl_enable;
   logic dmem_enable, l2_dmem_enable, l3_dmem_enable, reg_file_read_enable, reg_file_write_enable, l2_reg_file_write_enable, l3_reg_file_write_enable, l4_reg_file_write_enable;
-  logic bl_take_branch, interrupt_status, pc_enable, jump_valid, stall_pc_direct, update_pc_direct;
+  logic bl_take_branch, interrupt_status, pc_enable, jump_valid, stall_pc_next, update_pc_next;
 
   logic [31:0] riscv_instruction, l1_riscv_instruction, csr_data_from_cu, l2_csr_data_from_cu, l3_csr_data_from_cu;
   logic [31:0] rs1_data, l2_rs1_data, l3_rs1_data, rs2_data, l2_rs2_data, imm_offset, l2_imm_offset, l3_imm_offset, lui, l2_lui, l3_lui, l4_lui;
   logic [31:0] pc_addr, l1_pc_addr, l2_pc_addr, l3_pc_addr, l4_pc_addr, pc_new, alu_out, l3_alu_out, l4_alu_out, l3_dmem_addr, l3_dmem_data;
-  logic [31:0] dmem_out_data, l4_dmem_out_data, csr_out_data, l4_csr_out_data, pc_update_from_execute, pc_direct_update_from_execute, reg_file_rd_data;
+  logic [31:0] dmem_out_data, l4_dmem_out_data, csr_out_data, l4_csr_out_data, pc_jump, pc_next, reg_file_rd_data;
 
   logic [4:0] inst_id, rs1_addr, rs1_addr_hcu, l2_rs1_addr, rs2_addr, rs2_addr_hcu, l2_rs2_addr, rd_addr, rd_addr_hcu, l2_rd_addr, l3_rd_addr, l4_rd_addr;
 
@@ -63,7 +63,7 @@ module RippleV #(
   sel_reg_file_data_t sel_reg_file_data, l2_sel_reg_file_data, l3_sel_reg_file_data, l4_sel_reg_file_data;
 
   // PC
-  sel_pc_t             sel_pc;
+  sel_pcv2_t           sel_pc;
 
   // HCU
   hcu_handler_stages_t hcu_handler_stage;
@@ -91,12 +91,6 @@ module RippleV #(
     rd_addr_hcu  <= rd_addr;
   end
 
-  // PC + 4
-  always_ff @(posedge clk_i) begin
-    if (!rst_i) pc_direct_update_from_execute <= 'd0;
-    else pc_direct_update_from_execute <= (update_pc_direct == 1'b1) ? pc_update_from_execute : ((stall_pc_direct == 1'b1) ? pc_direct_update_from_execute : pc_addr + 32'd4);
-  end
-
   // Hazard Control Unit -----------------------------------------------------------------------
 
   HazardControlUnit #(
@@ -104,32 +98,32 @@ module RippleV #(
   ) hcu_inst (
       .clk_i,
       .rst_i,
-      .jump_valid_i      (jump_valid),
-      .hcu_inst_type_i   (hcu_instruction),
-      .bl_take_branch_i  (bl_take_branch),
-      .rs1_i             (rs1_addr),
-      .rs2_i             (rs2_addr),
-      .rd_i              (rd_addr),
-      .inst_id_i         (inst_id),
-      .stall_l1_o        (stall_l1),
-      .clear_l1_o        (clear_l1),
-      .stall_l2_o        (stall_l2),
-      .clear_l2_o        (clear_l2),
-      .stall_l3_o        (stall_l3),
-      .clear_l3_o        (clear_l3),
-      .stall_l4_o        (stall_l4),
-      .clear_l4_o        (clear_l4),
-      .stall_if_o        (stall_if),
-      .stall_id_o        (stall_id),
-      .stall_cu_o        (stall_cu),
-      .stall_ex_o        (stall_ex),
-      .stall_mem_o       (stall_mem),
-      .stall_wb_o        (stall_wb),
-      .stall_pc_direct_o (stall_pc_direct),
-      .update_pc_direct_o(update_pc_direct),
-      .hcu_hnd_stage_o   (hcu_handler_stage),
-      .pc_en_o           (pc_enable),
-      .pc_sel_o          (sel_pc)
+      .jump_valid_i    (jump_valid),
+      .hcu_inst_type_i (hcu_instruction),
+      .bl_take_branch_i(bl_take_branch),
+      .rs1_i           (rs1_addr),
+      .rs2_i           (rs2_addr),
+      .rd_i            (rd_addr),
+      .inst_id_i       (inst_id),
+      .stall_l1_o      (stall_l1),
+      .clear_l1_o      (clear_l1),
+      .stall_l2_o      (stall_l2),
+      .clear_l2_o      (clear_l2),
+      .stall_l3_o      (stall_l3),
+      .clear_l3_o      (clear_l3),
+      .stall_l4_o      (stall_l4),
+      .clear_l4_o      (clear_l4),
+      .stall_if_o      (stall_if),
+      .stall_id_o      (stall_id),
+      .stall_cu_o      (stall_cu),
+      .stall_ex_o      (stall_ex),
+      .stall_mem_o     (stall_mem),
+      .stall_wb_o      (stall_wb),
+      .stall_pc_next_o (stall_pc_next),
+      .update_pc_next_o(update_pc_next),
+      .hcu_hnd_stage_o (hcu_handler_stage),
+      .pc_en_o         (pc_enable),
+      .pc_sel_o        (sel_pc)
   );
 
   // Instruction-fetch --------------------------------------------------------------------------
@@ -139,11 +133,11 @@ module RippleV #(
     .INT_HND   (INT_HND)
   ) mux_pc_inst (
       .clk_i,
-      .sel_i             (sel_pc),
-      .pc_direct_update_i(pc_direct_update_from_execute),
-      .pc_update_i       (pc_update_from_execute),
-      .jump_vec_i        (csr_out_data),
-      .data_o            (pc_new)
+      .sel_i     (sel_pc),
+      .pc_next_i (pc_next),
+      .pc_jump_i (pc_jump),
+      .jump_csr_i(csr_out_data),
+      .data_o    (pc_new)
   );
 
   If #(
@@ -315,9 +309,13 @@ module RippleV #(
       .bl_en_i             (l2_bl_enable),
       .bl_opr_i            (l2_bl_operation),
       .bl_take_branch_o    (bl_take_branch),
-      // Output
+      // Misc
+      .stall_pc_next_i     (stall_pc_next),
+      .update_pc_next_i    (update_pc_next),
+      .pc_addr_i           (pc_addr),
       .jump_valid_o        (jump_valid),
-      .pc_update_o         (pc_update_from_execute)
+      .pc_jump_o           (pc_jump),
+      .pc_next_o           (pc_next)
   );
 
   // Pipeline register III ----------------------------------------------------------------------

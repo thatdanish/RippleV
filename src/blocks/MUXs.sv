@@ -144,9 +144,9 @@ module mux_pc_v2 #(
 ) (
     input                                       clk_i,
     input  typed_pkg::sel_pc_t                  sel_i,
-    input  logic               [ADDR_WIDTH-1:0] pc_update_i,
-    input  logic               [ADDR_WIDTH-1:0] pc_direct_update_i,
-    input  logic               [ADDR_WIDTH-1:0] jump_vec_i,
+    input  logic               [ADDR_WIDTH-1:0] pc_next_i,
+    input  logic               [ADDR_WIDTH-1:0] pc_jump_i,
+    input  logic               [ADDR_WIDTH-1:0] jump_csr_i,
     output logic               [ADDR_WIDTH-1:0] data_o
 );
   import typed_pkg::*;
@@ -158,11 +158,11 @@ module mux_pc_v2 #(
 
   always_comb begin
     case (sel_i)
-      sel_pc_direct_update: data_o = pc_direct_update_i;
-      sel_pc_update:        data_o = pc_update_i;
-      sel_pc_jump_vec:      data_o = jump_vec_i;
-      sel_pc_int_hnd:       data_o = int_hnd;
-      default:              data_o = 'd0;
+      sel_pc_next:       data_o = pc_next_i;
+      sel_pc_jump:       data_o = pc_jump_i;
+      sel_pc_jump_csr:   data_o = jump_csr_i;
+      sel_pc_int_hnd_v2: data_o = int_hnd;
+      default:           data_o = 'd0;
     endcase
   end
 endmodule

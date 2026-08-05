@@ -272,7 +272,6 @@ module ControlUnitv2 (
           end
 
           // Write (PC+4) to RD 
-          // TODO : check if pc + 4 is automatically available
           reg_file_write_en_o     = 1'b1;
           reg_file_data_mux_sel_o = sel_reg_file_pc;
 

@@ -20,13 +20,18 @@ module Ex (
     input                                bl_en_i,
     input  typed_pkg::alu_opr_t          bl_opr_i,
     output                               bl_take_branch_o,
-    // Output
+    // Misc
+    input                                stall_pc_next_i,
+    input                                update_pc_next_i,
+    input  logic                  [31:0] pc_addr_i,
     output logic                         jump_valid_o,
-    output logic                  [31:0] pc_update_o
+    output logic                  [31:0] pc_jump_o,
+    output logic                  [31:0] pc_next_o
+
 );
   import typed_pkg::*;
 
-  logic [31:0] alu_out, bl_pc_update, alu_a_out, alu_b_out;
+  logic [31:0] alu_out, bl_pc_jump, alu_a_out, alu_b_out;
 
   assign alu_out_o = alu_out;
 
@@ -65,7 +70,7 @@ module Ex (
       .rs2_i            (alu_mux_a_rs2_i),
       .rs1_i            (alu_mux_b_rs1_i),
       .pc_i             (alu_mux_b_pc_i),
-      .pc_update_o      (bl_pc_update),
+      .pc_jump_o        (bl_pc_jump),
       .take_branch_o    (bl_take_branch_o),
       .jump_valid_o
   );
@@ -74,10 +79,16 @@ module Ex (
   always_comb begin
     if (bl_opr_i inside {ALU_BEQ, ALU_BNE, ALU_BLT, ALU_BLTU, ALU_BGE, ALU_BGEU}) begin
       case (bl_take_branch_o)
-        1'b0: pc_update_o = alu_out;
-        1'b1: pc_update_o = bl_pc_update;
+        1'b0: pc_jump_o = alu_out;
+        1'b1: pc_jump_o = bl_pc_jump;
       endcase
-    end else pc_update_o = bl_pc_update;
+    end else pc_jump_o = bl_pc_jump;
+  end
+
+  // PC + 4
+  always_ff @(posedge clk_i) begin
+    if (!rst_i) pc_next_o <= 'd0;
+    else pc_next_o <= (update_pc_next_i == 1'b1) ? pc_jump_o : ((stall_pc_next_i == 1'b1) ? pc_next_o : pc_addr_i + 32'd4);
   end
 
 endmodule

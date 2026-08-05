@@ -158,11 +158,19 @@ package typed_pkg;
   // mux_pc
 
   typedef enum bit [1:0] {
-    sel_pc_direct_update,
     sel_pc_update,
     sel_pc_jump_vec,
     sel_pc_int_hnd
   } sel_pc_t;
+
+  // mux_pcv2
+
+  typedef enum bit [1:0] {
+    sel_pc_next,
+    sel_pc_jump,
+    sel_pc_jump_csr,
+    sel_pc_int_hnd_v2
+  } sel_pcv2_t;
 
   // mux_csr_data
 

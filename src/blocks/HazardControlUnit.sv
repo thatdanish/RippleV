@@ -26,18 +26,18 @@ module HazardControlUnit #(
     output logic                                 stall_ex_o,
     output logic                                 stall_mem_o,
     output logic                                 stall_wb_o,
-    output logic                                 update_pc_direct_o,
-    output logic                                 stall_pc_direct_o,
+    output logic                                 update_pc_next_o,
+    output logic                                 stall_pc_next_o,
     output typed_pkg::hcu_handler_stages_t       hcu_hnd_stage_o,
     output logic                                 pc_en_o,
-    output typed_pkg::sel_pc_t                   pc_sel_o
+    output typed_pkg::sel_pcv2_t                 pc_sel_o
 );
   import typed_pkg::*;
 
   localparam AFTER_RST_STALL_MAX = 1;
   localparam UCJ_STALL_MAX = 3;
   localparam PROPAGATE_MAX = 3;
-  localparam PROPAGATE_MAX_2 = 1;
+  localparam PROPAGATE_MAX_2 = 0;
   localparam MRET_STALL_MAX = 4;
   localparam WFI_STALL_WAIT = 4;
   localparam TRAP_STALL_MAX = 12;
@@ -128,7 +128,6 @@ module HazardControlUnit #(
     end else begin
       // shift rd reg
 
-      // TODO: Remove extra shift registers
       rd_shift_reg[1].reg_addr <= (stall_shift() == 1'b1) ? rd_shift_reg[1].reg_addr : rd_shift_reg[0].reg_addr;
       rd_shift_reg[1].rd_id    <= (stall_shift() == 1'b1) ? rd_shift_reg[1].rd_id : rd_shift_reg[0].rd_id;
       rd_shift_reg[2].reg_addr <= rd_shift_reg[1].reg_addr;
@@ -137,12 +136,6 @@ module HazardControlUnit #(
       rd_shift_reg[3].rd_id    <= rd_shift_reg[2].rd_id;
       rd_shift_reg[4].reg_addr <= rd_shift_reg[3].reg_addr;
       rd_shift_reg[4].rd_id    <= rd_shift_reg[3].rd_id;
-      rd_shift_reg[5].reg_addr <= rd_shift_reg[4].reg_addr;
-      rd_shift_reg[5].rd_id    <= rd_shift_reg[4].rd_id;
-      rd_shift_reg[6].reg_addr <= rd_shift_reg[5].reg_addr;
-      rd_shift_reg[6].rd_id    <= rd_shift_reg[5].rd_id;
-      rd_shift_reg[7].reg_addr <= rd_shift_reg[6].reg_addr;
-      rd_shift_reg[7].rd_id    <= rd_shift_reg[6].rd_id;
 
       rd_stale.reg_addr        <= rd_shift_reg[4].reg_addr;
       rd_stale.rd_id           <= rd_shift_reg[4].rd_id;
@@ -271,68 +264,68 @@ module HazardControlUnit #(
   end
 
   always_comb begin
-    stall_l1_o         = 1'b0;
-    clear_l1_o         = 1'b0;
-    stall_l2_o         = 1'b0;
-    clear_l2_o         = 1'b0;
-    stall_l3_o         = 1'b0;
-    clear_l3_o         = 1'b0;
-    stall_l4_o         = 1'b0;
-    clear_l4_o         = 1'b0;
-    stall_if_o         = 1'b0;
-    stall_id_o         = 1'b0;
-    stall_ex_o         = 1'b0;
-    stall_mem_o        = 1'b0;
-    stall_wb_o         = 1'b0;
-    stall_pc_direct_o  = 1'b0;
-    update_pc_direct_o = 1'b0;
-    stall_cu_o         = 1'b0;
-    pc_en_o            = 1'b0;
-    pc_sel_o           = sel_pc_t'('d0);
+    stall_l1_o       = 1'b0;
+    clear_l1_o       = 1'b0;
+    stall_l2_o       = 1'b0;
+    clear_l2_o       = 1'b0;
+    stall_l3_o       = 1'b0;
+    clear_l3_o       = 1'b0;
+    stall_l4_o       = 1'b0;
+    clear_l4_o       = 1'b0;
+    stall_if_o       = 1'b0;
+    stall_id_o       = 1'b0;
+    stall_ex_o       = 1'b0;
+    stall_mem_o      = 1'b0;
+    stall_wb_o       = 1'b0;
+    stall_pc_next_o  = 1'b0;
+    update_pc_next_o = 1'b0;
+    stall_cu_o       = 1'b0;
+    pc_en_o          = 1'b0;
+    pc_sel_o         = sel_pcv2_t'('d0);
 
-    hcu_hnd_stage_o    = hcu_handler_stages_t'('d0);
+    hcu_hnd_stage_o  = hcu_handler_stages_t'('d0);
 
     case (current_state)
       STALL_AFTER_RST: begin
         stall_cu_o = 1'b1;
         pc_en_o    = 1'b1;
-        pc_sel_o   = sel_pc_direct_update;
+        pc_sel_o   = sel_pc_next;
       end
       STALL_OFF: begin
         pc_en_o  = 1'b1;
-        pc_sel_o = sel_pc_direct_update;
+        pc_sel_o = sel_pc_next;
       end
       PROPAGATE_PC: begin
         stall_l2_o = 1'b1;
         pc_en_o    = 1'b1;
-        pc_sel_o   = sel_pc_direct_update;
+        pc_sel_o   = sel_pc_next;
       end
       PROPAGATE_PC_JUMP: begin
         stall_id_o = (stall_counter > 'd1) ? 1'b0 : 1'b1;
 
         pc_en_o    = 1'b1;
-        pc_sel_o   = sel_pc_direct_update;
+        pc_sel_o   = sel_pc_next;
       end
       STALL_FOR_UCJ: begin
-        stall_if_o         = 1'b1;
-        stall_l1_o         = 1'b1;
-        stall_id_o         = 1'b1;
+        stall_if_o       = 1'b1;
+        stall_l1_o       = 1'b1;
+        stall_id_o       = 1'b1;
         // clear_l2_o         = (stall_counter > 'd2) ? 1'b1 : 1'b0;
-        update_pc_direct_o = 1'b1;
+        update_pc_next_o = 1'b1;
 
-        pc_en_o            = 1'b1;
-        pc_sel_o           = sel_pc_update;
+        pc_en_o          = 1'b1;
+        pc_sel_o         = sel_pc_jump;
       end
       STALL_FOR_RBW_LS_CSR: begin
         // I & R types
-        stall_pc_direct_o = 1'b1;
-        stall_id_o        = 1'b1;
-        stall_l1_o        = 1'b1;
-        stall_if_o        = 1'b1;
-        stall_l2_o        = 1'b1;
+        stall_pc_next_o = 1'b1;
+        stall_id_o      = 1'b1;
+        stall_l1_o      = 1'b1;
+        stall_if_o      = 1'b1;
+        stall_l2_o      = 1'b1;
 
-        pc_en_o           = 1'b1;
-        pc_sel_o          = sel_pc_direct_update;
+        pc_en_o         = 1'b1;
+        pc_sel_o        = sel_pc_next;
       end
       STALL_FOR_ECALL: begin
       end
@@ -351,7 +344,7 @@ module HazardControlUnit #(
       //     clear_l2_o = 1'b1;
 
       //     pc_en_o = 1'b1;
-      //     pc_sel_o = sel_pc_update;
+      //     pc_sel_o = sel_pc_jump;
       // end
       // handle_trap: begin
 
@@ -376,7 +369,7 @@ module HazardControlUnit #(
       //     stall_id_o = 1'b1;
 
       //     pc_en_o = 1'b0;
-      //     pc_sel_o = sel_pc_update;
+      //     pc_sel_o = sel_pc_jump;
 
       //     if (stall_counter == WFI_STALL_WAIT) begin
       //         stall_l2_o = 1'b1;
@@ -400,24 +393,24 @@ module HazardControlUnit #(
   endfunction
 
   function logic monitor_valid(input logic [4:0] inst_id);
-    if ((hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} && current_state inside {STALL_OFF}) && _match_rd_id(inst_id) == 1'b0) return 1'b1;
+    if ((hcu_inst_type_i inside {HCU_I_type, HCU_R_type, HCU_CSR_type, HCU_LOAD_type} && current_state inside {STALL_OFF}) && !_match_rd_id(inst_id)) return 1'b1;
     else return 1'b0;
   endfunction
 
   function logic rs_hazard(input logic [4:0] rs_reg, logic [4:0] inst_id);
-    if ((_match_rd_prev(rs_reg)) && _match_rd_id(inst_id) && (rs_reg != 5'd0)) return 1'b1;
+    if ((_match_rd_prev(rs_reg, inst_id)) && (rs_reg != 5'd0)) return 1'b1;
     else return 1'b0;
   endfunction
 
   function logic csr_hazard(input logic [4:0] rs_reg, logic [4:0] inst_id);
-    if (_match_rd_prev(rs_reg) && _match_rd_id(inst_id) && ((rs_reg != 5'd0)) || (rs_reg == rd_i)) return 1'b1;
+    if (_match_rd_prev(rs_reg, inst_id) && ((rs_reg != 5'd0)) || (rs_reg == rd_i)) return 1'b1;
     else return 1'b0;
   endfunction
 
-  function logic _match_rd_prev(input logic [4:0] rs_reg);
-    if ((rs_reg == rd_prev[0].reg_addr && rd_prev[0].active == 1'b1) || (rs_reg == rd_prev[1].reg_addr && rd_prev[1].active == 1'b1) ||
-        (rs_reg == rd_prev[2].reg_addr && rd_prev[2].active == 1'b1) || (rs_reg == rd_prev[3].reg_addr && rd_prev[3].active == 1'b1) ||
-        (rs_reg == rd_prev[4].reg_addr && rd_prev[4].active == 1'b1) || (rs_reg == rd_prev[5].reg_addr && rd_prev[5].active == 1'b1))
+  function logic _match_rd_prev(input logic [4:0] rs_reg, logic [4:0] inst_id);
+    if ((rs_reg == rd_prev[0].reg_addr && rd_prev[0].active == 1'b1 && rd_prev[0].rd_id != inst_id) || (rs_reg == rd_prev[1].reg_addr && rd_prev[1].active == 1'b1 && rd_prev[1].rd_id != inst_id) ||
+        (rs_reg == rd_prev[2].reg_addr && rd_prev[2].active == 1'b1 && rd_prev[2].rd_id != inst_id) || (rs_reg == rd_prev[3].reg_addr && rd_prev[3].active == 1'b1 && rd_prev[3].rd_id != inst_id) ||
+        (rs_reg == rd_prev[4].reg_addr && rd_prev[4].active == 1'b1 && rd_prev[4].rd_id != inst_id) || (rs_reg == rd_prev[5].reg_addr && rd_prev[5].active == 1'b1 && rd_prev[5].rd_id != inst_id))
       return 1'b1;
     else return 1'b0;
   endfunction

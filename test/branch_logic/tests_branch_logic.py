@@ -161,12 +161,12 @@ async def test(dut):
                 )
         else:
             try:
-                assert res == dut.pc_update_o.value
+                assert res == dut.pc_jump_o.value
             except:
                 raise AssertionError(
                     f"Invalid Output value -->\n"
                     f"Opr: {opr}, a : {a} ({a.to_unsigned()}), b : {b} ({b.to_unsigned()})\n"
-                    f"Expected : {res} (), got : {dut.pc_update_o.value}"
+                    f"Expected : {res} (), got : {dut.pc_jump_o.value}"
                 )
 
 
